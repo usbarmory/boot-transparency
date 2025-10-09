@@ -58,12 +58,18 @@ bootPolicy = []byte(`[
         {
             "category": 1,
             "_comment": "0x0001 -> LinuxKernel",
-            "requirements": "{\"min_version\":\"v6.14.0-29\",\"tainted\":false,\"metadata_include\":[\"CONFIG_STACKPROTECTOR_STRONG=y\"]}"
+            "requirements": {
+                "min_version": "v6.14.0-29",
+                "tainted": false,
+                "metadata_include": ["CONFIG_STACKPROTECTOR_STRONG=y"]
+            }
         },
         {
             "category": 2,
             "_comment": "0x0002 -> Initrd",
-            "requirements": "{\"tainted\":false}"
+            "requirements": {
+                "tainted": false
+            }
         }
     ],
     "signatures": {

@@ -41,12 +41,12 @@ type ArtifactRequirements struct {
 	// define the artifact category (e.g. LinuxKernel, Initrd, Dtb, ...)
 	Category uint `json:"category"`
 
-	// serialized JSON containing the list of properties that must
+	// JSON containing the list of properties that must
 	// match the claims for an artifact of this category.
 	// The set of properties that are supported depends by the artifact category.
 	// The JSON format should reflect the underlying structure that is defined
 	// in the artifact package for the given category.
-	Requirements string `json:"requirements"`
+	Requirements json.RawMessage `json:"requirements"`
 }
 
 // Define the policy entry as a set of requirements to authorize a given bundle of artifacts.
@@ -81,7 +81,7 @@ func Parse(jsonPolicy []byte) (policy *[]PolicyEntry, err error) {
 			}
 
 			// invoke the correspondent requirement parser for the given artifact category
-			if _, err = h.ParseRequirements([]byte(a.Requirements)); err != nil {
+			if _, err = h.ParseRequirements(a.Requirements); err != nil {
 				return
 			}
 		}

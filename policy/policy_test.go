@@ -18,11 +18,13 @@ func TestParse(t *testing.T) {
     "artifacts": [
         {
             "category": 1,
-            "requirements": "{\"architecture\":\"x64\"}"
+            "requirements": {
+                "architecture":"x64"
+            }
         },
         {
             "category": 2,
-            "requirements": "{}"
+            "requirements": {}
         }
     ],
     "signatures": {
@@ -55,11 +57,19 @@ func TestCheck(t *testing.T) {
     "artifacts": [
         {
             "category": 1,
-            "requirements": "{\"min_version\":\"v6.14.0-29\",\"tainted\":false,\"architecture\":\"x64\",\"license\":[\"GPL\"]}"
+            "requirements": {
+                "min_version": "v6.14.0-29",
+                "tainted": false,
+                "architecture": "x64",
+                "license":["GPL"]
+            }
         },
         {
             "category": 2,
-            "requirements": "{\"architecture\":\"x64\",\"tainted\":false}"
+            "requirements": {
+                "architecture": "x64",
+                "tainted": false
+            }
         }
     ],
     "signatures": {
@@ -80,7 +90,10 @@ func TestCheck(t *testing.T) {
     "artifacts": [
         {
             "category": 1,
-            "requirements": "{\"min_version\":\"v6.14.0-29\",\"architecture\":\"x64\"}"
+            "requirements": {
+                "min_version": "v6.14.0-29",
+                "architecture": "x64"
+            }
         }
     ]
 }]`)
@@ -91,11 +104,23 @@ func TestCheck(t *testing.T) {
     "artifacts": [
         {
             "category": 1,
-            "claims": "{\"file_name\":\"vmlinuz-6.14.0-29-generic\",\"hash\":\"8ba6bc3d9ccfe9c17ad7482d6c0160150c7d1da4b4a4f464744ce069291d6174ea9949574002f022e18585df04f57c192431794f36f40659930bd5c0b470eb59\",\"version\":\"v6.14.0-29-generic\",\"architecture\":\"x64\",\"tainted\":false,\"license\":[\"GPL-2.0\"]}"
+            "claims": {
+                "file_name": "vmlinuz-6.14.0-29-generic",
+                "hash": "8ba6bc3d9ccfe9c17ad7482d6c0160150c7d1da4b4a4f464744ce069291d6174ea9949574002f022e18585df04f57c192431794f36f40659930bd5c0b470eb59",
+                "version": "v6.14.0-29-generic",
+                "architecture": "x64",
+                "tainted": false,
+                "license": ["GPL-2.0"]
+            }
         },
         {
             "category": 2,
-            "claims": "{\"file_name\":\"initrd.img-6.14.0-29-generic\",\"hash\":\"9f5db8bc106c426a6654aa53ada75db307adb6dcb59291aa0a874898bc197b3dad8d2ebef985936bba94e9ae34b52a79e8f9045346cde2326baf4feba73ab66c\",\"architecture\":\"x64\",\"tainted\":false}"
+            "claims": {
+                "file_name": "initrd.img-6.14.0-29-generic",
+                "hash": "9f5db8bc106c426a6654aa53ada75db307adb6dcb59291aa0a874898bc197b3dad8d2ebef985936bba94e9ae34b52a79e8f9045346cde2326baf4feba73ab66c",
+                "architecture": "x64",
+                "tainted": false
+            }
         }
     ],
     "signatures": [

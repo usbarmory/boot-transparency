@@ -28,11 +28,11 @@ type Artifact struct {
 	// type of artifact (e.g. 1: LinuxKernel, 2: Initrd, 3: Dtb, ...)
 	Category uint `json:"category"`
 
-	// serialized JSON containing the claims for a given artifact
+	// JSON containing the claims for a given artifact
 	// The set of claims that are supported depends by the artifact category,
 	// the JSON format must reflect the underlying structure that is defined
 	// in the artifact package for the given category.
-	Claims string `json:"claims"`
+	Claims json.RawMessage `json:"claims"`
 }
 
 // Define the statement that will be logged when releasing a new bundle of artifacts
@@ -67,7 +67,7 @@ func Parse(jsonStatement []byte) (s *Statement, err error) {
 		}
 
 		// invoke the correspondent claims parser for the given artifact category
-		if _, err = h.ParseClaims([]byte(a.Claims)); err != nil {
+		if _, err = h.ParseClaims(a.Claims); err != nil {
 			return
 		}
 	}
