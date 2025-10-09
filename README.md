@@ -1,3 +1,7 @@
+> [!WARNING]
+> This repository contains incomplete and non-working code.
+> All the code material, including its documentation, should be treated as a Work in Progress.
+
 Introduction
 ============
 
