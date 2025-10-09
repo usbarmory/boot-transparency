@@ -59,6 +59,10 @@ func (h *LinuxKernel) Check(require interface{}, claim interface{}) (err error) 
 	c := claim.(*Claims)
 
 	// check all the supported policy requirements for LinuxKernel
+	if err = artifact.CheckHash(r.Hash, c.Hash); err != nil {
+		return
+	}
+
 	if err = artifact.CheckMinVersion(r.MinVersion, c.Version); err != nil {
 		return
 	}

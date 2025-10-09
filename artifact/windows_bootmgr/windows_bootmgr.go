@@ -58,8 +58,12 @@ func (h *WindowsBootMgr) Check(require interface{}, claim interface{}) (err erro
 	r := require.(*Requirements)
 	c := claim.(*Claims)
 
-	// FIXME: windows boot manager does not use semantic versioning
 	// check all the supported policy requirements for WindowsBootMgr
+	if err = artifact.CheckHash(r.Hash, c.Hash); err != nil {
+		return
+	}
+
+	// FIXME: windows boot manager does not use semantic versioning
 	if err = artifact.CheckMinVersion(r.MinVersion, c.Version); err != nil {
 		return
 	}

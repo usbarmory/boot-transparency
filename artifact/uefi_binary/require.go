@@ -9,6 +9,9 @@ package uefi_binary
 
 // Supported policy requirements for UEFIBinary artifact
 type Requirements struct {
+	// required SHA-512 hash of the artifact
+	Hash string `json:"hash,omitempty"`
+
 	// required minimum version, expressed using Semantic Versioning 2.0.0 (see semver.org)
 	MinVersion string `json:"min_version,omitempty"`
 
