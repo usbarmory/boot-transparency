@@ -61,7 +61,9 @@ bootPolicy = []byte(`[
             "requirements": {
                 "min_version": "v6.14.0-29",
                 "tainted": false,
-                "metadata_include": ["CONFIG_STACKPROTECTOR_STRONG=y"]
+                "metadata_include": [
+                    "CONFIG_STACKPROTECTOR_STRONG=y"
+                ]
             }
         },
         {
