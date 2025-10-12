@@ -100,7 +100,7 @@ submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMdLcxVjCAQUHbD4jCfFP
 witnessKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMvjV+a0ZASecDt75siSARk6zCoYwJWwaRqvULmx4VeK"}
 
 // configure an off-line Sigsum transparency engine
-te := sigsum.SigsumEngine{Network: false}
+te := sigsum.Engine{Network: false}
 
 // set public keys
 if err := te.SetKey(logKey, submitKey, witnessKey); err != nil {

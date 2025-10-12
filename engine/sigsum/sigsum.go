@@ -11,8 +11,10 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/usbarmory/boot-transparency/transparency"
@@ -25,36 +27,79 @@ import (
 	"sigsum.org/sigsum-go/pkg/types"
 )
 
-// Defines the Sigsum transparency engine and its configuration parameters
-type SigsumEngine struct {
-	Network bool // true if the engine does have access to the network and all the
-	// transparency proof verifications must be performed on-line, default is false.
-	logPubkey     []crypto.PublicKey // list of public keys to verify log signatures
-	submitPubkey  []crypto.PublicKey // list of public keys to verify leaf signatures
-	witnessPubkey []crypto.PublicKey // list of public keys to verify cosignatures according to the witness policy, if any
-	witnessPolicy *policy.Policy     // the witness policy, the actual format should be aligned with the one supported one by the chosen transparency engine
+// Define the Sigsum transparency engine and its configuration parameters
+type Engine struct {
+	// true if the engine does have access to the network
+	Network bool
+	// list of trusted public keys to verify log signatures
+	logPubkey []string
+	// list of trusted public keys to verify leaf signatures
+	submitPubkey []string
+	// the witness policy, the actual format should be aligned
+	// with the one supported one by the chosen transparency engine
+	witnessPolicy *policy.Policy
+}
+
+// Define the set of inputs required to probe for an inclusion proof
+// for a given leaf.
+type Probe struct {
+	// log origin
+	Origin string `json:"origin"`
+	// Sigsum uses leaf signature to identify the leaf into the log
+	LeafSignature string `json:"leaf_signature"`
+	// log key hash in hex format as expected in Sigsum proof bundle
+	LogPublicKeyHash string `json:"log_public_key_hash"`
+	// submitter key hash in hex format as expected in Sigsum proof bundle
+	SubmitPublicKeyHash string `json:"submit_public_key_hash"`
+	// The LeafHash is not present as it is computed hashing the statement
+	// included in the proof bundle.
+	// LeafHash []byte    `json:"leafHash"`
 }
 
 // The logic implemented for the Sigsum engine is partially replicating
 // the collectProof() from sigsum-go/pkg/submit/submit.go
-func (se *SigsumEngine) GetProof(origin string, p *transparency.ProofBundle) (err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(30*time.Second))
-	defer cancel()
+func (e *Engine) GetProof(p *transparency.ProofBundle) (err error) {
+	var probe Probe
 
-	if !se.Network {
+	// parse the inclusion probe data to request the proof
+	if err = json.Unmarshal(p.Probe, &probe); err != nil {
+		return fmt.Errorf("unable to parse Sigsum probing data to require the inclusion proof to the log: %s", err)
+	}
+
+	if !e.Network {
 		return fmt.Errorf("transparency engine is off-line")
 	}
 
-	if se.witnessPolicy == nil {
+	if e.witnessPolicy == nil {
 		return fmt.Errorf("witness policy not configured")
 	}
 
-	if len(se.logPubkey) == 0 {
-		return fmt.Errorf("log public key is not set")
+	if len(e.logPubkey) == 0 {
+		return fmt.Errorf("trusted log public key is not set")
 	}
 
-	if len(se.submitPubkey) == 0 {
-		return fmt.Errorf("submit public key is not set")
+	// check if the log key hash included in the proof probe corresponds
+	// to one of the trusted log keys
+	lk, err := getTrustedKeyFromHash(e.logPubkey, probe.LogPublicKeyHash)
+
+	if err != nil {
+		return
+	}
+
+	if len(e.submitPubkey) == 0 {
+		return fmt.Errorf("trusted submit public key is not set")
+	}
+
+	// check if the submit key hash included in the proof probe corresponds
+	// to one of the trusted submit keys
+	sk, err := getTrustedKeyFromHash(e.submitPubkey, probe.SubmitPublicKeyHash)
+
+	if err != nil {
+		return
+	}
+
+	if _, err := url.Parse(probe.Origin); err != nil {
+		return fmt.Errorf("invalid log origin: %s", err)
 	}
 
 	// HTTP client configuration
@@ -67,17 +112,9 @@ func (se *SigsumEngine) GetProof(origin string, p *transparency.ProofBundle) (er
 
 	client := client.New(client.Config{
 		UserAgent:  "boot-transparency",
-		URL:        origin,
+		URL:        probe.Origin,
 		HTTPClient: httpClient,
 	})
-
-	// FIXME: should loop through all the supported log/submitter keys
-	// OR
-	// remove the support for multiple log/submitter keys at engine layer?
-	// for _, logKey := range se.logPubkey {
-	// 	for _, submitKey := range se.submitPubkey {
-	logKey := se.logPubkey[0]
-	submitKey := se.submitPubkey[0]
 
 	// By default in Sigsum, the actual logged message is a double SHA-256 of the statement
 	// equivalent to: $ sha256sum statement.json | cut -d' ' -f1 | base16 -d | sha256sum
@@ -86,59 +123,65 @@ func (se *SigsumEngine) GetProof(origin string, p *transparency.ProofBundle) (er
 
 	msgChksum := crypto.Hash(s)
 
-	sig, _ := crypto.SignatureFromHex(p.Signature)
+	sig, _ := crypto.SignatureFromHex(probe.LeafSignature)
 
 	// proof.ShortLeaf is used by GetTreeHead()
 	shortLeaf := proof.ShortLeaf{
 		Signature: sig,
-		KeyHash:   crypto.HashBytes(submitKey[:]),
+		KeyHash:   crypto.HashBytes(sk[:]),
 	}
 
 	// "complete" types.Leaf, including also the logged message checksum, is used by GetInclusionProof()
 	leaf := types.Leaf{
 		Checksum:  msgChksum,
 		Signature: sig,
-		KeyHash:   crypto.HashBytes(submitKey[:]),
+		KeyHash:   crypto.HashBytes(sk[:]),
 	}
 
 	pr := proof.SigsumProof{
-		LogKeyHash: crypto.HashBytes(logKey[:]),
+		LogKeyHash: crypto.HashBytes(lk[:]),
 		Leaf:       shortLeaf,
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(30*time.Second))
+	defer cancel()
 
 	if pr.TreeHead, err = client.GetTreeHead(ctx); err != nil {
 		return fmt.Errorf("getting latest tree head: %v", err)
 	}
 
-	// FIXME append results to proof bundle instead of printing to stdout
-	head := bytes.Buffer{}
-	pr.TreeHead.ToASCII(&head)
-	fmt.Printf("got signed tree head: %q\n\n", head.String())
-
-	if err = se.witnessPolicy.VerifyCosignedTreeHead(&pr.LogKeyHash, &pr.TreeHead); err != nil {
+	if err = e.witnessPolicy.VerifyCosignedTreeHead(&pr.LogKeyHash, &pr.TreeHead); err != nil {
 		return fmt.Errorf("verifying tree head: %v", err)
 	}
 
 	leafHash := leaf.ToHash()
-
 	req := requests.InclusionProof{Size: pr.TreeHead.Size, LeafHash: leafHash}
+
 	if pr.Inclusion, err = client.GetInclusionProof(ctx, req); err != nil {
 		return fmt.Errorf("getting inclusion proof: %v", err)
 	}
 
-	// FIXME append results to proof bundle instead of printing to stdout
-	inclusion := bytes.Buffer{}
-	pr.Inclusion.ToASCII(&inclusion)
-	fmt.Printf("got inclusion proof: %q\n\n", inclusion.String())
-
 	if err = pr.Inclusion.Verify(&leafHash, &pr.TreeHead.TreeHead); err != nil {
-		return fmt.Errorf("inclusion proof invalid: %v", err)
+		return fmt.Errorf("invalid inclusion proof: %v", err)
 	}
+
+	// save the whole inclusion proof in ASCII format in the proof bundle
+	// FIXME: the Sigsum proof format requires to prepend
+	// version=2
+	// log=KEYHASH
+	// leaf=KEYHASH SIGNATURE
+	// append results in ASCII format
+	builtProof := bytes.Buffer{}
+	pr.TreeHead.ToASCII(&builtProof)
+	pr.Inclusion.ToASCII(&builtProof)
+
+	// Sigsum stores inclusion proof(s) as byte array []byte
+	p.Proof = builtProof.Bytes()
 
 	return
 }
 
-func (se *SigsumEngine) ParseWitnessPolicy(wp []byte) (interface{}, error) {
+func (e *Engine) ParseWitnessPolicy(wp []byte) (interface{}, error) {
 	p, err := policy.ParseConfig(bytes.NewReader(wp))
 
 	if err != nil {
@@ -148,56 +191,43 @@ func (se *SigsumEngine) ParseWitnessPolicy(wp []byte) (interface{}, error) {
 	return p, err
 }
 
-func (se *SigsumEngine) SetKey(logKey []string, submitKey []string, witnessKey []string) (err error) {
-	var parsedKey crypto.PublicKey
-
+func (e *Engine) SetKey(logKey []string, submitKey []string) (err error) {
 	// parse and load log public key(s)
 	for _, k := range logKey {
-		parsedKey, err = key.ParsePublicKey(k)
+		_, err = key.ParsePublicKey(k)
 
 		if err != nil {
 			return
 		}
 
-		se.logPubkey = append(se.logPubkey, parsedKey)
+		e.logPubkey = append(e.logPubkey, k)
 	}
 
 	// parse and load submit public key(s)
 	for _, k := range submitKey {
-		parsedKey, err = key.ParsePublicKey(k)
+		_, err = key.ParsePublicKey(k)
 
 		if err != nil {
 			return
 		}
 
-		se.submitPubkey = append(se.submitPubkey, parsedKey)
-	}
-
-	// parse and load witness public key(s)
-	for _, k := range witnessKey {
-		parsedKey, err = key.ParsePublicKey(k)
-
-		if err != nil {
-			return
-		}
-
-		se.witnessPubkey = append(se.witnessPubkey, parsedKey)
+		e.submitPubkey = append(e.submitPubkey, k)
 	}
 
 	return
 }
 
-func (se *SigsumEngine) SetWitnessPolicy(wp interface{}) (err error) {
+func (e *Engine) SetWitnessPolicy(wp interface{}) (err error) {
 	if _, ok := wp.(*policy.Policy); !ok {
 		return fmt.Errorf("invalid policy, type assertion to Sigsum *policy.Policy failed")
 	}
 
-	se.witnessPolicy = wp.(*policy.Policy)
+	e.witnessPolicy = wp.(*policy.Policy)
 
 	return
 }
 
-func (se *SigsumEngine) VerifyProof(p *transparency.ProofBundle) (err error) {
+func (e *Engine) VerifyProof(p *transparency.ProofBundle) (err error) {
 	var proof proof.SigsumProof
 
 	// load the statement and compute its checksum, which is the logged message to verify
@@ -205,41 +235,79 @@ func (se *SigsumEngine) VerifyProof(p *transparency.ProofBundle) (err error) {
 
 	// load the proof
 	if err = proof.FromASCII(bytes.NewReader(p.Proof)); err != nil {
-		return
+		return err
 	}
 
 	// check if at least one trusted log key has been set
-	if len(se.logPubkey) == 0 {
+	if len(e.logPubkey) == 0 {
 		return fmt.Errorf("log public key is not set")
 	}
 
-	// check if at least one submitter key has been set
-	if len(se.submitPubkey) == 0 {
+	// check if at least one trusted submitter key has been set
+	if len(e.submitPubkey) == 0 {
 		return fmt.Errorf("submitter public key is not set")
 	}
 
-	// traverse all log and submitter pubkeys and attempt to verify the proof
-	for _, logKey := range se.logPubkey {
-		if proof.LogKeyHash != crypto.HashBytes(logKey[:]) {
-			err = fmt.Errorf("unknown log key hash")
-			continue // try proof verification with the next log key, if any
+	// traverse all trusted log and submitter pubkeys and attempt to verify the proof
+	for _, logKey := range e.logPubkey {
+		lk, err := key.ParsePublicKey(logKey)
+
+		// return immediately when encountering an invalid public key
+		if err != nil {
+			return fmt.Errorf("invalid log public key: %s", logKey)
 		}
 
-		for _, submitKey := range se.submitPubkey {
-			// include quorum verification only if the witness policy is set.
-			if se.witnessPolicy != nil {
-				err = proof.Verify(&msg, map[crypto.Hash]crypto.PublicKey{
-					crypto.HashBytes(submitKey[:]): submitKey}, se.witnessPolicy)
-			} else { // verification do not include any witness quorum verification
-				err = proof.VerifyNoCosignatures(&msg, map[crypto.Hash]crypto.PublicKey{
-					crypto.HashBytes(submitKey[:]): submitKey}, &logKey)
+		for _, submitKey := range e.submitPubkey {
+			sk, err := key.ParsePublicKey(submitKey)
+
+			// return immediately when encountering an invalid public key
+			if err != nil {
+				return fmt.Errorf("invalid submit public key: %s", submitKey)
 			}
 
-			if err != nil {
-				continue // try proof verification with the next submitter key, if any
+			// include quorum verification only if the witness policy is set.
+			if e.witnessPolicy != nil {
+				err = proof.Verify(&msg, map[crypto.Hash]crypto.PublicKey{
+					crypto.HashBytes(sk[:]): sk}, e.witnessPolicy)
+			} else { // verification do not include any witness quorum verification
+				err = proof.VerifyNoCosignatures(&msg, map[crypto.Hash]crypto.PublicKey{
+					crypto.HashBytes(sk[:]): sk}, &lk)
+			}
+
+			if err == nil {
+				return nil // proof verified passed
 			}
 		}
 	}
 
 	return
+}
+
+// If present, return the key that corresponds to a given key hash.
+// The key is searched among all the trusted keys configured for the transparency engine.
+func getTrustedKeyFromHash(trustedKeys []string, hash string) (crypto.PublicKey, error) {
+	var k crypto.PublicKey
+
+	h, err := crypto.HashFromHex(hash)
+
+	if err != nil {
+		return k, fmt.Errorf("invalid public key hash %v", hash)
+	}
+
+	for _, trusted := range trustedKeys {
+		k, err := key.ParsePublicKey(trusted)
+
+		// return immediately when encountering an invalid public key
+		if err != nil {
+			return k, fmt.Errorf("invalid public key: %v", trusted)
+		}
+
+		if h == crypto.HashBytes(k[:]) {
+			return k, nil
+		} else {
+			continue // try if the next trusted key matches
+		}
+	}
+
+	return k, fmt.Errorf("keyhash is not matching any of the trusted keys")
 }

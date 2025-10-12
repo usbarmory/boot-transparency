@@ -16,11 +16,10 @@ import (
 func TestSigsumEngineSetKey(t *testing.T) {
 	logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKwmwKhVrEUaZTlHjhoWA4jwJLOF8TY+/NpHAXAHbAHl"}
 	submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMdLcxVjCAQUHbD4jCfFP+f8v1nmyjWkq6rXiexrK8II"}
-	witnessKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMvjV+a0ZASecDt75siSARk6zCoYwJWwaRqvULmx4VeK"}
 
-	se := SigsumEngine{Network: false}
+	e := Engine{Network: false}
 
-	err := se.SetKey(logKey, submitKey, witnessKey)
+	err := e.SetKey(logKey, submitKey)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -44,14 +43,14 @@ group G any A-group B-group
 
 quorum G
 `)
-	se := SigsumEngine{Network: false}
+	e := Engine{Network: false}
 
-	p, err := se.ParseWitnessPolicy(policy)
+	p, err := e.ParseWitnessPolicy(policy)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = se.SetWitnessPolicy(p)
+	err = e.SetWitnessPolicy(p)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -97,14 +96,14 @@ node_hash=e8bb977d7ae35a4b7e591ded5e3d7fad0afee0b958d6309a52f48fe46c679c36
 		Proof:     proof,
 	}
 
-	se := SigsumEngine{Network: false}
+	e := Engine{Network: false}
 
-	err := se.SetKey(logKey, submitKey, []string{})
+	err := e.SetKey(logKey, submitKey)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = se.VerifyProof(&pb)
+	err = e.VerifyProof(&pb)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -149,27 +148,27 @@ quorum demo-quorum-rule
 		Proof:     proof,
 	}
 
-	se := SigsumEngine{Network: false}
+	e := Engine{Network: false}
 
 	logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEZEryq9QPSJWgA7yjUPnVkSqzAaScd/E+W22QXCCl/m"}
 	submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqym9S/tFn6B/Eri5hGJiEV8BpGumEPcm65uxC+FG6K"}
 
-	err := se.SetKey(logKey, submitKey, []string{})
+	err := e.SetKey(logKey, submitKey)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	p, err := se.ParseWitnessPolicy(policy)
+	p, err := e.ParseWitnessPolicy(policy)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = se.SetWitnessPolicy(p)
+	err = e.SetWitnessPolicy(p)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = se.VerifyProof(&pb)
+	err = e.VerifyProof(&pb)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -214,28 +213,28 @@ quorum demo-quorum-rule
 		Proof:     proof,
 	}
 
-	se := SigsumEngine{Network: false}
+	e := Engine{Network: false}
 
 	// invalid log key (i.e. the only allowed key is not matching the log keyhash in the proof)
 	logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKwmwKhVrEUaZTlHjhoWA4jwJLOF8TY+/NpHAXAHbAHl"}
 	submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqym9S/tFn6B/Eri5hGJiEV8BpGumEPcm65uxC+FG6K"}
 
-	err := se.SetKey(logKey, submitKey, []string{})
+	err := e.SetKey(logKey, submitKey)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	p, err := se.ParseWitnessPolicy(policy)
+	p, err := e.ParseWitnessPolicy(policy)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = se.SetWitnessPolicy(p)
+	err = e.SetWitnessPolicy(p)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = se.VerifyProof(&pb)
+	err = e.VerifyProof(&pb)
 	// VerifyProof must return the log keyhash mismatch error
 	if err != nil && err.Error() != "unknown log key hash" {
 		t.Fatal(err)
@@ -281,27 +280,27 @@ quorum demo-quorum-rule
 		Proof:     proof,
 	}
 
-	se := SigsumEngine{Network: false}
+	e := Engine{Network: false}
 
 	logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEZEryq9QPSJWgA7yjUPnVkSqzAaScd/E+W22QXCCl/m"}
 	submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMdLcxVjCAQUHbD4jCfFP+f8v1nmyjWkq6rXiexrK8II"}
 
-	err := se.SetKey(logKey, submitKey, []string{})
+	err := e.SetKey(logKey, submitKey)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	p, err := se.ParseWitnessPolicy(policy)
+	p, err := e.ParseWitnessPolicy(policy)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = se.SetWitnessPolicy(p)
+	err = e.SetWitnessPolicy(p)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = se.VerifyProof(&pb)
+	err = e.VerifyProof(&pb)
 	// VerifyProof must return the leaf key hash (i.e. submitter's key) mismatch error
 	if err != nil && err.Error() != "unknown leaf key hash" {
 		t.Fatal(err)
@@ -322,30 +321,30 @@ quorum demo-quorum-rule
 
 	pb := transparency.ProofBundle{
 		Statement: statement,
-		Signature: "e0163de36e40b821893ea6fe49f1285164b5f6c72bfe5646adb4ae843b1bee7d30c631e40fcb3e4d9711f9ca5470568fb59ab26716757756be7c69b90360880b",
+		Probe:     []byte(`{"origin": "https://test.sigsum.org/barreleye", "leaf_signature":"e0163de36e40b821893ea6fe49f1285164b5f6c72bfe5646adb4ae843b1bee7d30c631e40fcb3e4d9711f9ca5470568fb59ab26716757756be7c69b90360880b", "log_public_key_hash": "4e89cc51651f0d95f3c6127c15e1a42e3ddf7046c5b17b752689c402e773bb4d", "submit_public_key_hash": "302928c2e0e01da52e3b161c54906de9b55ce250f0f47e80e022d04036e2765c"}`),
 	}
 
-	se := SigsumEngine{Network: true}
+	e := Engine{Network: true}
 
 	logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEZEryq9QPSJWgA7yjUPnVkSqzAaScd/E+W22QXCCl/m"}
 	submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqym9S/tFn6B/Eri5hGJiEV8BpGumEPcm65uxC+FG6K"}
 
-	err := se.SetKey(logKey, submitKey, []string{})
+	err := e.SetKey(logKey, submitKey)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	p, err := se.ParseWitnessPolicy(policy)
+	p, err := e.ParseWitnessPolicy(policy)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = se.SetWitnessPolicy(p)
+	err = e.SetWitnessPolicy(p)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err = se.GetProof("https://test.sigsum.org/barreleye", &pb); err != nil {
+	if err = e.GetProof(&pb); err != nil {
 		t.Fatal(err)
 	}
 }

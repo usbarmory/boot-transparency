@@ -13,6 +13,7 @@ test:
 	@cd artifact/uefi_bios && ${GO} test -cover -v
 	@cd artifact/windows_bootmgr && ${GO} test -cover -v
 	@cd engine/sigsum && ${GO} test -cover -v
+	@cd engine/tessera && ${GO} test -cover -v
 	@cd policy && ${GO} test -cover -v
 
 docs:
