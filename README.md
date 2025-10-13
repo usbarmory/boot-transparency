@@ -94,17 +94,16 @@ bootPolicy = []byte(`[
     }
 }]`)
 
-// list of trusted log, submitter and witness public keys
+// list of trusted log and submitter public keys
 logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKwmwKhVrEUaZTlHjhoWA4jwJLOF8TY+/NpHAXAHbAHl"}
 submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMdLcxVjCAQUHbD4jCfFP+f8v1nmyjWkq6rXiexrK8II"}
-witnessKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMvjV+a0ZASecDt75siSARk6zCoYwJWwaRqvULmx4VeK"}
 
 // configure an off-line Sigsum transparency engine
 te := sigsum.Engine{Network: false}
 
 // set public keys
-if err := te.SetKey(logKey, submitKey, witnessKey); err != nil {
-    // handle error: unable to parse or set the log, submitter and witness keys
+if err := te.SetKey(logKey, submitKey); err != nil {
+    // handle error: unable to parse the log or submitter keys
 }
 
 // parse and set the witness policy
