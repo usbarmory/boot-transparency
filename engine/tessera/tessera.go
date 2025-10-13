@@ -33,7 +33,7 @@ type Engine struct {
 	witnessPolicy *tessera.WitnessGroup
 }
 
-// Simplified version of the Tessera inclusionProbe structure:
+// Simplified version of the Tessera inclusionProbe structure
 type Probe struct {
 	// Log origin is needed to probe the correct log where
 	// the leaf has been logged to
