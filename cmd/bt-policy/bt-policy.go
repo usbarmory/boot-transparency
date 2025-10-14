@@ -38,7 +38,7 @@ the result is printed to stdout.
 	set := getopt.New()
 	set.SetProgram(args[0] + " " + args[1])
 
-	set.FlagLong(&s.policyFile, "policy-file", 'p', "Signed statement file", "policy-file").Mandatory()
+	set.FlagLong(&s.policyFile, "policy-file", 'p', "Boot-transparency policy file", "policy-file").Mandatory()
 	set.FlagLong(&s.signedStatementFile, "signed-statement", 's', "Signed statement file", "signed-statement-file").Mandatory()
 	set.FlagLong(&help, "help", 'h', "Show usage message and exit")
 
