@@ -9,6 +9,7 @@ package tessera
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -57,6 +58,11 @@ func (e *Engine) GetProof(p *transparency.ProofBundle) (err error) {
 	var logReadBaseURL *url.URL
 	var logReadCP client.CheckpointFetcherFunc
 	var logReadTile client.TileFetcherFunc
+
+	// check if this is a Tessera proof bundle
+	if p.Format != transparency.TesseraBundle {
+		return fmt.Errorf("invalid bundle format %d, expected %d (transparency.TesseraBundle)", p.Format, transparency.TesseraBundle)
+	}
 
 	// parse the probe data to request the inclusion proof
 	if err = json.Unmarshal(p.Probe, &probe); err != nil {
@@ -199,6 +205,11 @@ func (e *Engine) VerifyProof(p *transparency.ProofBundle) (err error) {
 	var tp Probe
 	var ip [][]byte
 
+	// check if this is a Tessera proof bundle
+	if p.Format != transparency.TesseraBundle {
+		return fmt.Errorf("invalid bundle format %d, expected %d (transparency.TesseraBundle)", p.Format, transparency.TesseraBundle)
+	}
+
 	// parse the probe data
 	if err = json.Unmarshal(p.Probe, &tp); err != nil {
 		return fmt.Errorf("unable to parse Tessera probe data: %s", err)
@@ -233,6 +244,54 @@ func (e *Engine) VerifyProof(p *transparency.ProofBundle) (err error) {
 
 		if err != nil {
 			continue // try proof verification with the next log key, if any
+		}
+	}
+
+	return
+}
+
+func (e *Engine) ParseProof(p *transparency.ProofBundle) (err error) {
+	var probe Probe
+	var proof []string
+
+	// do not parse the statement, only focus on the inclusion proof
+	// and the probing data
+
+	// check if this is a Tessera proof bundle
+	if p.Format != transparency.TesseraBundle {
+		return fmt.Errorf("invalid bundle format %d, expected %d (transparency.TesseraBundle)", p.Format, transparency.TesseraBundle)
+	}
+
+	// parse the inclusion probe data to request the proof
+	if err = json.Unmarshal(p.Probe, &probe); err != nil {
+		return fmt.Errorf("unable to parse Tessera probing data: %s", err)
+	}
+
+	// the inclusion proof is not present in the bundle, nothing to parse there
+	if p.Proof == nil {
+		return
+	}
+
+	// parse the inclusion proof
+	// Tessera uses [][]byte to store inclusion proof(s)
+	if err = json.Unmarshal(p.Proof, &proof); err != nil {
+		return fmt.Errorf("unable to parse Tessera inclusion proof: %s", err)
+	}
+
+	// traverse the proof array to ensure it is containing valid base64 string(s)
+	for _, entry := range proof {
+		d, err := base64.StdEncoding.DecodeString(entry)
+
+		if err != nil {
+			return fmt.Errorf("unable to parse Tessera inclusion proof: %s", err)
+		}
+
+		// Tessera inclusion proof is an array of 32 bytes arrays
+		// this further check is necessary to spot-out any proof entry
+		// that could have passed the base64 decoding but not be compliant
+		// with this further length requirement
+		if len(d) != 32 {
+			return fmt.Errorf("unable to parse Tessera inclusion proof, invalid base64 entry: %s", entry)
 		}
 	}
 

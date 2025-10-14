@@ -11,11 +11,22 @@ import (
 	"encoding/json"
 )
 
+// Supported proof bundle formats, according with supported
+// transparency engines
+const (
+	SigsumBundle uint = iota + 0x0001
+	TesseraBundle
+)
+
 // Define the transparency proof bundle which includes:
 // - the statement (i.e. claims)
 // - the logged statement identifier (i.e. log leaf identifier)
 // - the inclusion proof
 type ProofBundle struct {
+	// specify which transparency engine should be used to
+	// verify this proof (i.e. Sigsum, Tessera)
+	Format uint `json:"format"`
+
 	// serialized JSON of Statement struct
 	Statement []byte `json:"statement"`
 
@@ -74,4 +85,9 @@ type TransparencyEngine interface {
 	//    - public keys for log, submitter or cosigners are not set
 	//    - the witness signing quorum is not reached
 	VerifyProof(p *ProofBundle) error
+
+	// Parse the probing data, and the inclusion proof (if present)
+	// of a given proof bundle.
+	// Return error if the parsing fails.
+	ParseProof(p *ProofBundle) error
 }

@@ -61,9 +61,14 @@ type Probe struct {
 func (e *Engine) GetProof(p *transparency.ProofBundle) (err error) {
 	var probe Probe
 
+	// check if this is a Sigsum proof
+	if p.Format != transparency.SigsumBundle {
+		return fmt.Errorf("invalid bundle format %d, expected %d (transparency.SigsumBundle)", p.Format, transparency.SigsumBundle)
+	}
+
 	// parse the inclusion probe data to request the proof
 	if err = json.Unmarshal(p.Probe, &probe); err != nil {
-		return fmt.Errorf("unable to parse Sigsum probing data to require the inclusion proof to the log: %s", err)
+		return fmt.Errorf("unable to parse Sigsum probing data: %s", err)
 	}
 
 	if !e.Network {
@@ -233,6 +238,11 @@ func (e *Engine) VerifyProof(p *transparency.ProofBundle) (err error) {
 	// load the statement and compute its checksum, which is the logged message to verify
 	msg := crypto.Hash(sha256.Sum256(p.Statement))
 
+	// check if this is a Sigsum proof
+	if p.Format != transparency.SigsumBundle {
+		return fmt.Errorf("invalid bundle format %d, expected %d (transparency.SigsumBundle)", p.Format, transparency.SigsumBundle)
+	}
+
 	// load the proof
 	if err = proof.FromASCII(bytes.NewReader(p.Proof)); err != nil {
 		return err
@@ -278,6 +288,36 @@ func (e *Engine) VerifyProof(p *transparency.ProofBundle) (err error) {
 				return nil // proof verified passed
 			}
 		}
+	}
+
+	return
+}
+
+func (e *Engine) ParseProof(p *transparency.ProofBundle) (err error) {
+	var probe Probe
+	var proof proof.SigsumProof
+
+	// do not parse the statement, only focus on the inclusion proof
+	// and the probing data
+
+	// check if this is a Sigsum proof bundle
+	if p.Format != transparency.SigsumBundle {
+		return fmt.Errorf("invalid bundle format %d, expected %d (transparency.SigsumBundle)", p.Format, transparency.SigsumBundle)
+	}
+
+	// parse the inclusion probe data to request the proof
+	if err = json.Unmarshal(p.Probe, &probe); err != nil {
+		return fmt.Errorf("unable to parse Sigsum probing data: %s", err)
+	}
+
+	// the inclusion proof is not present in the bundle, nothing to parse there
+	if p.Proof == nil {
+		return
+	}
+
+	// parse the proof
+	if err = proof.FromASCII(bytes.NewReader(p.Proof)); err != nil {
+		return
 	}
 
 	return
