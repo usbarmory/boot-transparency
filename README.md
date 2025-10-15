@@ -99,7 +99,10 @@ logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKwmwKhVrEUaZTlHjhoWA4jw
 submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMdLcxVjCAQUHbD4jCfFP+f8v1nmyjWkq6rXiexrK8II"}
 
 // configure an off-line Sigsum transparency engine
-te := sigsum.Engine{Network: false}
+te, err := transparency.GetEngine(transparency.Sigsum)
+if err != nil {
+	// handle error: transparency engine is not supported
+}
 
 // set public keys
 if err := te.SetKey(logKey, submitKey); err != nil {
@@ -125,15 +128,12 @@ if err = te.SetWitnessPolicy(wp); err != nil {
     // handle error: unable to set witness policy
 }
 
-// the actual logged statement and its proof are not included for brevity
-pb := transparency.ProofBundle{
-	Statement: statement,
-	Proof:     proof,
-}
+// parse the proof bundle containing the logged statement and the inclusion proof
+pb, _, err := te.ParseProof(jsonProofBundle)
 
 // transparency verification:
 // inclusion proof verification according with the quorum defined in the witness policy
-if err := te.VerifyProof(&pb); err != nil {
+if err := te.VerifyProof(pb); err != nil {
     // handle error: boot bundle not allowed - transparency check failed
 }
 
