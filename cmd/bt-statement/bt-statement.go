@@ -20,10 +20,10 @@ import (
 	"sigsum.org/sigsum-go/pkg/crypto"
 	"sigsum.org/sigsum-go/pkg/key"
 
-	"github.com/usbarmory/boot-transparency/statement"
-	_ "github.com/usbarmory/boot-transparency/artifact/linux_kernel"
 	_ "github.com/usbarmory/boot-transparency/artifact/initrd"
+	_ "github.com/usbarmory/boot-transparency/artifact/linux_kernel"
 	_ "github.com/usbarmory/boot-transparency/artifact/uefi_bios"
+	"github.com/usbarmory/boot-transparency/statement"
 )
 
 type VerifySettings struct {
@@ -140,7 +140,7 @@ func readStatement(fileName string) (*statement.Statement, error) {
 	bytes, err := io.ReadAll(f)
 	if err != nil {
 		return nil, err
-	} 
+	}
 
 	s, err = statement.Parse(bytes)
 	if err != nil {
@@ -174,7 +174,7 @@ func writeSignedStatementFile(outputFile string, outputStatement *statement.Stat
 		// append the new signature, do not overwrite any existing one already present in the statement
 		outputStatement.Signatures = append(outputStatement.Signatures, s)
 
-		if signedS, err = json.Marshal(outputStatement); err != nil {
+		if signedS, err = json.MarshalIndent(outputStatement, "", "\t"); err != nil {
 			return err
 		}
 
@@ -247,7 +247,7 @@ Usage: bt-statement [--help]
 			log.Fatalf("statement sign failed: %v", err)
 		}
 
-		// Append the new signature, and the public key associated to the signer key, to the ouput file
+		// Append the new signature, and the public key associated to the signer key, to the output file
 		if err = writeSignedStatementFile(settings.signedStatementFile, statement, &signature, signer.Public()); err != nil {
 			log.Fatalf("statement sign failed: %v", err)
 		}
@@ -287,7 +287,7 @@ Usage: bt-statement [--help]
 		}
 
 		if !foundValidSignature {
-			log.Fatalf("signature is invalid")
+			log.Fatalf("signature is NOT valid")
 		}
 	}
 

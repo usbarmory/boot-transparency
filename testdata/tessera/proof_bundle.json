@@ -1,0 +1,18 @@
+{
+	"format": 2,
+	"_format": "2:Tessera",
+	"statement" : {
+		"description": "doesn't matter"
+	},
+	"proof": [
+			"lqKW0iTyhcZ77pPDD4owkVfw2qNdxbh+QQt4YwoJz8c=",
+			"Xwg/ChozygdqlSeYMlgNs+DvRYS9/x9UyKNg9Q3jAx4=",
+			"a0eq8p7jwq+a+Im8H7klTavTEXfxYjLdaqsDXKOb9uQ="
+		],
+	"probe": {
+		"leafIdx":0,
+		"treeSize": 8,
+		"root": "XcnaeacGWamtVZy3Ad7ZoqudgjqtL0lgz+Nw7/RgQyg=",
+		"log_public_key": "PeterNeumann+c74f20a3+ARpc2QcUPDhMQegwxbzhKqiBfsVkmqq/LDE4izWy10TW"
+	}
+}

@@ -152,7 +152,7 @@ Usage: bt-policy [--help]
 			log.Fatalf("read policy %q failed: %v", settings.policyFile, err)
 		} else {
 			if parsedPolicy, err := json.MarshalIndent(policy, "", "\t"); err == nil {
-                                log.Println(string(parsedPolicy))
+				log.Println(string(parsedPolicy))
 			}
 		}
 	case "check":

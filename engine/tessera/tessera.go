@@ -24,9 +24,7 @@ import (
 )
 
 // Defines the Tessera transparency engine and its configuration parameters
-type Engine struct {
-	// true if the engine does have access to the network
-	Network bool
+type TesseraEngine struct {
 	// list of trusted public keys to verify log signatures
 	logPubkey []string
 	// the witness policy, the actual format should be aligned with
@@ -34,77 +32,59 @@ type Engine struct {
 	witnessPolicy *tessera.WitnessGroup
 }
 
-// Simplified version of the Tessera inclusionProbe structure
-type Probe struct {
-	// Log origin is needed to probe the correct log where
-	// the leaf has been logged to
-	Origin string `json:"origin"`
-	// Leaf index
-	LeafIdx uint64 `json:"leafIdx"`
-	// Tree size
-	TreeSize uint64 `json:"treeSize"`
-	// Root hash
-	Root []byte `json:"root"`
-	// the LeafHash is not present as it is computed hashing
-	// the ProofBundle.Statement.
-	// LeafHash []byte   `json:"leafHash"`
-	// Log public key is needed to verify that the proof is
-	// signed with a trusted log key
-	LogPublicKey string `json:"log_public_key"`
+func init() {
+	e := TesseraEngine{}
+	transparency.Add(&e, transparency.Tessera)
 }
 
-func (e *Engine) GetProof(p *transparency.ProofBundle) (err error) {
-	var probe Probe
+func (e *TesseraEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 	var logReadBaseURL *url.URL
 	var logReadCP client.CheckpointFetcherFunc
 	var logReadTile client.TileFetcherFunc
 
-	// check if this is a Tessera proof bundle
-	if p.Format != transparency.TesseraBundle {
-		return fmt.Errorf("invalid bundle format %d, expected %d (transparency.TesseraBundle)", p.Format, transparency.TesseraBundle)
+	if _, ok := proofBundle.(*ProofBundle); !ok {
+		return nil, fmt.Errorf("invalid·proof bundle for Tessera engine")
 	}
 
-	// parse the probe data to request the inclusion proof
-	if err = json.Unmarshal(p.Probe, &probe); err != nil {
-		return fmt.Errorf("unable to parse Tessera probing data to require the inclusion proof to the log: %s", err)
-	}
+	pb := proofBundle.(*ProofBundle)
 
-	if !e.Network {
-		return fmt.Errorf("transparency engine is off-line")
+	// check that the format set in the bundle is correct
+	if pb.Format != transparency.Tessera {
+		return nil, fmt.Errorf("invalid bundle format %d, expected %d (transparency.Tessera)", pb.Format, transparency.Tessera)
 	}
 
 	if e.witnessPolicy == nil {
-		return fmt.Errorf("witness policy not configured")
+		return nil, fmt.Errorf("witness policy not configured")
 	}
 
 	if len(e.logPubkey) == 0 {
-		return fmt.Errorf("log public key is not set")
+		return nil, fmt.Errorf("log public key is not set")
 	}
 
 	// check if the log key included in the proof probe
 	// corresponds to one of the trusted log public keys
-	lk, err := getTrustedKey(e.logPubkey, probe.LogPublicKey)
+	lk, err := getTrustedKey(e.logPubkey, pb.Probe.LogPublicKey)
 
 	if err != nil {
-		return fmt.Errorf("log public key is not trusted %v", probe.LogPublicKey)
+		return nil, fmt.Errorf("log public key is not trusted %v", pb.Probe.LogPublicKey)
 	}
 
 	logVerifier, err := note.NewVerifier(lk)
 
 	if err != nil {
-		return fmt.Errorf("failed to load log public key: %v", err)
+		return nil, fmt.Errorf("failed to load log public key: %v", err)
 	}
 
-	logReadBaseURL, err = url.Parse(probe.Origin)
+	logReadBaseURL, err = url.Parse(pb.Probe.Origin)
 	if err != nil {
-		return fmt.Errorf("invalid log origin: %s", err)
+		return nil, fmt.Errorf("invalid log origin: %s", err)
 	}
 
 	switch logReadBaseURL.Scheme {
 	case "http", "https":
 		hf, err := client.NewHTTPFetcher(logReadBaseURL, nil)
 		if err != nil {
-			return fmt.Errorf("failed to create an http fetcher: %v", err)
+			return nil, fmt.Errorf("failed to create an http fetcher: %v", err)
 		}
 		logReadCP = hf.ReadCheckpoint
 		logReadTile = hf.ReadTile
@@ -113,7 +93,7 @@ func (e *Engine) GetProof(p *transparency.ProofBundle) (err error) {
 		logReadCP = ff.ReadCheckpoint
 		logReadTile = ff.ReadTile
 	default:
-		return fmt.Errorf("unsupported url scheme: %s", logReadBaseURL.Scheme)
+		return nil, fmt.Errorf("unsupported url scheme: %s", logReadBaseURL.Scheme)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(30*time.Second))
@@ -128,45 +108,58 @@ func (e *Engine) GetProof(p *transparency.ProofBundle) (err error) {
 	//}
 
 	// verify that checkpoint co-signatures are satisfying the witness policy
-	cp, rawcp, _, err := client.FetchCheckpoint(ctx, logReadCP, logVerifier, probe.Origin)
+	cp, rawcp, _, err := client.FetchCheckpoint(ctx, logReadCP, logVerifier, pb.Probe.Origin)
 	if err != nil {
-		return fmt.Errorf("fecthing checkpoint: %v", err)
+		return nil, fmt.Errorf("fecthing checkpoint: %v", err)
 	}
 
 	if !e.witnessPolicy.Satisfied(rawcp) {
-		return fmt.Errorf("invalid checkpoint: %v", err)
+		return nil, fmt.Errorf("invalid checkpoint: %v", err)
 	}
 
 	// creates the proof builder that will be used to assemble proofs
 	// according with the passed (i.e. latest) checkpoint
-	pb, err := client.NewProofBuilder(ctx, cp.Size, logReadTile)
+	pBuilder, err := client.NewProofBuilder(ctx, cp.Size, logReadTile)
 
 	if err != nil {
-		return fmt.Errorf("tessera proof builder: %v", err)
+		return nil, fmt.Errorf("tessera proof builder: %v", err)
 	}
 
 	// get the inclusion proof given the latest checkpoint
-	ip, err := pb.InclusionProof(ctx, probe.LeafIdx)
+	ip, err := pBuilder.InclusionProof(ctx, pb.Probe.LeafIdx)
 
 	if err != nil {
-		return fmt.Errorf("getting inclusion proof: %v", err)
+		return nil, fmt.Errorf("getting inclusion proof: %v", err)
 	}
 
-	leafHash := rfc6962.DefaultHasher.HashLeaf(fmt.Append(nil, p.Statement))
+	// JSON marshalling is required to ensure the message has been logged
+	// independently from its formatting (i.e. indent spaces, or tabs,
+	// that would be present in human-readable statement JSON)
+	statement, err := json.Marshal(pb.Statement)
+
+	if err != nil {
+		return nil, err
+	}
+
+	leafHash := rfc6962.DefaultHasher.HashLeaf(fmt.Append(nil, statement))
 
 	// verify the inclusion proof is valid
-	if err = proof.VerifyInclusion(rfc6962.DefaultHasher, probe.LeafIdx, cp.Size, leafHash, ip, cp.Hash); err != nil {
-		return fmt.Errorf("invalid inclusion proof: %v", err)
+	if err = proof.VerifyInclusion(rfc6962.DefaultHasher, pb.Probe.LeafIdx, cp.Size, leafHash, ip, cp.Hash); err != nil {
+		return nil, fmt.Errorf("invalid inclusion proof: %v", err)
 	}
 
 	// Tessera stores inclusion proof(s) as array of byte arrays ([][]byte)
 	// but p.Proof is json.RawMessage which is defined as []byte
-	p.Proof, err = json.Marshal(ip)
+	builtProof, err := json.Marshal(ip)
 
-	return
+	if err != nil {
+		return nil, err
+	}
+
+	return builtProof, nil
 }
 
-func (e *Engine) ParseWitnessPolicy(wp []byte) (interface{}, error) {
+func (e *TesseraEngine) ParseWitnessPolicy(wp []byte) (interface{}, error) {
 	p, err := tessera.NewWitnessGroupFromPolicy(wp)
 
 	if err != nil {
@@ -176,7 +169,10 @@ func (e *Engine) ParseWitnessPolicy(wp []byte) (interface{}, error) {
 	return &p, err
 }
 
-func (e *Engine) SetKey(logKey []string, submitKey []string) (err error) {
+func (e *TesseraEngine) SetKey(logKey []string, submitKey []string) (err error) {
+	// re-set any previously stored key
+	e.logPubkey = []string{}
+
 	// parse and load log public key(s) that needs to be compliant with note format
 	for _, k := range logKey {
 		_, err = note.NewVerifier(k)
@@ -191,7 +187,7 @@ func (e *Engine) SetKey(logKey []string, submitKey []string) (err error) {
 	return
 }
 
-func (e *Engine) SetWitnessPolicy(wp interface{}) (err error) {
+func (e *TesseraEngine) SetWitnessPolicy(wp interface{}) (err error) {
 	if _, ok := wp.(*tessera.WitnessGroup); !ok {
 		return fmt.Errorf("invalid policy, type assertion to Tessera *tessera.WitnessGroup failed")
 	}
@@ -201,33 +197,42 @@ func (e *Engine) SetWitnessPolicy(wp interface{}) (err error) {
 	return
 }
 
-func (e *Engine) VerifyProof(p *transparency.ProofBundle) (err error) {
-	var tp Probe
-	var ip [][]byte
+func (e *TesseraEngine) ResetWitnessPolicy() {
+	e.witnessPolicy = nil
+}
 
-	// check if this is a Tessera proof bundle
-	if p.Format != transparency.TesseraBundle {
-		return fmt.Errorf("invalid bundle format %d, expected %d (transparency.TesseraBundle)", p.Format, transparency.TesseraBundle)
+func (e *TesseraEngine) VerifyProof(proofBundle interface{}) (err error) {
+	if _, ok := proofBundle.(*ProofBundle); !ok {
+		return fmt.Errorf("invalid proof bundle for Tessera engine")
 	}
 
-	// parse the probe data
-	if err = json.Unmarshal(p.Probe, &tp); err != nil {
-		return fmt.Errorf("unable to parse Tessera probe data: %s", err)
-	}
+	pb := proofBundle.(*ProofBundle)
 
-	// parse the inclusion proof
-	// Tessera uses [][]byte to store inclusion proof(s)
-	if err = json.Unmarshal(p.Proof, &ip); err != nil {
-		return fmt.Errorf("unable to parse Tessera inclusion proof: %s", err)
+	// check that the format set in the bundle is correct
+	if pb.Format != transparency.Tessera {
+		return fmt.Errorf("invalid bundle format %d, expected %d (transparency.Tessera)", pb.Format, transparency.Tessera)
 	}
 
 	// load the statement and compute its checksum, which is the leaf hash
-	leafHash := rfc6962.DefaultHasher.HashLeaf(p.Statement)
+	// JSON marshal is required to ensure the message has been logged
+	// independently from its formatting (i.e. indent spaces, or tabs,
+	// that would be present in human-readable statement JSON)
+	statement, err := json.Marshal(pb.Statement)
+
+	if err != nil {
+		return
+	}
+
+	leafHash := rfc6962.DefaultHasher.HashLeaf(statement)
 
 	// check if at least one trusted log key has been set
 	if len(e.logPubkey) == 0 {
 		return fmt.Errorf("log public key is not set")
 	}
+
+	// convert the inclusion proof, from []string to [][]byte
+	// as expected by Tessera
+	ip := inclusionProofFromJSON(pb.Proof)
 
 	// traverse all log keys and attempt to verify the proof
 	for _, logKey := range e.logPubkey {
@@ -235,12 +240,12 @@ func (e *Engine) VerifyProof(p *transparency.ProofBundle) (err error) {
 		// actually used to sign the inclusion proof is a trusted one.
 		// witness group must be satisfied when verifying co-signatures
 		//  on the tree head
-		if logKey != tp.LogPublicKey {
+		if logKey != pb.Probe.LogPublicKey {
 			err = fmt.Errorf("unknown log public key")
 			continue // try the next trusted log key
 		}
 
-		err = proof.VerifyInclusion(rfc6962.DefaultHasher, tp.LeafIdx, tp.TreeSize, leafHash, ip, tp.Root)
+		err = proof.VerifyInclusion(rfc6962.DefaultHasher, pb.Probe.LeafIdx, pb.Probe.TreeSize, leafHash, ip, pb.Probe.Root)
 
 		if err != nil {
 			continue // try proof verification with the next log key, if any
@@ -250,52 +255,51 @@ func (e *Engine) VerifyProof(p *transparency.ProofBundle) (err error) {
 	return
 }
 
-func (e *Engine) ParseProof(p *transparency.ProofBundle) (err error) {
-	var probe Probe
-	var proof []string
+func (e *TesseraEngine) ParseProof(jsonProofBundle []byte) (interface{}, []byte, error) {
+	var pb ProofBundle
+
+	if err := json.Unmarshal(jsonProofBundle, &pb); err != nil {
+		return nil, nil, err
+	}
 
 	// do not parse the statement, only focus on the inclusion proof
 	// and the probing data
 
 	// check if this is a Tessera proof bundle
-	if p.Format != transparency.TesseraBundle {
-		return fmt.Errorf("invalid bundle format %d, expected %d (transparency.TesseraBundle)", p.Format, transparency.TesseraBundle)
-	}
-
-	// parse the inclusion probe data to request the proof
-	if err = json.Unmarshal(p.Probe, &probe); err != nil {
-		return fmt.Errorf("unable to parse Tessera probing data: %s", err)
+	if pb.Format != transparency.Tessera {
+		return nil, nil, fmt.Errorf("invalid bundle format %d, expected %d (transparency.Tessera)", pb.Format, transparency.Tessera)
 	}
 
 	// the inclusion proof is not present in the bundle, nothing to parse there
-	if p.Proof == nil {
-		return
-	}
+	if pb.Proof != nil {
+		// parse the inclusion proof
+		// Tessera uses [][]byte to store inclusion proof(s). However, the
+		// proof is stored as []string in the proof bundle JSON.
+		// Traverse the proof array to ensure it is containing only valid base64 string(s)
+		for _, entry := range pb.Proof {
+			d, err := base64.StdEncoding.DecodeString(entry)
 
-	// parse the inclusion proof
-	// Tessera uses [][]byte to store inclusion proof(s)
-	if err = json.Unmarshal(p.Proof, &proof); err != nil {
-		return fmt.Errorf("unable to parse Tessera inclusion proof: %s", err)
-	}
+			if err != nil {
+				return nil, nil, fmt.Errorf("unable to parse Tessera inclusion proof: %s", err)
+			}
 
-	// traverse the proof array to ensure it is containing valid base64 string(s)
-	for _, entry := range proof {
-		d, err := base64.StdEncoding.DecodeString(entry)
-
-		if err != nil {
-			return fmt.Errorf("unable to parse Tessera inclusion proof: %s", err)
-		}
-
-		// Tessera inclusion proof is an array of 32 bytes arrays
-		// this further check is necessary to spot-out any proof entry
-		// that could have passed the base64 decoding but not be compliant
-		// with this further length requirement
-		if len(d) != 32 {
-			return fmt.Errorf("unable to parse Tessera inclusion proof, invalid base64 entry: %s", entry)
+			// Tessera inclusion proof is an array of 32 bytes arrays
+			// this further check is necessary to spot-out any proof entry
+			// that could have passed the base64 decoding but that is not
+			// resulting in a byte array compliant with the length requirement
+			if len(d) != 32 {
+				return nil, nil, fmt.Errorf("unable to parse Tessera inclusion proof, invalid base64 entry: %s", entry)
+			}
 		}
 	}
 
-	return
+	// return also the JSON marshal version of the bundle
+	pbMarshal, err := json.MarshalIndent(&pb, "", "\t")
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal the proof bundle: %v", err)
+	}
+
+	return &pb, pbMarshal, nil
 }
 
 // search for a public key among a set of trusted ones.
@@ -322,4 +326,17 @@ func getTrustedKey(trusted []string, probe string) (string, error) {
 	}
 
 	return "", fmt.Errorf("public key is not matching any of the trusted keys")
+}
+
+// convert the inclusion proof from what is provided in the JSON
+// proof bundle (i.e. []string) to what Tessera functions expects
+// to verify the inclusion proof (i.e. [][]byte)
+func inclusionProofFromJSON(pbProof []string) [][]byte {
+	tesseraProof := make([][]byte, len(pbProof))
+
+	for i, v := range pbProof {
+		tesseraProof[i] = []byte(v)
+	}
+
+	return tesseraProof
 }

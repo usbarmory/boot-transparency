@@ -1,0 +1,35 @@
+[
+	{
+		"artifacts": [
+			{
+				"category": 1,
+				"requirements": {
+					"min_version": "v6.14.0-29",
+					"tainted": false,
+					"metadata_include": [
+						"CONFIG_STACKPROTECTOR_STRONG=y"
+					]
+				}
+			},
+			{
+				"category": 2,
+				"requirements": {
+					"tainted": false
+				}
+			}
+		],
+		"signatures": {
+			"signers": [
+				{
+					"name": "dist signatory I",
+					"pub_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP5rbNcIOcwqBHzLOhJEfdKFHa+pIs10idfTm8c+HDnK"
+				},
+				{
+					"name": "dist signatory II",
+			 		"pub_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL0zV5fSWzzXa4R7Kpk6RAXkvWsJGpvkQ+9/xxpHC49J"
+				}
+			],
+			"quorum": 2
+		}
+	}
+]

@@ -28,9 +28,7 @@ import (
 )
 
 // Define the Sigsum transparency engine and its configuration parameters
-type Engine struct {
-	// true if the engine does have access to the network
-	Network bool
+type SigsumEngine struct {
 	// list of trusted public keys to verify log signatures
 	logPubkey []string
 	// list of trusted public keys to verify leaf signatures
@@ -40,71 +38,55 @@ type Engine struct {
 	witnessPolicy *policy.Policy
 }
 
-// Define the set of inputs required to probe for an inclusion proof
-// for a given leaf.
-type Probe struct {
-	// log origin
-	Origin string `json:"origin"`
-	// Sigsum uses leaf signature to identify the leaf into the log
-	LeafSignature string `json:"leaf_signature"`
-	// log key hash in hex format as expected in Sigsum proof bundle
-	LogPublicKeyHash string `json:"log_public_key_hash"`
-	// submitter key hash in hex format as expected in Sigsum proof bundle
-	SubmitPublicKeyHash string `json:"submit_public_key_hash"`
-	// The LeafHash is not present as it is computed hashing the statement
-	// included in the proof bundle.
-	// LeafHash []byte    `json:"leafHash"`
+func init() {
+	e := SigsumEngine{}
+	transparency.Add(&e, transparency.Sigsum)
 }
 
 // The logic implemented for the Sigsum engine is partially replicating
 // the collectProof() from sigsum-go/pkg/submit/submit.go
-func (e *Engine) GetProof(p *transparency.ProofBundle) (err error) {
-	var probe Probe
-
-	// check if this is a Sigsum proof
-	if p.Format != transparency.SigsumBundle {
-		return fmt.Errorf("invalid bundle format %d, expected %d (transparency.SigsumBundle)", p.Format, transparency.SigsumBundle)
+func (e *SigsumEngine) GetProof(proofBundle interface{}) ([]byte, error) {
+	if _, ok := proofBundle.(*ProofBundle); !ok {
+		return nil, fmt.Errorf("invalid·proof bundle for Sigsum engine")
 	}
 
-	// parse the inclusion probe data to request the proof
-	if err = json.Unmarshal(p.Probe, &probe); err != nil {
-		return fmt.Errorf("unable to parse Sigsum probing data: %s", err)
-	}
+	pb := proofBundle.(*ProofBundle)
 
-	if !e.Network {
-		return fmt.Errorf("transparency engine is off-line")
+	// check that the format set in the bundle is correct
+	if pb.Format != transparency.Sigsum {
+		return nil, fmt.Errorf("invalid bundle format %d, expected %d (transparency.Sigsum)", pb.Format, transparency.Sigsum)
 	}
 
 	if e.witnessPolicy == nil {
-		return fmt.Errorf("witness policy not configured")
+		return nil, fmt.Errorf("witness policy not configured")
 	}
 
 	if len(e.logPubkey) == 0 {
-		return fmt.Errorf("trusted log public key is not set")
+		return nil, fmt.Errorf("trusted log public key is not set")
 	}
 
 	// check if the log key hash included in the proof probe corresponds
 	// to one of the trusted log keys
-	lk, err := getTrustedKeyFromHash(e.logPubkey, probe.LogPublicKeyHash)
+	lk, err := getTrustedKeyFromHash(e.logPubkey, pb.Probe.LogPublicKeyHash)
 
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	if len(e.submitPubkey) == 0 {
-		return fmt.Errorf("trusted submit public key is not set")
+		return nil, fmt.Errorf("trusted submit public key is not set")
 	}
 
 	// check if the submit key hash included in the proof probe corresponds
 	// to one of the trusted submit keys
-	sk, err := getTrustedKeyFromHash(e.submitPubkey, probe.SubmitPublicKeyHash)
+	sk, err := getTrustedKeyFromHash(e.submitPubkey, pb.Probe.SubmitPublicKeyHash)
 
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	if _, err := url.Parse(probe.Origin); err != nil {
-		return fmt.Errorf("invalid log origin: %s", err)
+	if _, err := url.Parse(pb.Probe.Origin); err != nil {
+		return nil, fmt.Errorf("invalid log origin: %s", err)
 	}
 
 	// HTTP client configuration
@@ -117,18 +99,33 @@ func (e *Engine) GetProof(p *transparency.ProofBundle) (err error) {
 
 	client := client.New(client.Config{
 		UserAgent:  "boot-transparency",
-		URL:        probe.Origin,
+		URL:        pb.Probe.Origin,
 		HTTPClient: httpClient,
 	})
 
 	// By default in Sigsum, the actual logged message is a double SHA-256 of the statement
 	// equivalent to: $ sha256sum statement.json | cut -d' ' -f1 | base16 -d | sha256sum
-	s := sha256.Sum256(p.Statement)
+	// JSON marshalling is required to ensure the message has been logged
+	// independently from its formatting (i.e. indent spaces, or tabs,
+	// that would be present in human-readable statement JSON)
+	statement, err := json.Marshal(pb.Statement)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// need to append a newline (i.e. 0x0a) to be consistent
+	// with the actual logged bytes
+	statement = append(statement, "\n"...)
+
+	// the message chksum is a sha256 of the logged message,
+	// which in turn is a sha256 of the initial statement
+	s := sha256.Sum256(statement)
 	s = sha256.Sum256(s[:])
 
 	msgChksum := crypto.Hash(s)
 
-	sig, _ := crypto.SignatureFromHex(probe.LeafSignature)
+	sig, _ := crypto.SignatureFromHex(pb.Probe.LeafSignature)
 
 	// proof.ShortLeaf is used by GetTreeHead()
 	shortLeaf := proof.ShortLeaf{
@@ -152,22 +149,22 @@ func (e *Engine) GetProof(p *transparency.ProofBundle) (err error) {
 	defer cancel()
 
 	if pr.TreeHead, err = client.GetTreeHead(ctx); err != nil {
-		return fmt.Errorf("getting latest tree head: %v", err)
+		return nil, fmt.Errorf("getting latest tree head: %v", err)
 	}
 
 	if err = e.witnessPolicy.VerifyCosignedTreeHead(&pr.LogKeyHash, &pr.TreeHead); err != nil {
-		return fmt.Errorf("verifying tree head: %v", err)
+		return nil, fmt.Errorf("verifying tree head: %v", err)
 	}
 
 	leafHash := leaf.ToHash()
 	req := requests.InclusionProof{Size: pr.TreeHead.Size, LeafHash: leafHash}
 
 	if pr.Inclusion, err = client.GetInclusionProof(ctx, req); err != nil {
-		return fmt.Errorf("getting inclusion proof: %v", err)
+		return nil, fmt.Errorf("getting inclusion proof: %v", err)
 	}
 
 	if err = pr.Inclusion.Verify(&leafHash, &pr.TreeHead.TreeHead); err != nil {
-		return fmt.Errorf("invalid inclusion proof: %v", err)
+		return nil, fmt.Errorf("invalid inclusion proof: %v", err)
 	}
 
 	// save the whole inclusion proof in ASCII format in the proof bundle
@@ -181,12 +178,10 @@ func (e *Engine) GetProof(p *transparency.ProofBundle) (err error) {
 	pr.Inclusion.ToASCII(&builtProof)
 
 	// Sigsum stores inclusion proof(s) as byte array []byte
-	p.Proof = builtProof.Bytes()
-
-	return
+	return builtProof.Bytes(), nil
 }
 
-func (e *Engine) ParseWitnessPolicy(wp []byte) (interface{}, error) {
+func (e *SigsumEngine) ParseWitnessPolicy(wp []byte) (interface{}, error) {
 	p, err := policy.ParseConfig(bytes.NewReader(wp))
 
 	if err != nil {
@@ -196,7 +191,11 @@ func (e *Engine) ParseWitnessPolicy(wp []byte) (interface{}, error) {
 	return p, err
 }
 
-func (e *Engine) SetKey(logKey []string, submitKey []string) (err error) {
+func (e *SigsumEngine) SetKey(logKey []string, submitKey []string) (err error) {
+	// re-set any previously stored key
+	e.logPubkey = []string{}
+	e.submitPubkey = []string{}
+
 	// parse and load log public key(s)
 	for _, k := range logKey {
 		_, err = key.ParsePublicKey(k)
@@ -222,7 +221,7 @@ func (e *Engine) SetKey(logKey []string, submitKey []string) (err error) {
 	return
 }
 
-func (e *Engine) SetWitnessPolicy(wp interface{}) (err error) {
+func (e *SigsumEngine) SetWitnessPolicy(wp interface{}) (err error) {
 	if _, ok := wp.(*policy.Policy); !ok {
 		return fmt.Errorf("invalid policy, type assertion to Sigsum *policy.Policy failed")
 	}
@@ -232,20 +231,47 @@ func (e *Engine) SetWitnessPolicy(wp interface{}) (err error) {
 	return
 }
 
-func (e *Engine) VerifyProof(p *transparency.ProofBundle) (err error) {
+func (e *SigsumEngine) ResetWitnessPolicy() {
+	e.witnessPolicy = nil
+}
+
+func (e *SigsumEngine) VerifyProof(proofBundle interface{}) (err error) {
 	var proof proof.SigsumProof
+	var lk crypto.PublicKey
+	var sk crypto.PublicKey
 
-	// load the statement and compute its checksum, which is the logged message to verify
-	msg := crypto.Hash(sha256.Sum256(p.Statement))
-
-	// check if this is a Sigsum proof
-	if p.Format != transparency.SigsumBundle {
-		return fmt.Errorf("invalid bundle format %d, expected %d (transparency.SigsumBundle)", p.Format, transparency.SigsumBundle)
+	if _, ok := proofBundle.(*ProofBundle); !ok {
+		return fmt.Errorf("invalid proof bundle for Sigsum engine")
 	}
 
+	pb := proofBundle.(*ProofBundle)
+
+	// check that the format set in the bundle is correct
+	if pb.Format != transparency.Sigsum {
+		return fmt.Errorf("invalid bundle format %d, expected %d (transparency.SigsumBundle)", pb.Format, transparency.Sigsum)
+	}
+
+	// load the statement and compute its checksum, which is the logged message to verify
+	// JSON marshalling is required to ensure the message has been logged
+	// independently from its formatting (i.e. indent spaces, or tabs,
+	// that would be present in human-readable statement JSON)
+	statement, err := json.Marshal(pb.Statement)
+
+	if err != nil {
+		return
+	}
+
+	// need to append a newline (i.e. 0x0a) to be consistent
+	// with the actual logged bytes
+	statement = append(statement, "\n"...)
+
+	// the logged message is a sha256 of the original statement
+	msg := crypto.Hash(sha256.Sum256(statement))
+
 	// load the proof
-	if err = proof.FromASCII(bytes.NewReader(p.Proof)); err != nil {
-		return err
+	asciiProof := []byte(pb.Proof)
+	if err = proof.FromASCII(bytes.NewReader(asciiProof)); err != nil {
+		return
 	}
 
 	// check if at least one trusted log key has been set
@@ -258,9 +284,10 @@ func (e *Engine) VerifyProof(p *transparency.ProofBundle) (err error) {
 		return fmt.Errorf("submitter public key is not set")
 	}
 
-	// traverse all trusted log and submitter pubkeys and attempt to verify the proof
+	// traverse all trusted log and submitter public keys,
+	// and attempt to verify the proof
 	for _, logKey := range e.logPubkey {
-		lk, err := key.ParsePublicKey(logKey)
+		lk, err = key.ParsePublicKey(logKey)
 
 		// return immediately when encountering an invalid public key
 		if err != nil {
@@ -268,7 +295,7 @@ func (e *Engine) VerifyProof(p *transparency.ProofBundle) (err error) {
 		}
 
 		for _, submitKey := range e.submitPubkey {
-			sk, err := key.ParsePublicKey(submitKey)
+			sk, err = key.ParsePublicKey(submitKey)
 
 			// return immediately when encountering an invalid public key
 			if err != nil {
@@ -284,8 +311,9 @@ func (e *Engine) VerifyProof(p *transparency.ProofBundle) (err error) {
 					crypto.HashBytes(sk[:]): sk}, &lk)
 			}
 
+			// return immediately if the proof verification passes
 			if err == nil {
-				return nil // proof verified passed
+				return
 			}
 		}
 	}
@@ -293,34 +321,39 @@ func (e *Engine) VerifyProof(p *transparency.ProofBundle) (err error) {
 	return
 }
 
-func (e *Engine) ParseProof(p *transparency.ProofBundle) (err error) {
-	var probe Probe
+func (e *SigsumEngine) ParseProof(jsonProofBundle []byte) (interface{}, []byte, error) {
+	var pb ProofBundle
 	var proof proof.SigsumProof
+	var pbMarshal []byte
+
+	if err := json.Unmarshal(jsonProofBundle, &pb); err != nil {
+		return nil, nil, err
+	}
 
 	// do not parse the statement, only focus on the inclusion proof
 	// and the probing data
 
 	// check if this is a Sigsum proof bundle
-	if p.Format != transparency.SigsumBundle {
-		return fmt.Errorf("invalid bundle format %d, expected %d (transparency.SigsumBundle)", p.Format, transparency.SigsumBundle)
+	if pb.Format != transparency.Sigsum {
+		return nil, nil, fmt.Errorf("invalid bundle format %d, expected %d (transparency.Sigsum)", pb.Format, transparency.Sigsum)
 	}
 
-	// parse the inclusion probe data to request the proof
-	if err = json.Unmarshal(p.Probe, &probe); err != nil {
-		return fmt.Errorf("unable to parse Sigsum probing data: %s", err)
+	// try to import the proof as proof.SigsumProof, if present to confirm it
+	// can be imported by sigsum
+	if pb.Proof != "" {
+		asciiProof := []byte(pb.Proof)
+		if err := proof.FromASCII(bytes.NewReader(asciiProof)); err != nil {
+			return nil, nil, err
+		}
 	}
 
-	// the inclusion proof is not present in the bundle, nothing to parse there
-	if p.Proof == nil {
-		return
+	// return also the JSON marshal version of the bundle
+	pbMarshal, err := json.MarshalIndent(&pb, "", "\t")
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal the proof bundle: %v", err)
 	}
 
-	// parse the proof
-	if err = proof.FromASCII(bytes.NewReader(p.Proof)); err != nil {
-		return
-	}
-
-	return
+	return &pb, pbMarshal, nil
 }
 
 // If present, return the key that corresponds to a given key hash.
