@@ -61,7 +61,7 @@ type PolicyEntry struct {
 // Parse the boot policy requirements from the serialized JSON
 //
 // Return error if:
-//     - the parsing fails
+//   - the parsing fails
 func Parse(jsonPolicy []byte) (policy *[]PolicyEntry, err error) {
 	var h artifact.Handler
 
@@ -115,7 +115,8 @@ func Check(p *[]PolicyEntry, s *statement.Statement) (err error) {
 		// if this policy entry requires a signing quorum to authorize the bundle,
 		// check the number of valid signatures in the logged statement
 		if entry.Signatures.Quorum > 0 {
-			if err = checkSigningQuorum(&entry.Signatures, s); err != nil {
+			err = checkSigningQuorum(&entry.Signatures, s)
+			if err != nil {
 				continue // quorum not satisfied try with the next policy entry
 			}
 		}
@@ -123,6 +124,11 @@ func Check(p *[]PolicyEntry, s *statement.Statement) (err error) {
 		// check all the per-category requirements against the claimed
 		// properties for the artifacts present in the bundle
 		for _, policyArtifact := range entry.Artifacts {
+			// this means that the latest checked artifact did not met the requirements
+			if err != nil {
+				break // try with the next policy entry
+			}
+
 			h, err = artifact.GetHandler(policyArtifact.Category)
 
 			// return immediately if the policy requirements for this artifact
@@ -136,21 +142,22 @@ func Check(p *[]PolicyEntry, s *statement.Statement) (err error) {
 			for _, statementArtifact := range s.Artifacts {
 				if policyArtifact.Category == statementArtifact.Category {
 					matchCategory = true
-					r, err := h.ParseRequirements([]byte(policyArtifact.Requirements))
+					r, parseError := h.ParseRequirements([]byte(policyArtifact.Requirements))
 
-					if err != nil {
-						return err
+					if parseError != nil {
+						return parseError
 					}
 
-					c, err := h.ParseClaims([]byte(statementArtifact.Claims))
+					c, parseError := h.ParseClaims([]byte(statementArtifact.Claims))
 
-					if err != nil {
-						return err
+					if parseError != nil {
+						return parseError
 					}
 
 					// stop checking this bundle at the first artifact that
 					// does not met the requirements
-					if err = h.Check(r, c); err != nil {
+					err = h.Check(r, c)
+					if err != nil {
 						break
 					}
 				}
@@ -160,14 +167,14 @@ func Check(p *[]PolicyEntry, s *statement.Statement) (err error) {
 			// cannot authorize bundles that are not containing at least one artifact
 			// that is compatible (i.e. same category) with the one required by this policy entry
 			if !matchCategory {
-				err = fmt.Errorf("the boot bundle includes a required artifact category")
+				err = fmt.Errorf("the boot bundle does not include a required artifact category")
 				break // try with the next policy entry
 			}
 		}
 
 		// return on the first policy entry that authorize the bundle
 		if err == nil {
-			return nil
+			return
 		}
 	}
 
