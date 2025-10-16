@@ -274,14 +274,15 @@ func (e *SigsumEngine) VerifyProof(proofBundle interface{}) (err error) {
 		return
 	}
 
-	// check if at least one trusted log key has been set
-	if len(e.logPubkey) == 0 {
-		return fmt.Errorf("log public key is not set")
-	}
-
 	// check if at least one trusted submitter key has been set
 	if len(e.submitPubkey) == 0 {
 		return fmt.Errorf("submitter public key is not set")
+	}
+
+	// check if at least one trusted log key has been set.
+	// The log key is read directly from the witness policy (when present)
+	if e.witnessPolicy == nil && len(e.logPubkey) == 0 {
+		return fmt.Errorf("log public key is not set")
 	}
 
 	// traverse all trusted log and submitter public keys,
