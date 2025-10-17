@@ -344,7 +344,15 @@ func TestSigsumEngineGetProof(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = e.GetProof(pb)
+	pr, err := e.GetProof(pb)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	freshBundle := pb.(*ProofBundle)
+	freshBundle.Proof = string(pr)
+
+	err = e.VerifyProof(freshBundle)
 	if err != nil {
 		t.Fatal(err)
 	}

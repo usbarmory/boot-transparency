@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -94,6 +95,7 @@ func (e *SigsumEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 		MaxIdleConns:       10,
 		IdleConnTimeout:    29 * time.Second,
 		DisableCompression: true,
+		TLSClientConfig: &tls.Config{InsecureSkipVerify : true},
 	}
 	httpClient := &http.Client{Transport: tr}
 
@@ -168,17 +170,7 @@ func (e *SigsumEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 	}
 
 	// save the whole inclusion proof in ASCII format in the proof bundle
-	// FIXME: the Sigsum proof format requires to prepend
-	// version=2
-	// log=KEYHASH
-	// leaf=KEYHASH SIGNATURE
-	// append results in ASCII format
-	builtProof := bytes.Buffer{}
-	pr.TreeHead.ToASCII(&builtProof)
-	pr.Inclusion.ToASCII(&builtProof)
-
-	// Sigsum stores inclusion proof(s) as byte array []byte
-	return builtProof.Bytes(), nil
+	return buildSigsumProofBundle(pr), nil
 }
 
 func (e *SigsumEngine) ParseWitnessPolicy(wp []byte) (interface{}, error) {
@@ -384,4 +376,15 @@ func getTrustedKeyFromHash(trustedKeys []string, hash string) (crypto.PublicKey,
 	}
 
 	return k, fmt.Errorf("keyhash is not matching any of the trusted keys")
+}
+
+func buildSigsumProofBundle(p proof.SigsumProof) []byte {
+	b := bytes.Buffer{}
+	header := fmt.Sprintf("version=2\nlog=%x\nleaf=%x %x\n\n", p.LogKeyHash, p.Leaf.KeyHash, p.Leaf.Signature)
+	_, _ = b.Write([]byte(header))
+	p.TreeHead.ToASCII(&b)
+	_, _ = b.Write([]byte("\n"))
+	p.Inclusion.ToASCII(&b)
+
+	return b.Bytes()
 }
