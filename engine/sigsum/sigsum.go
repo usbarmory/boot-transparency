@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -94,6 +95,7 @@ func (e *SigsumEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 		MaxIdleConns:       10,
 		IdleConnTimeout:    29 * time.Second,
 		DisableCompression: true,
+		TLSClientConfig: &tls.Config{InsecureSkipVerify : true},
 	}
 	httpClient := &http.Client{Transport: tr}
 
