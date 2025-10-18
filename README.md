@@ -98,7 +98,7 @@ bootPolicy = []byte(`[
 logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKwmwKhVrEUaZTlHjhoWA4jwJLOF8TY+/NpHAXAHbAHl"}
 submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMdLcxVjCAQUHbD4jCfFP+f8v1nmyjWkq6rXiexrK8II"}
 
-// configure an off-line Sigsum transparency engine
+// select Sigsum as transparency engine
 te, err := transparency.GetEngine(transparency.Sigsum)
 if err != nil {
 	// handle error: transparency engine is not supported
@@ -109,7 +109,6 @@ if err := te.SetKey(logKey, submitKey); err != nil {
     // handle error: unable to parse the log or submitter keys
 }
 
-// parse and set the witness policy
 witnessPolicy := []byte(`log 4644af2abd40f4895a003bca350f9d5912ab301a49c77f13e5b6d905c20a5fe6 https://test.sigsum.org/barreleye
 
 witness poc.sigsum.org/nisse 1c25f8a44c635457e2e391d1efbca7d4c2951a0aef06225a881e46b98962ac6c
@@ -119,39 +118,47 @@ group  demo-quorum-rule any poc.sigsum.org/nisse rgdd.se/poc-witness
 quorum demo-quorum-rule
 `)
 
+// parse witness policy
 wp, err := te.ParseWitnessPolicy(witnessPolicy)
 if err != nil {
     // handle error: unable to parse witness policy
 }
 
+// set witness policy
 if err = te.SetWitnessPolicy(wp); err != nil {
     // handle error: unable to set witness policy
 }
 
-// parse the proof bundle containing the logged statement and the inclusion proof
+// parse the proof bundle, which is expected to contain
+// the logged statement and its inclusion proof
 pb, _, err := te.ParseProof(jsonProofBundle)
 
-// transparency verification:
-// inclusion proof verification according with the quorum defined in the witness policy
-if err := te.VerifyProof(pb); err != nil {
+// inclusion proof verification
+// considers the co-signing quorum as defined in the witness policy
+err = te.VerifyProof(pb)
+if err != nil {
     // handle error: boot bundle not allowed - transparency check failed
 }
 
-// boot policy verification:
-// check if the logged claims are matching the requirements from the policy
+// parse the boot policy
 p, err := policy.Parse(bootPolicy)
 if err != nil {
     // handle error: boot policy parsing failed
 }
 
-s, err := statement.Parse(pb.Statement)
+// convert to the proof bundle type expected by the selected engine
+b := pb.(*sigsum.ProofBundle)
+
+// parse the statement included in the proof bundle
+s, err := statement.Parse(b.Statement)
 if err != nil {
     // handle error: boot bundle parsing failed, cannot parse claims
 }
 
+// check if the logged claims are matching the policy requirements
 if err = policy.Check(p, s); err != nil {
     // handle error: boot bundle not authorized
 }
 
-// all checks passed, the bundle can boot
+// all boot-transparency checks passed
 ```
