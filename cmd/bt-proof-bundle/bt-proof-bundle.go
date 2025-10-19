@@ -18,7 +18,6 @@ import (
 	"github.com/pborman/getopt/v2"
 	_ "github.com/usbarmory/boot-transparency/engine/sigsum"
 	_ "github.com/usbarmory/boot-transparency/engine/tessera"
-	_ "github.com/usbarmory/boot-transparency/policy"
 	"github.com/usbarmory/boot-transparency/statement"
 	"github.com/usbarmory/boot-transparency/transparency"
 )
@@ -32,7 +31,8 @@ type CreateSettings struct {
 }
 
 type ParseSettings struct {
-	proofBundleFile string
+	transparencyEngine string
+	proofBundleFile    string
 }
 
 func (s *CreateSettings) parse(args []string) {
@@ -76,6 +76,7 @@ the result is printed to stdout.
 	set := getopt.New()
 	set.SetProgram(args[0] + " " + args[1])
 
+	set.FlagLong(&s.transparencyEngine, "engine", 'e', "Transparency engine (i.e. 1: Sigsum or 2: Tessera)", "transparency-engine").Mandatory()
 	set.FlagLong(&s.proofBundleFile, "bundle", 'p', "Boot-transparency proof bundle file", "bundle-file").Mandatory()
 	set.FlagLong(&help, "help", 'h', "Show usage message and exit")
 
@@ -130,16 +131,17 @@ Usage: bt-proof [--help]
 	case "parse":
 		var settings ParseSettings
 		settings.parse(os.Args)
-		var pb transparency.ProofBundle
+
+		format, err := strconv.ParseUint(settings.transparencyEngine, 10, 64)
+
+		if err != nil {
+			log.Fatalf("invalid transparency engine: %s", settings.transparencyEngine)
+		}
 
 		if jsonProofBundle, err := readFile(settings.proofBundleFile); err != nil {
 			log.Fatalf("read proof bundle %q failed: %v", settings.proofBundleFile, err)
 		} else {
-			if err := json.Unmarshal(jsonProofBundle, &pb); err != nil {
-				log.Fatalf("invalid proof bundle: %v", err)
-			}
-
-			e, err := transparency.GetEngine(pb.Format)
+			e, err := transparency.GetEngine(uint(format))
 			if err != nil {
 				log.Fatalf("unsupported bundle format: %v", err)
 			}
