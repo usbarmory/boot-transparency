@@ -56,7 +56,7 @@ Usage
 //   - an init ram disk that meets the following requirement:
 //     - it is not containing any tainted module
 //   - such artifact categories have been claimed in the log
-//   - the claims have been signed by a sufficient number of trusted signers to satisfy the required quorum (e.g. 2)
+//   - the claims have been signed by a sufficient number of trusted signers to satisfy the required quorum (e.g. 2).
 bootPolicy = []byte(`[
 {
     "artifacts": [
@@ -94,19 +94,19 @@ bootPolicy = []byte(`[
     }
 }]`)
 
-// list of trusted log and submitter public keys
+// List of trusted log and submitter public keys.
 logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKwmwKhVrEUaZTlHjhoWA4jwJLOF8TY+/NpHAXAHbAHl"}
 submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMdLcxVjCAQUHbD4jCfFP+f8v1nmyjWkq6rXiexrK8II"}
 
-// select Sigsum as transparency engine
+// Select Sigsum as transparency engine.
 te, err := transparency.GetEngine(transparency.Sigsum)
 if err != nil {
-	// handle error: transparency engine is not supported
+	// Handle error: transparency engine is not supported.
 }
 
-// set public keys
+// Set public keys.
 if err := te.SetKey(logKey, submitKey); err != nil {
-    // handle error: unable to parse the log or submitter keys
+    // Handle error: unable to parse the log or submitter keys.
 }
 
 witnessPolicy := []byte(`log 4644af2abd40f4895a003bca350f9d5912ab301a49c77f13e5b6d905c20a5fe6 https://test.sigsum.org/barreleye
@@ -118,47 +118,47 @@ group  demo-quorum-rule any poc.sigsum.org/nisse rgdd.se/poc-witness
 quorum demo-quorum-rule
 `)
 
-// parse witness policy
+// Parse witness policy.
 wp, err := te.ParseWitnessPolicy(witnessPolicy)
 if err != nil {
     // handle error: unable to parse witness policy
 }
 
-// set witness policy
+// Set witness policy.
 if err = te.SetWitnessPolicy(wp); err != nil {
-    // handle error: unable to set witness policy
+    // Handle error: unable to set witness policy.
 }
 
-// parse the proof bundle, which is expected to contain
-// the logged statement and its inclusion proof
+// Parse the proof bundle, which is expected to contain
+// the logged statement and its inclusion proof.
 pb, _, err := te.ParseProof(jsonProofBundle)
 
-// inclusion proof verification
-// considers the co-signing quorum as defined in the witness policy
+// Inclusion proof verification
+// considers the co-signing quorum as defined in the witness policy.
 err = te.VerifyProof(pb)
 if err != nil {
-    // handle error: boot bundle not allowed - transparency check failed
+    // Handle error: boot bundle not allowed - transparency check failed.
 }
 
-// parse the boot policy
-p, err := policy.Parse(bootPolicy)
+// Parse the requirements (i.e. boot policy).
+r, err := policy.ParseRequirements(bootPolicy)
 if err != nil {
-    // handle error: boot policy parsing failed
+    // Handle error: boot policy parsing failed.
 }
 
-// convert to the proof bundle type expected by the selected engine
+// Convert to the proof bundle type expected by the selected engine.
 b := pb.(*sigsum.ProofBundle)
 
-// parse the statement included in the proof bundle
-s, err := statement.Parse(b.Statement)
+// Parse the claims (i.e. statement) included in the proof bundle.
+c, err := policy.ParseClaims(b.Statement)
 if err != nil {
-    // handle error: boot bundle parsing failed, cannot parse claims
+    // Handle error: boot bundle parsing failed, cannot parse claims.
 }
 
-// check if the logged claims are matching the policy requirements
-if err = policy.Check(p, s); err != nil {
-    // handle error: boot bundle not authorized
+// Check if the logged claims are matching the policy requirements.
+if err = policy.Check(r, c); err != nil {
+    // Handle error: boot bundle not authorized.
 }
 
-// all boot-transparency checks passed
+// All boot-transparency checks passed.
 ```
