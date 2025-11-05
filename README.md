@@ -140,7 +140,7 @@ if err != nil {
     // Handle error: boot bundle not allowed - transparency check failed.
 }
 
-// Parse the requirements (i.e. boot policy).
+// Parse the boot policy requirements.
 r, err := policy.ParseRequirements(bootPolicy)
 if err != nil {
     // Handle error: boot policy parsing failed.
@@ -149,7 +149,7 @@ if err != nil {
 // Convert to the proof bundle type expected by the selected engine.
 b := pb.(*sigsum.ProofBundle)
 
-// Parse the claims (i.e. statement) included in the proof bundle.
+// Parse the statement claims included in the proof bundle.
 c, err := policy.ParseClaims(b.Statement)
 if err != nil {
     // Handle error: boot bundle parsing failed, cannot parse claims.
