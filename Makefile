@@ -17,8 +17,9 @@ test:
 	@cd policy && ${GO} test -cover -v
 
 docs:
-	@${GOPATH}/bin/gomarkdoc artifact/artifact.go policy/policy.go transparency/transparency.go statement/statement.go > ./doc/API.md
+	@${GOPATH}/bin/gomarkdoc artifact/artifact.go policy/policy.go transparency/transparency.go > ./doc/API.md
 
 tools:
 	@cd cmd/bt-statement && ${GO} build
 	@cd cmd/bt-policy && ${GO} build
+	@cd cmd/bt-proof-bundle && ${GO} build

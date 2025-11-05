@@ -16,16 +16,16 @@ import (
 	"github.com/usbarmory/boot-transparency/artifact"
 )
 
-// Define UEFI BIOS handler
+// Define UEFI BIOS handler.
 type UEFIBIOS struct{}
 
-// Register the handler for the UEFIBIOS category
+// Register the handler for the UEFIBIOS category.
 func init() {
 	h := UEFIBIOS{}
 	artifact.Add(&h, artifact.UEFIBIOS)
 }
 
-// Parse requirements for the UEFIBIOS category
+// Parse requirements for the UEFIBIOS category.
 func (h *UEFIBIOS) ParseRequirements(jsonRequirements []byte) (interface{}, error) {
 	var r Requirements
 
@@ -36,7 +36,7 @@ func (h *UEFIBIOS) ParseRequirements(jsonRequirements []byte) (interface{}, erro
 	return &r, nil
 }
 
-// Parse claims for the UEFIBIOS category
+// Parse claims for the UEFIBIOS category.
 func (h *UEFIBIOS) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	var c Claims
 
@@ -47,7 +47,7 @@ func (h *UEFIBIOS) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	return &c, nil
 }
 
-// Check matching between requirements and claims for the UEFIBIOS category
+// Check matching between requirements and claims for the UEFIBIOS category.
 func (h *UEFIBIOS) Check(require interface{}, claim interface{}) (err error) {
 	if _, ok := require.(*Requirements); !ok {
 		return fmt.Errorf("invalid·policy requirements for UEFIBIOS")
@@ -60,7 +60,7 @@ func (h *UEFIBIOS) Check(require interface{}, claim interface{}) (err error) {
 	r := require.(*Requirements)
 	c := claim.(*Claims)
 
-	// check all the supported policy requirements for UEFIBIOS
+	// Check all the supported policy requirements for UEFIBIOS.
 	if err = artifact.CheckMinVersion(r.MinUEFIRevision, c.UEFIRevision); err != nil {
 		return
 	}

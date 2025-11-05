@@ -15,33 +15,69 @@ import (
 	"sigsum.org/sigsum-go/pkg/key"
 
 	"github.com/usbarmory/boot-transparency/artifact"
-	"github.com/usbarmory/boot-transparency/statement"
 )
 
-// Define a trusted signer
+// Statement signature including the signer's public key to ease the verifier
+// while checking its validity.
+type Signature struct {
+	// Ed25519 signer public key in OpenSSH format.
+	PubKey string `json:"pub_key"`
+
+	// Ed25519 signature in hex format.
+	Signature string `json:"signature"`
+}
+
+// Define Artifact structure as a claims container for a given artifact.
+type Artifact struct {
+	// Type of artifact (e.g. 1: LinuxKernel, 2: Initrd, 3: Dtb, ...).
+	Category uint `json:"category"`
+
+	// JSON containing the claims for a given artifact.
+	// The set of claims that are supported depends by the artifact category,
+	// the JSON format must reflect the underlying structure that is defined
+	// in the artifact package for the given category.
+	Claims json.RawMessage `json:"claims"`
+}
+
+// Define the statement that is logged to the transparency log.
+type Statement struct {
+	// Human-readable title for the bundle.
+	Description string `json:"description,omitempty"`
+
+	// Bundle version, using Semantic Versioning 2.0.0 (see semver.org).
+	Version string `json:"version,omitempty"`
+
+	// Artifact claims.
+	Artifacts []Artifact `json:"artifacts"`
+
+	// Statement signatures.
+	Signatures []Signature `json:"signatures,omitempty"`
+}
+
+// Define a trusted signer that can be used to verify statement signatures.
 type Signer struct {
-	// human-readable signer name
+	// Human-readable signer name.
 	Name string `json:"name,omitempty"`
 
-	// signer's public key
+	// Signer's public key.
 	PubKey string `json:"pub_key"`
 }
 
-// Define a signing quorum that must be satisfied to authorize the bundle
+// Define a signing quorum that must be satisfied to authorize the bundle.
 type SigningRequirement struct {
-	// list of trusted signers that are participating to the quorum
+	// List of trusted signers that are participating to the quorum.
 	Signers []Signer `json:"signers"`
 
-	// requires at least n signatures out of the total number of trusted signers
+	// Require at least n signatures out of the total number of trusted signers.
 	Quorum uint64 `json:"quorum"`
 }
 
 // Define the required set of properties to authorize an artifact from a given category.
 type ArtifactRequirements struct {
-	// define the artifact category (e.g. LinuxKernel, Initrd, Dtb, ...)
+	// Define the artifact category (e.g. LinuxKernel, Initrd, Dtb, ...).
 	Category uint `json:"category"`
 
-	// JSON containing the list of properties that must
+	// JSON containing the list of properties that must.
 	// match the claims for an artifact of this category.
 	// The set of properties that are supported depends by the artifact category.
 	// The JSON format should reflect the underlying structure that is defined
@@ -51,18 +87,43 @@ type ArtifactRequirements struct {
 
 // Define the policy entry as a set of requirements to authorize a given bundle of artifacts.
 type PolicyEntry struct {
-	// artifact rules
+	// Artifact rules.
 	Artifacts []ArtifactRequirements `json:"artifacts"`
 
-	// require at least a quorum of n signatures for the bundle
+	// Require at least a quorum of n signatures for the bundle.
 	Signatures SigningRequirement `json:"signatures,omitempty"`
 }
 
-// Parse the boot policy requirements from the serialized JSON
+// Parse the logged statement which is included as serialized JSON in the proof bundle.
+func ParseClaims(jsonStatement []byte) (s *Statement, err error) {
+	var h artifact.Handler
+
+	if err = json.Unmarshal(jsonStatement, &s); err != nil {
+		return
+	}
+
+	for _, a := range s.Artifacts {
+		// Check if an artifact handler is registered for the given artifact category.
+		h, err = artifact.GetHandler(a.Category)
+
+		if err != nil {
+			return
+		}
+
+		// Invoke the correspondent claims parser for the given artifact category.
+		if _, err = h.ParseClaims(a.Claims); err != nil {
+			return
+		}
+	}
+
+	return
+}
+
+// Parse the boot policy requirements from the serialized JSON.
 //
 // Return error if:
-//   - the parsing fails
-func Parse(jsonPolicy []byte) (policy *[]PolicyEntry, err error) {
+//   - the parsing fails.
+func ParseRequirements(jsonPolicy []byte) (policy *[]PolicyEntry, err error) {
 	var h artifact.Handler
 
 	if err = json.Unmarshal(jsonPolicy, &policy); err != nil {
@@ -71,16 +132,16 @@ func Parse(jsonPolicy []byte) (policy *[]PolicyEntry, err error) {
 
 	// the policy is an array of entries (i.e. per-bundle requirements).
 	// Each entry needs deeper parsing to ensure consistency between the specified
-	// artifact requirements and the ones supported by the given artifact category
+	// artifact requirements and the ones supported by the given artifact category.
 	for _, entry := range *policy {
 		for _, a := range entry.Artifacts {
-			// check if an artifact handler is registered for the given artifact category
+			// Check if an artifact handler is registered for the given artifact category.
 			h, err = artifact.GetHandler(a.Category)
 			if err != nil {
 				return
 			}
 
-			// invoke the correspondent requirement parser for the given artifact category
+			// Invoke the correspondent requirement parser for the given artifact category.
 			if _, err = h.ParseRequirements(a.Requirements); err != nil {
 				return
 			}
@@ -103,37 +164,37 @@ func Parse(jsonPolicy []byte) (policy *[]PolicyEntry, err error) {
 // Return error if:
 //   - the bundle does not met the policy requirements
 //   - the claim parsing fails
-//   - the requirement parsing fails
-func Check(p *[]PolicyEntry, s *statement.Statement) (err error) {
+//   - the requirement parsing fails.
+func Check(p *[]PolicyEntry, s *Statement) (err error) {
 	var h artifact.Handler
 
-	// traverse the policy
+	// Traverse the policy.
 	for _, entry := range *p {
-		// reset any error got while checking the previous policy entry
+		// Reset any error got while checking the previous policy entry.
 		err = nil
 
-		// if this policy entry requires a signing quorum to authorize the bundle,
-		// check the number of valid signatures in the logged statement
+		// If this policy entry requires a signing quorum to authorize the bundle,
+		// check the number of valid signatures in the logged statement.
 		if entry.Signatures.Quorum > 0 {
-			err = checkSigningQuorum(&entry.Signatures, s)
+			err = isSigningQuorumSatisfied(&entry.Signatures, s)
 			if err != nil {
-				continue // quorum not satisfied try with the next policy entry
+				continue // Quorum not satisfied try with the next policy entry.
 			}
 		}
 
-		// check all the per-category requirements against the claimed
-		// properties for the artifacts present in the bundle
+		// Check all the per-category requirements against the claimed
+		// properties for the artifacts present in the bundle.
 		for _, policyArtifact := range entry.Artifacts {
-			// this means that the latest checked artifact did not met the requirements
+			// This means that the latest checked artifact did not met the requirements.
 			if err != nil {
-				break // try with the next policy entry
+				break // Try with the next policy entry.
 			}
 
 			h, err = artifact.GetHandler(policyArtifact.Category)
 
-			// return immediately if the policy requirements for this artifact
+			// Return immediately if the policy requirements for this artifact
 			// cannot be checked. The handler for this category, that is included
-			// in the policy, is not registered
+			// in the policy, is not registered.
 			if err != nil {
 				return
 			}
@@ -154,8 +215,8 @@ func Check(p *[]PolicyEntry, s *statement.Statement) (err error) {
 						return parseError
 					}
 
-					// stop checking this bundle at the first artifact that
-					// does not met the requirements
+					// Stop checking this bundle at the first artifact that
+					// does not met the requirements.
 					err = h.Check(r, c)
 					if err != nil {
 						break
@@ -163,30 +224,31 @@ func Check(p *[]PolicyEntry, s *statement.Statement) (err error) {
 				}
 			}
 
-			// do not continue checking this bundle
-			// cannot authorize bundles that are not containing at least one artifact
-			// that is compatible (i.e. same category) with the one required by this policy entry
+			// Do not continue checking this bundle.
+			// It cannot authorize bundles that are not containing at least one artifact
+			// that is compatible (i.e. same category) with the one required by this policy entry.
 			if !matchCategory {
 				err = fmt.Errorf("the boot bundle does not include a required artifact category")
-				break // try with the next policy entry
+				break // Try with the next policy entry.
 			}
 		}
 
-		// return on the first policy entry that authorize the bundle
+		// Return on the first policy entry that authorize the bundle.
 		if err == nil {
 			return
 		}
 	}
 
-	// return latest error encountered while traversing the policy array
-	// that contains the per-bundle rule sets
+	// Return latest error encountered while traversing the policy array
+	// that contains the per-bundle rule sets.
 	return
 }
 
-// check validity of the signatures present in the statement against
-// the required quorum
-// return error if an insufficient number of valid signatures is found
-func checkSigningQuorum(p *SigningRequirement, s *statement.Statement) (err error) {
+// Check validity of the signatures present in the statement against
+// the required quorum.
+//
+// Return error if an insufficient number of valid signatures is found.
+func isSigningQuorumSatisfied(p *SigningRequirement, s *Statement) (err error) {
 	var validSignatures uint64
 
 	artifacts, err := json.Marshal(s.Artifacts)
@@ -195,10 +257,10 @@ func checkSigningQuorum(p *SigningRequirement, s *statement.Statement) (err erro
 		return
 	}
 
-	// total valid signatures
+	// Total valid signatures.
 	validSignatures = 0
 
-	// loop through all the trusted signers set in the policy
+	// Loop through all the trusted signers set in the policy.
 	for _, signer := range p.Signers {
 		gotValidSignature := false
 		for _, sig := range s.Signatures {
@@ -219,8 +281,8 @@ func checkSigningQuorum(p *SigningRequirement, s *statement.Statement) (err erro
 			}
 		}
 
-		// do not count twice (or more) multiple valid signature(s) present in
-		// the statement that would refer to the same single trusted signer
+		// Do not count twice (or more) multiple valid signature(s) present in
+		// the statement that would refer to the same single trusted signer.
 		if gotValidSignature {
 			validSignatures += 1
 		}

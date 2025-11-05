@@ -7,14 +7,14 @@
 
 package windows_bootmgr
 
-// Supported claims for WindowsBootMgr artifact
+// Supported claims for WindowsBootMgr artifact.
 type Claims struct {
-	// filename of the artifact
+	// Filename of the artifact.
 	FileName string `json:"file_name"`
 
-	// SHA-512 hash of the artifact
+	// SHA-512 hash of the artifact.
 	Hash string `json:"hash"`
 
-	// artifact version
+	// Artifact version.
 	Version string `json:"version,omitempty"`
 }

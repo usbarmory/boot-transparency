@@ -168,9 +168,9 @@ node_hash=e8bb977d7ae35a4b7e591ded5e3d7fad0afee0b958d6309a52f48fe46c679c36
 */
 
 func TestSigsumEngineNoCosignaturesVerifyProof(t *testing.T) {
-	// test support for multiple keys configured in the transparency engine:
+	// Test support for multiple keys configured in the transparency engine:
 	// in this example only the last keys are the correct ones for verifying
-	// the test statement proof
+	// the test statement proof.
 	logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKwmwKhVrEUaZTlHjhoWA4jwJLOF8TY+/NpHAXAHbAHl",
 		"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN6kw3w2BWjlKLdrtnv4IaN+zg8/RpKGA98AbbTwjpdQ",
 		"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEZEryq9QPSJWgA7yjUPnVkSqzAaScd/E+W22QXCCl/m"}
@@ -188,8 +188,8 @@ func TestSigsumEngineNoCosignaturesVerifyProof(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// reset the witness policy to induce the engine to verify the proof using
-	// the no-cosignature verification
+	// Reset the witness policy to induce the engine to verify the proof using
+	// the no-cosignature verification.
 	e.ResetWitnessPolicy()
 
 	pb, _, err := e.ParseProof(validProofBundle)
@@ -246,7 +246,7 @@ func TestSigsumEngineCosignaturesVerifyProofInvalidLogKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// invalid log key (i.e. the only allowed key is not matching the log keyhash in the proof)
+	// Invalid log key (i.e. the only allowed key is not matching the log keyhash in the proof).
 	logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKwmwKhVrEUaZTlHjhoWA4jwJLOF8TY+/NpHAXAHbAHl"}
 	submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqym9S/tFn6B/Eri5hGJiEV8BpGumEPcm65uxC+FG6K"}
 
@@ -271,7 +271,7 @@ func TestSigsumEngineCosignaturesVerifyProofInvalidLogKey(t *testing.T) {
 	}
 
 	err = e.VerifyProof(pb)
-	// VerifyProof must return the log keyhash mismatch error
+	// Error expected: VerifyProof must return the log keyhash mismatch error.
 	if err != nil && err.Error() != "unknown log key hash" {
 		t.Fatal(err)
 	}
@@ -308,7 +308,7 @@ func TestSigsumEngineCosignaturesVerifyProofInvalidSubmitKey(t *testing.T) {
 	}
 
 	err = e.VerifyProof(pb)
-	// VerifyProof must return the leaf key hash (i.e. submitter's key) mismatch error
+	// Error expected: VerifyProof must return the leaf key hash (i.e. submitter's key) mismatch error.
 	if err != nil && err.Error() != "unknown leaf key hash" {
 		t.Fatal(err)
 	}

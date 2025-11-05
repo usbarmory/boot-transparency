@@ -34,7 +34,7 @@ func TestNegativeUEFIBIOSParseRequirements(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// error expected: "firmware vendor" must be an array
+	// Error expected: "firmware vendor" must be an array.
 	if _, err := h.ParseRequirements(r); err == nil {
 		t.Fatal(err)
 	}
@@ -61,7 +61,7 @@ func TestNegativeUEFIBIOSParseClaims(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// error expected: "firmware_vendor" cannot be an array
+	// Error expected: "firmware_vendor" cannot be an array.
 	if _, err := h.ParseClaims(c); err == nil {
 		t.Fatal(err)
 	}
@@ -110,7 +110,7 @@ func TestNegativeUEFIBIOSCheck(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// error expected: the claimed "vendor" are not present in the required ones
+	// Error expected: the claimed "vendor" are not present in the required ones.
 	if err = h.Check(parsedRequirements, parsedClaims); err == nil {
 		t.Fatal(err)
 	}

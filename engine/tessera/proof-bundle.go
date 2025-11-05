@@ -12,7 +12,7 @@ import (
 )
 
 // Define Tessera proof bundle structure
-// Tessera stores inclusion proof as [][]byte
+// Tessera stores inclusion proof as [][]byte.
 type ProofBundle struct {
 	Format    uint            `json:"format"`
 	Statement json.RawMessage `json:"statement"`

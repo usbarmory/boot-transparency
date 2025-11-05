@@ -14,16 +14,16 @@ import (
 	"github.com/usbarmory/boot-transparency/artifact"
 )
 
-// Define the LinuxKernel handler
+// Define the LinuxKernel handler.
 type LinuxKernel struct{}
 
-// Register the handler for the LinuxKernel category
+// Register the handler for the LinuxKernel category.
 func init() {
 	h := LinuxKernel{}
 	artifact.Add(&h, artifact.LinuxKernel)
 }
 
-// Parse requirements for the LinuxKernel category
+// Parse requirements for the LinuxKernel category.
 func (h *LinuxKernel) ParseRequirements(jsonRequirements []byte) (interface{}, error) {
 	var r Requirements
 
@@ -34,7 +34,7 @@ func (h *LinuxKernel) ParseRequirements(jsonRequirements []byte) (interface{}, e
 	return &r, nil
 }
 
-// Parse claims for the LinuxKernel category
+// Parse claims for the LinuxKernel category.
 func (h *LinuxKernel) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	var c Claims
 
@@ -45,7 +45,7 @@ func (h *LinuxKernel) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	return &c, nil
 }
 
-// Check matching between requirements and claims for the LinuxKernel category
+// Check matching between requirements and claims for the LinuxKernel category.
 func (h *LinuxKernel) Check(require interface{}, claim interface{}) (err error) {
 	if _, ok := require.(*Requirements); !ok {
 		return fmt.Errorf("invalid·policy requirements for LinuxKernel")
@@ -58,7 +58,7 @@ func (h *LinuxKernel) Check(require interface{}, claim interface{}) (err error) 
 	r := require.(*Requirements)
 	c := claim.(*Claims)
 
-	// check all the supported policy requirements for LinuxKernel
+	// Check all the supported policy requirements for LinuxKernel.
 	if err = artifact.CheckHash(r.Hash, c.Hash); err != nil {
 		return
 	}

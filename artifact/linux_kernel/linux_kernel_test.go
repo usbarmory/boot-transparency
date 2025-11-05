@@ -47,7 +47,7 @@ func TestNegativeLinuxKernelParseClaims(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// error is expected: "hash" cannot be an array
+	// Error expected: "hash" cannot be an array.
 	if _, err := h.ParseClaims(c); err == nil {
 		t.Fatal(err)
 	}
@@ -98,7 +98,7 @@ func TestNegativeLinuxKernelCheck(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// error expected: the claimed "metadata" is not matching the required one
+	// Error expected: the claimed "metadata" is not matching the required one.
 	if err = h.Check(parsedRequirements, parsedClaims); err == nil {
 		t.Fatal(err)
 	}

@@ -14,16 +14,16 @@ import (
 	"github.com/usbarmory/boot-transparency/artifact"
 )
 
-// Define the WindowsBootMgr handler
+// Define the WindowsBootMgr handler.
 type WindowsBootMgr struct{}
 
-// Register the handler for the WindowsBootMgr category
+// Register the handler for the WindowsBootMgr category.
 func init() {
 	h := WindowsBootMgr{}
 	artifact.Add(&h, artifact.WindowsBootMgr)
 }
 
-// Parse requirements for the WindowsBootMgr category
+// Parse requirements for the WindowsBootMgr category.
 func (h *WindowsBootMgr) ParseRequirements(jsonRequirements []byte) (interface{}, error) {
 	var r Requirements
 
@@ -34,7 +34,7 @@ func (h *WindowsBootMgr) ParseRequirements(jsonRequirements []byte) (interface{}
 	return &r, nil
 }
 
-// Parse claims for the WindowsBootMgr category
+// Parse claims for the WindowsBootMgr category.
 func (h *WindowsBootMgr) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	var c Claims
 
@@ -45,7 +45,7 @@ func (h *WindowsBootMgr) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	return &c, nil
 }
 
-// Check matching between requirements and claims for the WindowsBootMgr category
+// Check matching between requirements and claims for the WindowsBootMgr category.
 func (h *WindowsBootMgr) Check(require interface{}, claim interface{}) (err error) {
 	if _, ok := require.(*Requirements); !ok {
 		return fmt.Errorf("invalid·policy requirements for WindowsBootMgr")
@@ -58,12 +58,12 @@ func (h *WindowsBootMgr) Check(require interface{}, claim interface{}) (err erro
 	r := require.(*Requirements)
 	c := claim.(*Claims)
 
-	// check all the supported policy requirements for WindowsBootMgr
+	// Check all the supported policy requirements for WindowsBootMgr.
 	if err = artifact.CheckHash(r.Hash, c.Hash); err != nil {
 		return
 	}
 
-	// FIXME: windows boot manager does not use semantic versioning
+	// FIXME: windows boot manager does not use semantic versioning.
 	if err = artifact.CheckMinVersion(r.MinVersion, c.Version); err != nil {
 		return
 	}

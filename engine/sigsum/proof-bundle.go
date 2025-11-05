@@ -11,8 +11,8 @@ import (
 	"encoding/json"
 )
 
-// Define Sigsum proof bundle structure
-// Sigsum stores inclusion proof as []byte
+// Define Sigsum proof bundle structure.
+// Sigsum stores inclusion proof as []byte.
 type ProofBundle struct {
 	Format    uint            `json:"format"`
 	Statement json.RawMessage `json:"statement"`

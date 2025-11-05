@@ -12,7 +12,7 @@ import (
 	"fmt"
 )
 
-// Supported transparency engines
+// Supported transparency engines.
 const (
 	Sigsum uint = iota + 0x0001
 	Tessera
@@ -22,21 +22,21 @@ const (
 // - the bundle format (i.e. sigsum, tessera)
 // - the logged statement (i.e. claims)
 // - the probing data to request the inclusion proof to the log
-// - the inclusion proof
+// - the inclusion proof.
 type ProofBundle struct {
-	// specify which transparency engine should be used to
-	// verify this proof (i.e. Sigsum, Tessera)
+	// Specify which transparency engine should be used to
+	// verify this proof (i.e. Sigsum, Tessera).
 	Format uint `json:"format"`
 
-	// serialized JSON of Statement struct
+	// Serialized JSON of Statement struct.
 	Statement []byte `json:"statement"`
 
-	// serialized inclusion proof probing data,
-	// its format depends by the chosen transparency engine
+	// Serialized inclusion proof probing data,
+	// its format depends by the chosen transparency engine.
 	Probe json.RawMessage `json:"probe,omitempty"`
 
-	// inclusion proof, its format depends by the chosen
-	// transparency engine
+	// Inclusion proof, its format depends by the chosen
+	// transparency engine.
 	Proof json.RawMessage `json:"proof,omitempty"`
 }
 
@@ -61,25 +61,28 @@ type Engine interface {
 	//   - the log key is not configured
 	//   - the submitter key is not configured
 	//   - the statement leaf is not present in the log
-	//   - any other error is returned by the public log
+	//   - any other error is returned by the public log.
 	GetProof(proofBundle interface{}) ([]byte, error)
 
 	// Parse the witness policy according with the format expected by the
 	// chosen transparency engine.
+	//
 	// Return error if:
-	//   - the parsing of the policy fails
+	//   - the parsing of the policy fails.
 	ParseWitnessPolicy(wp []byte) (interface{}, error)
 
 	// Set log and submitter keys that will be used by the transparency
 	// engine to fetch, or verify, the proof.
+	//
 	// Return error if:
-	//    - the parsing of the public keys fails
+	//    - the parsing of the public keys fails.
 	SetKey(logKey []string, submitKey []string) error
 
 	// Set the witness policy for the transparency engine.
-	// The function expects in input a policy as returned by ParseWitnessPolicy()
+	// The function expects in input a policy as returned by ParseWitnessPolicy().
+	//
 	// Return error if:
-	//   - the parsing of the policy fails
+	//   - the parsing of the policy fails.
 	SetWitnessPolicy(wp interface{}) error
 
 	// Reset the witness policy for the transparency engine.
@@ -87,11 +90,12 @@ type Engine interface {
 
 	// Verify the proof of the log, expects an input proof bundle
 	// as returned by ParseProof().
+	//
 	// Return error if:
 	//    - the proof verification fails
 	//    - the parsing of the proof bundle fails
 	//    - public keys for log, submitter or cosigners are not set
-	//    - the witness signing quorum is not reached
+	//    - the witness signing quorum is not reached.
 	VerifyProof(proofBundle interface{}) error
 
 	// Parse the probing data, and the inclusion proof (if present)
@@ -99,23 +103,24 @@ type Engine interface {
 	// as expected by the given transparency engine.
 	// The function also return, as second value, a JSON marshal
 	// version of the parsed proof bundle.
+	//
 	// Return error if the parsing fails.
 	ParseProof(jsonProofBundle []byte) (interface{}, []byte, error)
 }
 
-// Define the list of registered transparency engines
+// Define the list of registered transparency engines.
 var engines = make(map[uint]*Engine)
 
-// Register a transparency engine
+// Register a transparency engine.
 func Add(e Engine, t uint) {
 	engines[t] = &e
 }
 
-// Return the registered transparency engine, if present
+// Return the registered transparency engine, if present.
 func GetEngine(t uint) (Engine, error) {
 	e := engines[t]
 	if e == nil {
-		return nil, fmt.Errorf("Transparency engine not registered")
+		return nil, fmt.Errorf("transparency engine not registered")
 	}
 
 	return *e, nil

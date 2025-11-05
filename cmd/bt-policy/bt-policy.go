@@ -16,7 +16,6 @@ import (
 
 	"github.com/pborman/getopt/v2"
 	"github.com/usbarmory/boot-transparency/policy"
-	"github.com/usbarmory/boot-transparency/statement"
 )
 
 type CheckSettings struct {
@@ -44,7 +43,7 @@ the result is printed to stdout.
 
 	err := set.Getopt(args[1:], nil)
 
-	// handle help before checking for errors on other arguments
+	// Handle help before checking for errors on other arguments.
 	if help {
 		fmt.Print(usage[1:] + "\n")
 		set.PrintUsage(os.Stdout)
@@ -71,7 +70,7 @@ the result is printed to stdout.
 
 	err := set.Getopt(args[1:], nil)
 
-	// handle help before checking for errors on other arguments
+	// Handle help before checking for errors on other arguments.
 	if help {
 		fmt.Print(usage[1:] + "\n")
 		set.PrintUsage(os.Stdout)
@@ -84,8 +83,8 @@ the result is printed to stdout.
 	}
 }
 
-func readStatement(fileName string) (*statement.Statement, error) {
-	var s *statement.Statement
+func readStatement(fileName string) (*policy.Statement, error) {
+	var s *policy.Statement
 
 	f, err := os.Open(fileName)
 	if err != nil {
@@ -97,7 +96,7 @@ func readStatement(fileName string) (*statement.Statement, error) {
 		return nil, err
 	}
 
-	s, err = statement.Parse(bytes)
+	s, err = policy.ParseClaims(bytes)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +117,7 @@ func readPolicy(fileName string) (*[]policy.PolicyEntry, error) {
 		return nil, err
 	}
 
-	p, err = policy.Parse(bytes)
+	p, err = policy.ParseRequirements(bytes)
 	if err != nil {
 		return nil, err
 	}

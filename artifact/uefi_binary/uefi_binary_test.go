@@ -47,7 +47,7 @@ func TestNegativeUEFIBinaryParseClaims(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// error is expected: "hash" cannot be an array
+	// Error expected: "hash" cannot be an array.
 	if _, err := h.ParseClaims(c); err == nil {
 		t.Fatal(err)
 	}
@@ -98,7 +98,7 @@ func TestNegativeUEFIBinaryCheck(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// error expected: the claimed "version" does not met requirements
+	// Error expected: the claimed "version" does not met requirements.
 	if err = h.Check(parsedRequirements, parsedClaims); err == nil {
 		t.Fatal(err)
 	}

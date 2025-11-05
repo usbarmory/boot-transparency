@@ -14,16 +14,16 @@ import (
 	"github.com/usbarmory/boot-transparency/artifact"
 )
 
-// Define the Initrd handler
+// Define the Initrd handler.
 type Initrd struct{}
 
-// Register the handler for the Initrd category
+// Register the handler for the Initrd category.
 func init() {
 	h := Initrd{}
 	artifact.Add(&h, artifact.Initrd)
 }
 
-// Parse requirements for the Initrd category
+// Parse requirements for the Initrd category.
 func (h *Initrd) ParseRequirements(jsonRequirements []byte) (interface{}, error) {
 	var r Requirements
 
@@ -34,7 +34,7 @@ func (h *Initrd) ParseRequirements(jsonRequirements []byte) (interface{}, error)
 	return &r, nil
 }
 
-// Parse claims for the Initrd category
+// Parse claims for the Initrd category.
 func (h *Initrd) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	var c Claims
 
@@ -45,7 +45,7 @@ func (h *Initrd) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	return &c, nil
 }
 
-// Check matching between requirements and claims for the Initrd category
+// Check matching between requirements and claims for the Initrd category.
 func (h *Initrd) Check(require interface{}, claim interface{}) (err error) {
 	if _, ok := require.(*Requirements); !ok {
 		return fmt.Errorf("invalid·policy requirements for Initrd")
@@ -58,7 +58,7 @@ func (h *Initrd) Check(require interface{}, claim interface{}) (err error) {
 	r := require.(*Requirements)
 	c := claim.(*Claims)
 
-	// check all the supported policy requirements for Initrd
+	// Check all the supported policy requirements for Initrd.
 	if err = artifact.CheckHash(r.Hash, c.Hash); err != nil {
 		return
 	}

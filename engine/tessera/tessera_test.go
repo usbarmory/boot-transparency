@@ -36,7 +36,7 @@ func TestLoadTestData(t *testing.T) {
 
 func TestTesseraEngineSetKey(t *testing.T) {
 	logKey := []string{"PeterNeumann+c74f20a3+ARpc2QcUPDhMQegwxbzhKqiBfsVkmqq/LDE4izWy10TW"}
-	// Tessera does not use the submit key in the verification process
+	// Tessera does not use the submit key in the verification process.
 	submitKey := []string{}
 
 	e, err := transparency.GetEngine(transparency.Tessera)
@@ -52,9 +52,9 @@ func TestTesseraEngineSetKey(t *testing.T) {
 }
 
 func TestNegativeTesseraEngineSetKey(t *testing.T) {
-	// invalid vkey: malformed verifier id
+	// Invalid vkey: malformed verifier id.
 	logKey := []string{"PeterNeumann+c74f203+ARpc2QcUPDhMQegwxbzKqiBfsVkmqq/LDE4izWy10TW"}
-	// Tessera does not use the submit key in the verification process
+	// Tessera does not use the submit key in the verification process.
 	submitKey := []string{}
 
 	e, err := transparency.GetEngine(transparency.Tessera)
@@ -89,9 +89,9 @@ func TestTesseraEngineParseWitnessPolicy(t *testing.T) {
 }
 
 func TestTesseraEngineNegativeNoCosignaturesVerifyProof(t *testing.T) {
-	// test support for multiple keys configured in the transparency engine:
+	// Test support for multiple keys configured in the transparency engine:
 	// in this example only the last keys are the correct ones for verifying
-	// the test statement proof
+	// the test statement proof.
 	logKey := []string{"PeterNeumann+c74f20a3+ARpc2QcUPDhMQegwxbzhKqiBfsVkmqq/LDE4izWy10TW"}
 
 	e, err := transparency.GetEngine(transparency.Tessera)
@@ -111,7 +111,7 @@ func TestTesseraEngineNegativeNoCosignaturesVerifyProof(t *testing.T) {
 
 	err = e.VerifyProof(pb)
 
-	// error expected here as the log public key will not pass log signature verification
+	// Error expected: the log public key will not pass log signature verification.
 	if err != nil && !strings.Contains(err.Error(), "does not match expected root") {
 		t.Fatal(err)
 	}

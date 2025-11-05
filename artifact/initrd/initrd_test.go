@@ -98,7 +98,7 @@ func TestNegativeInitrdCheck(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// error expected: the claimed "metadata" is not matching the required one
+	// Error expected: the claimed "metadata" is not matching the required one.
 	if err = h.Check(parsedRequirements, parsedClaims); err == nil {
 		t.Fatal(err)
 	}

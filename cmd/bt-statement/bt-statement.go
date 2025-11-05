@@ -23,7 +23,7 @@ import (
 	_ "github.com/usbarmory/boot-transparency/artifact/initrd"
 	_ "github.com/usbarmory/boot-transparency/artifact/linux_kernel"
 	_ "github.com/usbarmory/boot-transparency/artifact/uefi_bios"
-	"github.com/usbarmory/boot-transparency/statement"
+	"github.com/usbarmory/boot-transparency/policy"
 )
 
 type VerifySettings struct {
@@ -58,7 +58,7 @@ the verification result is printed to stdout.
 
 	err := set.Getopt(args[1:], nil)
 
-	// handle help before checking for errors on other arguments
+	// Handle help before checking for errors on other arguments.
 	if help {
 		fmt.Print(usage[1:] + "\n")
 		set.PrintUsage(os.Stdout)
@@ -88,7 +88,7 @@ the signed statement is saved to an output file.
 
 	err := set.Getopt(args[1:], nil)
 
-	// handle help before checking for errors on other arguments
+	// Handle help before checking for errors on other arguments.
 	if help {
 		fmt.Print(usage[1:] + "\n")
 		set.PrintUsage(os.Stdout)
@@ -116,7 +116,7 @@ the result of the parsing is printed to stdout.
 
 	err := set.Getopt(args[1:], nil)
 
-	// handle help before checking for errors on other arguments
+	// Handle help before checking for errors on other arguments.
 	if help {
 		fmt.Print(usage[1:] + "\n")
 		set.PrintUsage(os.Stdout)
@@ -129,8 +129,8 @@ the result of the parsing is printed to stdout.
 	}
 }
 
-func readStatement(fileName string) (*statement.Statement, error) {
-	var s *statement.Statement
+func readStatement(fileName string) (*policy.Statement, error) {
+	var s *policy.Statement
 
 	f, err := os.Open(fileName)
 	if err != nil {
@@ -142,7 +142,7 @@ func readStatement(fileName string) (*statement.Statement, error) {
 		return nil, err
 	}
 
-	s, err = statement.Parse(bytes)
+	s, err = policy.ParseClaims(bytes)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func readStatement(fileName string) (*statement.Statement, error) {
 	return s, nil
 }
 
-func writeSignedStatementFile(outputFile string, outputStatement *statement.Statement, signature *crypto.Signature, publicKey crypto.PublicKey) error {
+func writeSignedStatementFile(outputFile string, outputStatement *policy.Statement, signature *crypto.Signature, publicKey crypto.PublicKey) error {
 	if len(outputFile) > 0 {
 		var err error
 		var signedS []byte
@@ -162,7 +162,7 @@ func writeSignedStatementFile(outputFile string, outputStatement *statement.Stat
 		}
 		defer closeFile(f)
 
-		s := statement.Signature{}
+		s := policy.Signature{}
 		s.Signature = fmt.Sprintf("%x", signature[:])
 
 		// Ed25519 public keys following SSH format
@@ -171,7 +171,7 @@ func writeSignedStatementFile(outputFile string, outputStatement *statement.Stat
 		encodedKey := base64.StdEncoding.EncodeToString([]byte(plainKey))
 		s.PubKey = strings.Join([]string{"ssh-ed25519 AAAA", encodedKey}, "")
 
-		// append the new signature, do not overwrite any existing one already present in the statement
+		// Append the new signature, do not overwrite any existing one already present in the statement.
 		outputStatement.Signatures = append(outputStatement.Signatures, s)
 
 		if signedS, err = json.MarshalIndent(outputStatement, "", "\t"); err != nil {
@@ -237,7 +237,7 @@ Usage: bt-statement [--help]
 			log.Fatalf("statement read from %q failed: %v", settings.statementFile, err)
 		}
 
-		// Sign only the artifacts section of the bundle statement
+		// Sign only the artifacts section of the bundle statement.
 		artifacts, err := json.Marshal(statement.Artifacts)
 		if err != nil {
 			log.Fatalf("statement sign failed: %v", err)
@@ -247,7 +247,7 @@ Usage: bt-statement [--help]
 			log.Fatalf("statement sign failed: %v", err)
 		}
 
-		// Append the new signature, and the public key associated to the signer key, to the output file
+		// Append the new signature, and the public key associated to the signer key, to the output file.
 		if err = writeSignedStatementFile(settings.signedStatementFile, statement, &signature, signer.Public()); err != nil {
 			log.Fatalf("statement sign failed: %v", err)
 		}
@@ -271,7 +271,7 @@ Usage: bt-statement [--help]
 			log.Fatalf("signature verification failed: %v", err)
 		}
 
-		// the signed statement can contain multiple signatures
+		// The signed statement can contain multiple signatures.
 		foundValidSignature := false
 		for _, sig := range statement.Signatures {
 			s, err := crypto.SignatureFromHex(sig.Signature)

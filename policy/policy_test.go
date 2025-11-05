@@ -9,11 +9,9 @@ package policy
 
 import (
 	"testing"
-
-	"github.com/usbarmory/boot-transparency/statement"
 )
 
-func TestParse(t *testing.T) {
+func TestParseRequirements(t *testing.T) {
 	p := []byte(`[{
     "artifacts": [
         {
@@ -46,7 +44,7 @@ func TestParse(t *testing.T) {
     }
 }]`)
 
-	if _, err := Parse(p); err != nil {
+	if _, err := ParseRequirements(p); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -136,12 +134,12 @@ func TestCheck(t *testing.T) {
     ]
 }`)
 
-	policy, err := Parse(p)
+	policy, err := ParseRequirements(p)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	statement, err := statement.Parse(s)
+	statement, err := ParseClaims(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -226,12 +224,12 @@ func TestNegativeCheck(t *testing.T) {
     ]
 }`)
 
-	policy, err := Parse(p)
+	policy, err := ParseRequirements(p)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	statement, err := statement.Parse(s)
+	statement, err := ParseClaims(s)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -7,14 +7,14 @@
 
 package windows_bootmgr
 
-// Supported policy requirements for WindowsBootMgr artifact
+// Supported policy requirements for WindowsBootMgr artifact.
 type Requirements struct {
-	// required SHA-512 hash of the artifact
+	// Required SHA-512 hash of the artifact.
 	Hash string `json:"hash,omitempty"`
 
-	// required minimum version
+	// Required minimum version.
 	MinVersion string `json:"min_version,omitempty"`
 
-	// maximum allowed version
+	// Maximum allowed version.
 	MaxVersion string `json:"max_version,omitempty"`
 }

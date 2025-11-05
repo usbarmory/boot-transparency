@@ -14,16 +14,16 @@ import (
 	"github.com/usbarmory/boot-transparency/artifact"
 )
 
-// Define the UEFIBinary handler
+// Define the UEFIBinary handler.
 type UEFIBinary struct{}
 
-// Register the handler for the UEFIBinary category
+// Register the handler for the UEFIBinary category.
 func init() {
 	h := UEFIBinary{}
 	artifact.Add(&h, artifact.UEFIBinary)
 }
 
-// Parse requirements for the UEFIBinary category
+// Parse requirements for the UEFIBinary category.
 func (h *UEFIBinary) ParseRequirements(jsonRequirements []byte) (interface{}, error) {
 	var r Requirements
 
@@ -34,7 +34,7 @@ func (h *UEFIBinary) ParseRequirements(jsonRequirements []byte) (interface{}, er
 	return &r, nil
 }
 
-// Parse claims for the UEFIBinary category
+// Parse claims for the UEFIBinary category.
 func (h *UEFIBinary) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	var c Claims
 
@@ -45,7 +45,7 @@ func (h *UEFIBinary) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	return &c, nil
 }
 
-// Check matching between requirements and claims for the UEFIBinary category
+// Check matching between requirements and claims for the UEFIBinary category.
 func (h *UEFIBinary) Check(require interface{}, claim interface{}) (err error) {
 	if _, ok := require.(*Requirements); !ok {
 		return fmt.Errorf("invalid·policy requirements for UEFIBinary")
@@ -58,7 +58,7 @@ func (h *UEFIBinary) Check(require interface{}, claim interface{}) (err error) {
 	r := require.(*Requirements)
 	c := claim.(*Claims)
 
-	// check all the supported policy requirements for UEFIBinary
+	// Check all the supported policy requirements for UEFIBinary.
 	if err = artifact.CheckHash(r.Hash, c.Hash); err != nil {
 		return
 	}

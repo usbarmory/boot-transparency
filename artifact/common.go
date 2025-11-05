@@ -18,9 +18,8 @@ import (
 	"golang.org/x/mod/semver"
 )
 
-// Compare claimed file hash to ensure hash requirement is met
+// Compare claimed file hash to ensure hash requirement is met.
 func CheckHash(requireHash string, claimHash string) (err error) {
-	// nothing to check
 	if requireHash == "" {
 		return
 	}
@@ -50,9 +49,8 @@ func CheckHash(requireHash string, claimHash string) (err error) {
 	return
 }
 
-// Compare semantic versions to ensure minimum version requirement is met
+// Compare semantic versions to ensure minimum version requirement is met.
 func CheckMinVersion(requireVersion string, claimVersion string) (err error) {
-	// nothing to check
 	if requireVersion == "" {
 		return
 	}
@@ -70,9 +68,8 @@ func CheckMinVersion(requireVersion string, claimVersion string) (err error) {
 	return
 }
 
-// Compare semantic versions to ensure maximum version requirement is met
+// Compare semantic versions to ensure maximum version requirement is met.
 func CheckMaxVersion(requireVersion string, claimVersion string) (err error) {
-	// nothing to check
 	if requireVersion == "" {
 		return
 	}
@@ -90,7 +87,7 @@ func CheckMaxVersion(requireVersion string, claimVersion string) (err error) {
 	return
 }
 
-// Check the inclusion of an array of claimed strings within the required one
+// Check the inclusion of an array of claimed strings within the required one.
 func CheckArrayInclusion(require []string, claim []string) (err error) {
 	if len(require) == 0 {
 		return
@@ -105,7 +102,7 @@ func CheckArrayInclusion(require []string, claim []string) (err error) {
 	return
 }
 
-// Check the inclusion of a claimed string within an array of required ones
+// Check the inclusion of a claimed string within an array of required ones.
 func CheckElementInclusion(slice []string, element string) bool {
 	for _, v := range slice {
 		if v == element {
@@ -116,7 +113,7 @@ func CheckElementInclusion(slice []string, element string) bool {
 	return false
 }
 
-// Check the claimed timestamp to ensure the min timestamp requirement is met
+// Check the claimed timestamp to ensure the min timestamp requirement is met.
 func CheckMinTimestamp(requireMinTimestamp string, claimTimestamp string) (err error) {
 	if requireMinTimestamp == "" {
 		return
@@ -139,7 +136,7 @@ func CheckMinTimestamp(requireMinTimestamp string, claimTimestamp string) (err e
 	return
 }
 
-// Check if string matching requirement is met
+// Check if string matching requirement is met.
 func CheckStringMatch(require string, claim string) (err error) {
 	if require == "" {
 		return
@@ -152,7 +149,7 @@ func CheckStringMatch(require string, claim string) (err error) {
 	return
 }
 
-// Check if string inclusion requirement is met
+// Check if string inclusion requirement is met.
 func CheckStringInclude(require string, claim string) (err error) {
 	if require == "" {
 		return
@@ -165,7 +162,7 @@ func CheckStringInclude(require string, claim string) (err error) {
 	return
 }
 
-// Check if string non-inclusion requirement is met
+// Check if string non-inclusion requirement is met.
 func CheckStringNotInclude(require string, claim string) (err error) {
 	if require == "" {
 		return
