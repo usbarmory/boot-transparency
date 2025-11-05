@@ -26,20 +26,20 @@ func CheckHash(requireHash string, claimHash string) (err error) {
 
 	r, err := hex.DecodeString(requireHash)
 	if err != nil {
-		return fmt.Errorf("invalid hash requirement: %q", err)
+		return fmt.Errorf("invalid hash requirement, %w", err)
 	}
 
 	c, err := hex.DecodeString(claimHash)
 	if err != nil {
-		return fmt.Errorf("invalid hash claim: %q", err)
+		return fmt.Errorf("invalid hash claim, %w", err)
 	}
 
 	if len(r) != sha512.Size {
-		return fmt.Errorf("invalid requirement hash length: %q", requireHash)
+		return fmt.Errorf("invalid requirement hash length %q", requireHash)
 	}
 
 	if len(c) != sha512.Size {
-		return fmt.Errorf("invalid claim hash length: %q", claimHash)
+		return fmt.Errorf("invalid claim hash length %q", claimHash)
 	}
 
 	if subtle.ConstantTimeCompare([]byte(r), []byte(c)) != 1 {
@@ -56,10 +56,10 @@ func CheckMinVersion(requireVersion string, claimVersion string) (err error) {
 	}
 
 	if !semver.IsValid(requireVersion) {
-		return fmt.Errorf("invalid min version requirement: %q", requireVersion)
+		return fmt.Errorf("invalid min version requirement %q", requireVersion)
 	}
 	if !semver.IsValid(claimVersion) {
-		return fmt.Errorf("invalid version claim: %q", claimVersion)
+		return fmt.Errorf("invalid version claim %q", claimVersion)
 	}
 	if semver.Compare(claimVersion, requireVersion) < 0 {
 		return fmt.Errorf("version %q does not met min version requirement", claimVersion)
@@ -75,10 +75,10 @@ func CheckMaxVersion(requireVersion string, claimVersion string) (err error) {
 	}
 
 	if !semver.IsValid(requireVersion) {
-		return fmt.Errorf("invalid max version requirement: %q", requireVersion)
+		return fmt.Errorf("invalid max version requirement %q", requireVersion)
 	}
 	if !semver.IsValid(claimVersion) {
-		return fmt.Errorf("invalid version claim: %q", claimVersion)
+		return fmt.Errorf("invalid version claim %q", claimVersion)
 	}
 	if semver.Compare(claimVersion, requireVersion) > 0 {
 		return fmt.Errorf("version %q does not met max version requirement", claimVersion)
@@ -121,12 +121,12 @@ func CheckMinTimestamp(requireMinTimestamp string, claimTimestamp string) (err e
 
 	r, err := time.Parse(time.RFC3339, requireMinTimestamp)
 	if err != nil {
-		return fmt.Errorf("invalid min timestamp requirement: %q", requireMinTimestamp)
+		return fmt.Errorf("invalid min timestamp requirement, %w", err)
 	}
 
 	c, err := time.Parse(time.RFC3339, claimTimestamp)
 	if err != nil {
-		return fmt.Errorf("invalid timestamp claim: %q", claimTimestamp)
+		return fmt.Errorf("invalid timestamp claim, %w", err)
 	}
 
 	if r.After(c) {

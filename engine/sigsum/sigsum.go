@@ -56,7 +56,7 @@ func (e *SigsumEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 
 	// Check that the format set in the bundle is correct.
 	if pb.Format != transparency.Sigsum {
-		return nil, fmt.Errorf("invalid bundle format %d, expected %d (transparency.Sigsum)", pb.Format, transparency.Sigsum)
+		return nil, fmt.Errorf("invalid bundle format %q, expected %q (transparency.Sigsum)", pb.Format, transparency.Sigsum)
 	}
 
 	if e.witnessPolicy == nil {
@@ -88,7 +88,7 @@ func (e *SigsumEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 	}
 
 	if _, err := url.Parse(pb.Probe.Origin); err != nil {
-		return nil, fmt.Errorf("invalid log origin: %s", err)
+		return nil, fmt.Errorf("invalid log origin, %w", err)
 	}
 
 	// HTTP client configuration.
@@ -151,28 +151,28 @@ func (e *SigsumEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 	defer cancel()
 
 	if pr.TreeHead, err = client.GetTreeHead(ctx); err != nil {
-		return nil, fmt.Errorf("getting latest tree head: %v", err)
+		return nil, fmt.Errorf("failed to get the latest tree head, %w", err)
 	}
 
 	if err = e.witnessPolicy.VerifyCosignedTreeHead(&pr.LogKeyHash, &pr.TreeHead); err != nil {
-		return nil, fmt.Errorf("verifying tree head: %v", err)
+		return nil, fmt.Errorf("failed to verify the tree head, %w", err)
 	}
 
 	leafHash := leaf.ToHash()
 	req := requests.InclusionProof{Size: pr.TreeHead.Size, LeafHash: leafHash}
 
 	if pr.Inclusion, err = client.GetInclusionProof(ctx, req); err != nil {
-		return nil, fmt.Errorf("getting inclusion proof: %v", err)
+		return nil, fmt.Errorf("failed to get the inclusion proof, %w", err)
 	}
 
 	if err = pr.Inclusion.Verify(&leafHash, &pr.TreeHead.TreeHead); err != nil {
-		return nil, fmt.Errorf("invalid inclusion proof: %v", err)
+		return nil, fmt.Errorf("invalid inclusion proof, %w", err)
 	}
 
 	// Save the whole inclusion proof in ASCII format in the proof bundle.
 	sigsumProofBundle, err := buildSigsumProofBundle(pr)
 	if err != nil {
-		return nil, fmt.Errorf("sigsum ASCII proof bundle assembling failed: %v", err)
+		return nil, fmt.Errorf("failed to assemble the proof bundle, %w", err)
 	}
 
 	return sigsumProofBundle, nil
@@ -245,7 +245,7 @@ func (e *SigsumEngine) VerifyProof(proofBundle interface{}) (err error) {
 
 	// Check that the format set in the bundle is correct.
 	if pb.Format != transparency.Sigsum {
-		return fmt.Errorf("invalid bundle format %d, expected %d (transparency.SigsumBundle)", pb.Format, transparency.Sigsum)
+		return fmt.Errorf("invalid bundle format %q, expected %q (transparency.SigsumBundle)", pb.Format, transparency.Sigsum)
 	}
 
 	// Load the statement and compute its checksum, which is the logged
@@ -289,7 +289,7 @@ func (e *SigsumEngine) VerifyProof(proofBundle interface{}) (err error) {
 
 		// Return immediately when encountering an invalid public key.
 		if err != nil {
-			return fmt.Errorf("invalid log public key: %s", logKey)
+			return fmt.Errorf("invalid log public key %q", logKey)
 		}
 
 		for _, submitKey := range e.submitPubkey {
@@ -297,7 +297,7 @@ func (e *SigsumEngine) VerifyProof(proofBundle interface{}) (err error) {
 
 			// Return immediately when encountering an invalid public key.
 			if err != nil {
-				return fmt.Errorf("invalid submit public key: %s", submitKey)
+				return fmt.Errorf("invalid submit public key %q", submitKey)
 			}
 
 			// Include quorum verification only if the witness policy is set.
@@ -333,7 +333,7 @@ func (e *SigsumEngine) ParseProof(jsonProofBundle []byte) (interface{}, []byte, 
 
 	// Check if this is a Sigsum proof bundle.
 	if pb.Format != transparency.Sigsum {
-		return nil, nil, fmt.Errorf("invalid bundle format %d, expected %d (transparency.Sigsum)", pb.Format, transparency.Sigsum)
+		return nil, nil, fmt.Errorf("invalid bundle format %q, expected %q (transparency.Sigsum)", pb.Format, transparency.Sigsum)
 	}
 
 	// Try to import the proof as proof.SigsumProof, if present, to confirm it
@@ -348,7 +348,7 @@ func (e *SigsumEngine) ParseProof(jsonProofBundle []byte) (interface{}, []byte, 
 	// Return also the JSON marshal version of the bundle.
 	pbMarshal, err := json.MarshalIndent(&pb, "", "\t")
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to marshal the proof bundle: %v", err)
+		return nil, nil, fmt.Errorf("failed to marshal the proof bundle, %w", err)
 	}
 
 	return &pb, pbMarshal, nil
@@ -362,7 +362,7 @@ func getTrustedKeyFromHash(trustedKeys []string, hash string) (crypto.PublicKey,
 	h, err := crypto.HashFromHex(hash)
 
 	if err != nil {
-		return k, fmt.Errorf("invalid public key hash %v", hash)
+		return k, fmt.Errorf("invalid public key hash %q", hash)
 	}
 
 	for _, trusted := range trustedKeys {
@@ -370,7 +370,7 @@ func getTrustedKeyFromHash(trustedKeys []string, hash string) (crypto.PublicKey,
 
 		// Return immediately when encountering an invalid public key.
 		if err != nil {
-			return k, fmt.Errorf("invalid public key: %v", trusted)
+			return k, fmt.Errorf("invalid public key %q", trusted)
 		}
 
 		if h == crypto.HashBytes(k[:]) {

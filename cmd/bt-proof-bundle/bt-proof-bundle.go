@@ -134,22 +134,22 @@ Usage: bt-proof [--help]
 		format, err := strconv.ParseUint(settings.transparencyEngine, 10, 64)
 
 		if err != nil {
-			log.Fatalf("invalid transparency engine: %s", settings.transparencyEngine)
+			log.Fatalf("invalid transparency engine: %q", settings.transparencyEngine)
 		}
 
 		if jsonProofBundle, err := readFile(settings.proofBundleFile); err != nil {
-			log.Fatalf("read proof bundle %q failed: %v", settings.proofBundleFile, err)
+			log.Fatalf("cannot read proof bundle, %v", err)
 		} else {
 			e, err := transparency.GetEngine(uint(format))
 			if err != nil {
-				log.Fatalf("unsupported bundle format: %v", err)
+				log.Fatalf("unsupported bundle format, %v", err)
 			}
 
 			// Use the marshal version of the parsed proof bundle
 			// (i.e. []byte output returned as second value by the parsing function).
 			_, parsed, err := e.ParseProof(jsonProofBundle)
 			if err != nil {
-				log.Fatalf("invalid proof bundle: %v", err)
+				log.Fatalf("invalid proof bundle, %v", err)
 			}
 
 			// Print result to stdout.
@@ -162,34 +162,34 @@ Usage: bt-proof [--help]
 
 		s, err := readFile(settings.signedStatementFile)
 		if err != nil {
-			log.Fatalf("read statement %q failed: %v", settings.signedStatementFile, err)
+			log.Fatalf("cannot read statement, %v", err)
 		}
 
 		_, err = policy.ParseClaims(s)
 		if err != nil {
-			log.Fatalf("parse statement %q failed: %v", settings.signedStatementFile, err)
+			log.Fatalf("parse statement failed, %v", err)
 		}
 
 		ip, err := readFile(settings.inclusionProofFile)
 		if err != nil {
-			log.Fatalf("read inclusion proof %q failed: %v", settings.inclusionProofFile, err)
+			log.Fatalf("cannot read inclusion proof, %v", err)
 		}
 
 		p, err := readFile(settings.probeFile)
 		if err != nil {
-			log.Fatalf("read probe %q failed: %v", settings.probeFile, err)
+			log.Fatalf("cannot read probe, %v", err)
 		}
 
 		format, err := strconv.ParseUint(settings.transparencyEngine, 10, 64)
 		if err != nil {
-			log.Fatalf("invalid transparency engine: %s", settings.transparencyEngine)
+			log.Fatalf("invalid transparency engine: %q", settings.transparencyEngine)
 		}
 
 		// For Sigsum the inclusion proof need to be marshal to JSON string.
 		if uint(format) == transparency.Sigsum {
 			ip, err = json.Marshal(string(ip))
 			if err != nil {
-				log.Fatalf("failed to marshal inclusion proof %v", err)
+				log.Fatalf("failed to marshal inclusion proof, %v", err)
 			}
 		}
 
@@ -203,21 +203,21 @@ Usage: bt-proof [--help]
 
 		jsonProofBundle, err := json.MarshalIndent(&pb, "", "\t")
 		if err != nil {
-			log.Fatalf("failed to marshal the proof bundle: %v", err)
+			log.Fatalf("failed to marshal the proof bundle, %v", err)
 		}
 
 		// Parse the preliminary bundle to ensure it is consistent
 		// with the transparency engine format.
 		e, err := transparency.GetEngine(pb.Format)
 		if err != nil {
-			log.Fatalf("unsupported bundle format: %v", err)
+			log.Fatalf("unsupported bundle format, %v", err)
 		}
 
 		// Use the marshal version of the parsed proof bundle
 		// (i.e. []byte output returned as second value by the parsing function).
 		_, parsed, err := e.ParseProof(jsonProofBundle)
 		if err != nil {
-			log.Fatalf("invalid proof bundle: %v", err)
+			log.Fatalf("invalid proof bundle, %v", err)
 		}
 
 		// Print result to stdout.

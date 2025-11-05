@@ -76,11 +76,11 @@ func (h *UEFIBIOS) Check(require interface{}, claim interface{}) (err error) {
 	if r.MinFirmwareRevision != "" {
 		requireFirmwareRevision, err := strconv.ParseUint(strings.Trim(r.MinFirmwareRevision, "0x"), 16, 16)
 		if err != nil {
-			return fmt.Errorf("invalid min firmware revision requirement: %q", r.MinFirmwareRevision)
+			return fmt.Errorf("invalid min firmware revision requirement, %w", err)
 		}
 		claimFirmwareRevision, err := strconv.ParseUint(strings.Trim(c.FirmwareRevision, "0x"), 16, 16)
 		if err != nil {
-			return fmt.Errorf("invalid firmware revision claim: %q", c.FirmwareRevision)
+			return fmt.Errorf("invalid firmware revision claim, %w", err)
 		}
 
 		if claimFirmwareRevision < requireFirmwareRevision {
@@ -91,11 +91,11 @@ func (h *UEFIBIOS) Check(require interface{}, claim interface{}) (err error) {
 	if r.MaxFirmwareRevision != "" {
 		requireFirmwareRevision, err := strconv.ParseUint(r.MaxFirmwareRevision, 16, 16)
 		if err != nil {
-			return fmt.Errorf("invalid max firmware revision requirement: %q", r.MaxFirmwareRevision)
+			return fmt.Errorf("invalid max firmware revision requirement, %w", err)
 		}
 		claimFirmwareRevision, err := strconv.ParseUint(c.FirmwareRevision, 16, 16)
 		if err != nil {
-			return fmt.Errorf("invalid firmware revision claim: %q", c.FirmwareRevision)
+			return fmt.Errorf("invalid firmware revision claim, %w", err)
 		}
 
 		if claimFirmwareRevision > requireFirmwareRevision {

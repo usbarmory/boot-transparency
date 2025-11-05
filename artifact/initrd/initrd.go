@@ -80,7 +80,7 @@ func (h *Initrd) Check(require interface{}, claim interface{}) (err error) {
 	}
 
 	if err = artifact.CheckArrayInclusion(r.License, c.License); err != nil {
-		return fmt.Errorf("license requirement not met: %q", err)
+		return fmt.Errorf("license requirement not met, %w", err)
 	}
 
 	if err = artifact.CheckMinTimestamp(r.MinTimestamp, c.Timestamp); err != nil {
@@ -88,18 +88,18 @@ func (h *Initrd) Check(require interface{}, claim interface{}) (err error) {
 	}
 
 	if err = artifact.CheckStringMatch(r.Metadata, c.Metadata); err != nil {
-		return fmt.Errorf("metadata matching requirement not met")
+		return fmt.Errorf("metadata matching requirement not met, %w", err)
 	}
 
 	for _, requireMetadata := range r.MetadataInclude {
 		if err = artifact.CheckStringInclude(requireMetadata, c.Metadata); err != nil {
-			return fmt.Errorf("metadata inclusion requirement not met: %q", err)
+			return fmt.Errorf("metadata inclusion requirement not met, %w", err)
 		}
 	}
 
 	for _, requireMetadata := range r.MetadataNotInclude {
 		if err = artifact.CheckStringNotInclude(requireMetadata, c.Metadata); err != nil {
-			return fmt.Errorf("metadata non-inclusion requirement not met: %q", err)
+			return fmt.Errorf("metadata non-inclusion requirement not met, %w", err)
 		}
 	}
 

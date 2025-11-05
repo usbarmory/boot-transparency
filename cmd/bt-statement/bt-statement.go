@@ -217,7 +217,7 @@ Usage: bt-statement [--help]
 		settings.parse(os.Args)
 
 		if statement, err := readStatement(settings.statementFile); err != nil {
-			log.Fatalf("read statement %q failed: %v", settings.statementFile, err)
+			log.Fatalf("cannot read statement, %v", err)
 		} else {
 			if parsedStatement, err := json.MarshalIndent(statement, "", "\t"); err == nil {
 				log.Println(string(parsedStatement))
@@ -234,22 +234,22 @@ Usage: bt-statement [--help]
 
 		statement, err := readStatement(settings.statementFile)
 		if err != nil {
-			log.Fatalf("statement read from %q failed: %v", settings.statementFile, err)
+			log.Fatalf("cannot read statement, %v", err)
 		}
 
 		// Sign only the artifacts section of the bundle statement.
 		artifacts, err := json.Marshal(statement.Artifacts)
 		if err != nil {
-			log.Fatalf("statement sign failed: %v", err)
+			log.Fatalf("statement signing failed, %v", err)
 		}
 		signature, err := signer.Sign(artifacts)
 		if err != nil {
-			log.Fatalf("statement sign failed: %v", err)
+			log.Fatalf("statement signing failed, %v", err)
 		}
 
 		// Append the new signature, and the public key associated to the signer key, to the output file.
 		if err = writeSignedStatementFile(settings.signedStatementFile, statement, &signature, signer.Public()); err != nil {
-			log.Fatalf("statement sign failed: %v", err)
+			log.Fatalf("statement signing failed, %v", err)
 		}
 
 		log.Printf("signed statement written to: %q", settings.signedStatementFile)
@@ -264,11 +264,11 @@ Usage: bt-statement [--help]
 
 		statement, err := readStatement(settings.signedStatementFile)
 		if err != nil {
-			log.Fatalf("read statement %q failed: %v", settings.signedStatementFile, err)
+			log.Fatalf("cannot read statement, %v", err)
 		}
 		artifacts, err := json.Marshal(statement.Artifacts)
 		if err != nil {
-			log.Fatalf("signature verification failed: %v", err)
+			log.Fatalf("signature verification failed, %v", err)
 		}
 
 		// The signed statement can contain multiple signatures.
@@ -276,7 +276,7 @@ Usage: bt-statement [--help]
 		for _, sig := range statement.Signatures {
 			s, err := crypto.SignatureFromHex(sig.Signature)
 			if err != nil {
-				log.Fatalf("signature verification failed: %v", err)
+				log.Fatalf("signature verification failed, %v", err)
 			}
 
 			if crypto.Verify(&publicKey, artifacts, &s) {

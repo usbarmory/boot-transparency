@@ -51,7 +51,7 @@ func (e *TesseraEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 
 	// Check that the format set in the bundle is correct.
 	if pb.Format != transparency.Tessera {
-		return nil, fmt.Errorf("invalid bundle format %d, expected %d (transparency.Tessera)", pb.Format, transparency.Tessera)
+		return nil, fmt.Errorf("invalid bundle format %q, expected %q (transparency.Tessera)", pb.Format, transparency.Tessera)
 	}
 
 	if e.witnessPolicy == nil {
@@ -67,25 +67,25 @@ func (e *TesseraEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 	lk, err := getTrustedKey(e.logPubkey, pb.Probe.LogPublicKey)
 
 	if err != nil {
-		return nil, fmt.Errorf("log public key is not trusted %v", pb.Probe.LogPublicKey)
+		return nil, fmt.Errorf("log public key is not trusted %q", pb.Probe.LogPublicKey)
 	}
 
 	logVerifier, err := note.NewVerifier(lk)
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to load log public key: %v", err)
+		return nil, fmt.Errorf("failed to load log public key, %w", err)
 	}
 
 	logReadBaseURL, err = url.Parse(pb.Probe.Origin)
 	if err != nil {
-		return nil, fmt.Errorf("invalid log origin: %s", err)
+		return nil, fmt.Errorf("invalid log origin, %w", err)
 	}
 
 	switch logReadBaseURL.Scheme {
 	case "http", "https":
 		hf, err := client.NewHTTPFetcher(logReadBaseURL, nil)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create an http fetcher: %v", err)
+			return nil, fmt.Errorf("failed to create an http fetcher, %w", err)
 		}
 		logReadCP = hf.ReadCheckpoint
 		logReadTile = hf.ReadTile
@@ -111,11 +111,11 @@ func (e *TesseraEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 	// Verify that checkpoint co-signatures are satisfying the witness policy.
 	cp, rawcp, _, err := client.FetchCheckpoint(ctx, logReadCP, logVerifier, pb.Probe.Origin)
 	if err != nil {
-		return nil, fmt.Errorf("fecthing checkpoint: %v", err)
+		return nil, fmt.Errorf("failed to get the latest checkpoint, %w", err)
 	}
 
 	if !e.witnessPolicy.Satisfied(rawcp) {
-		return nil, fmt.Errorf("invalid checkpoint: %v", err)
+		return nil, fmt.Errorf("invalid checkpoint, %w", err)
 	}
 
 	// Creates the proof builder that will be used to assemble proofs
@@ -123,14 +123,14 @@ func (e *TesseraEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 	pBuilder, err := client.NewProofBuilder(ctx, cp.Size, logReadTile)
 
 	if err != nil {
-		return nil, fmt.Errorf("tessera proof builder: %v", err)
+		return nil, fmt.Errorf("tessera proof builder, %w", err)
 	}
 
 	// Get the inclusion proof given the latest checkpoint.
 	ip, err := pBuilder.InclusionProof(ctx, pb.Probe.LeafIdx)
 
 	if err != nil {
-		return nil, fmt.Errorf("getting inclusion proof: %v", err)
+		return nil, fmt.Errorf("failed to get inclusion proof, %w", err)
 	}
 
 	// JSON marshalling is required to ensure the message has been logged
@@ -146,7 +146,7 @@ func (e *TesseraEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 
 	// Verify the inclusion proof is valid.
 	if err = proof.VerifyInclusion(rfc6962.DefaultHasher, pb.Probe.LeafIdx, cp.Size, leafHash, ip, cp.Hash); err != nil {
-		return nil, fmt.Errorf("invalid inclusion proof: %v", err)
+		return nil, fmt.Errorf("invalid inclusion proof, %w", err)
 	}
 
 	// Tessera stores inclusion proof(s) as array of byte arrays ([][]byte)
@@ -211,7 +211,7 @@ func (e *TesseraEngine) VerifyProof(proofBundle interface{}) (err error) {
 
 	// Check that the format set in the bundle is correct.
 	if pb.Format != transparency.Tessera {
-		return fmt.Errorf("invalid bundle format %d, expected %d (transparency.Tessera)", pb.Format, transparency.Tessera)
+		return fmt.Errorf("invalid bundle format %q, expected %q (transparency.Tessera)", pb.Format, transparency.Tessera)
 	}
 
 	// Load the statement and compute its checksum, which is the leaf hash
@@ -268,7 +268,7 @@ func (e *TesseraEngine) ParseProof(jsonProofBundle []byte) (interface{}, []byte,
 
 	// Check if this is a Tessera proof bundle.
 	if pb.Format != transparency.Tessera {
-		return nil, nil, fmt.Errorf("invalid bundle format %d, expected %d (transparency.Tessera)", pb.Format, transparency.Tessera)
+		return nil, nil, fmt.Errorf("invalid bundle format %q, expected %q (transparency.Tessera)", pb.Format, transparency.Tessera)
 	}
 
 	// The inclusion proof is not present in the bundle, nothing to parse there.
@@ -281,7 +281,7 @@ func (e *TesseraEngine) ParseProof(jsonProofBundle []byte) (interface{}, []byte,
 			d, err := base64.StdEncoding.DecodeString(entry)
 
 			if err != nil {
-				return nil, nil, fmt.Errorf("unable to parse Tessera inclusion proof: %s", err)
+				return nil, nil, fmt.Errorf("unable to parse Tessera inclusion proof, %w", err)
 			}
 
 			// Tessera inclusion proof is an array of 32 bytes arrays
@@ -289,7 +289,7 @@ func (e *TesseraEngine) ParseProof(jsonProofBundle []byte) (interface{}, []byte,
 			// that could have passed the base64 decoding but that is not
 			// resulting in a byte array compliant with the length requirement.
 			if len(d) != 32 {
-				return nil, nil, fmt.Errorf("unable to parse Tessera inclusion proof, invalid base64 entry: %s", entry)
+				return nil, nil, fmt.Errorf("unable to parse Tessera inclusion proof, invalid base64 entry: %q", entry)
 			}
 		}
 	}
@@ -297,7 +297,7 @@ func (e *TesseraEngine) ParseProof(jsonProofBundle []byte) (interface{}, []byte,
 	// Return also the JSON marshal version of the bundle.
 	pbMarshal, err := json.MarshalIndent(&pb, "", "\t")
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to marshal the proof bundle: %v", err)
+		return nil, nil, fmt.Errorf("failed to marshal the proof bundle, %w", err)
 	}
 
 	return &pb, pbMarshal, nil
@@ -308,7 +308,7 @@ func getTrustedKey(trusted []string, probe string) (string, error) {
 	_, err := note.NewVerifier(probe)
 
 	if err != nil {
-		return "", fmt.Errorf("invalid public key %v", probe)
+		return "", fmt.Errorf("invalid public key %q, %w", probe, err)
 	}
 
 	for _, t := range trusted {
@@ -316,7 +316,7 @@ func getTrustedKey(trusted []string, probe string) (string, error) {
 
 		// Return immediately when encountering an invalid public key.
 		if err != nil {
-			return "", fmt.Errorf("invalid public key: %v", t)
+			return "", fmt.Errorf("invalid public key %q, %w", t, err)
 		}
 
 		if t == probe {

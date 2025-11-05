@@ -148,7 +148,7 @@ Usage: bt-policy [--help]
 		settings.parse(os.Args)
 
 		if policy, err := readPolicy(settings.policyFile); err != nil {
-			log.Fatalf("read policy %q failed: %v", settings.policyFile, err)
+			log.Fatalf("cannot read policy, %v", err)
 		} else {
 			if parsedPolicy, err := json.MarshalIndent(policy, "", "\t"); err == nil {
 				log.Println(string(parsedPolicy))
@@ -160,12 +160,12 @@ Usage: bt-policy [--help]
 
 		s, err := readStatement(settings.signedStatementFile)
 		if err != nil {
-			log.Fatalf("statement read from %q failed: %v", settings.signedStatementFile, err)
+			log.Fatalf("cannot read statement, %v", err)
 		}
 
 		p, err := readPolicy(settings.policyFile)
 		if err != nil {
-			log.Fatalf("read policy %q failed: %v", settings.policyFile, err)
+			log.Fatalf("cannot read policy, %v", err)
 		}
 
 		if err = policy.Check(p, s); err != nil {

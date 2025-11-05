@@ -58,7 +58,7 @@ func bootTransparencyOfflineCheck(fsys fs.FS, bootPolicyPath string, witnessPoli
 	// Select Sigsum as transparency engine.
 	te, err := transparency.GetEngine(transparency.Sigsum)
 	if err != nil {
-		return fmt.Errorf("unable to configure the transparency engine: %v", err)
+		return fmt.Errorf("unable to configure the transparency engine, %w", err)
 	}
 
 	// Set public keys.
@@ -147,7 +147,7 @@ func bootTransparencyOnlineCheck(fsys fs.FS, bootPolicyPath string, witnessPolic
 	// Select Sigsum as transparency engine.
 	te, err := transparency.GetEngine(transparency.Sigsum)
 	if err != nil {
-		return fmt.Errorf("unable to configure the transparency engine: %v", err)
+		return fmt.Errorf("unable to configure the transparency engine, %w", err)
 	}
 
 	// Set public keys.
