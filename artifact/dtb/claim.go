@@ -13,7 +13,7 @@ type Claims struct {
 	FileName string `json:"file_name,omitempty"`
 
 	// SHA-512 hash of the artifact.
-	Hash string `json:"hash,omitempty"`
+	FileHash string `json:"file_hash,omitempty"`
 
 	// Artifact version, using Semantic Versioning 2.0.0 (see semver.org).
 	Version string `json:"version,omitempty"`
@@ -27,24 +27,18 @@ type Claims struct {
 	// https://spdx.github.io/spdx-spec/v2.3/SPDX-license-list/ .
 	License []string `json:"license,omitempty"`
 
+	// Selected sub-set of build arguments that are considered by the claimant
+	// potentially relevant·to authorize the artifact.
+	BuildArgs map[string]string `json:"build_args,omitempty"`
+
 	// Timestamp in RFC3339 format (e.g. "1985-04-12T23:20:50.52Z"): "2025-10-12T23:20:50.52Z".
 	// The claimant can decide to use this field to expose any relevant timestamp for the artifact
-	// (e.g. the releasing date, tha building time, ...) that should be verified by the boot policy.
+	// (e.g. the releasing date, tha building time) that should be verified by the boot policy.
 	Timestamp string `json:"timestamp,omitempty"`
 
-	// Public URLs to download the source code required to build the artifact.
-	SourceURLs []string `json:"source_urls,omitempty"`
-
-	// Serialized JSON containing arbitrary artifact information.
-	// As an example, developers could include among metadata relevant arguments, configuration flags,
-	// toolchain information, or any other detail used during the building of the artifact.
-	Metadata string `json:"metadata,omitempty"`
-
-	// Serialized JSON containing the Device Tree Source file(s).
-	// The claimant could include the plaintext Device Tree Source (dts), or dtsi, or
-	// any device tree source file(s), that have been used to generate the dtb artifact.
-	// FIXME: this should be `[]string` to support multiple source files? Otherwise keeping
-	// it as it is now, means that the claimant needs to concatenate all the source files
-	// into the `dts` string.
-	Dts string `json:"dts,omitempty"`
+	// Contains ancillary information on the artifact.
+	// As an example, the complete information required to reproduce the build of the dtb
+	// plaintext Device Tree Source (dts), or dtsi, or any device tree source file(s) that have
+	// been used to generate the dtb artifact could be linked in the metadata.
+	Metadata map[string]string `json:"metadata,omitempty"`
 }

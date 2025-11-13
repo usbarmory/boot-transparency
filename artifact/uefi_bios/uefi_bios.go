@@ -50,11 +50,11 @@ func (h *UEFIBIOS) ParseClaims(jsonClaims []byte) (interface{}, error) {
 // Check matching between requirements and claims for the UEFIBIOS category.
 func (h *UEFIBIOS) Check(require interface{}, claim interface{}) (err error) {
 	if _, ok := require.(*Requirements); !ok {
-		return fmt.Errorf("invalid·policy requirements for UEFIBIOS")
+		return fmt.Errorf("invalid policy requirements for UEFIBIOS")
 	}
 
 	if _, ok := claim.(*Claims); !ok {
-		return fmt.Errorf("invalid·claims for UEFIBIOS")
+		return fmt.Errorf("invalid claims for UEFIBIOS")
 	}
 
 	r := require.(*Requirements)

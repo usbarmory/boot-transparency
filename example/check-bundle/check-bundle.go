@@ -22,11 +22,11 @@ import (
 
 const (
 	// Boot-transparency
-        bootPolicyPath    = "policy/policy.json"
-        witnessPolicyPath = "sigsum/witness_policy.txt"
-        proofBundlePath   = "sigsum/bt-proof-bundle.json"
-        submitKeyPath     = "keys/submit-key.pub"
-        logKeyPath        = "keys/log-key.pub"
+	bootPolicyPath    = "policy/policy.json"
+	witnessPolicyPath = "sigsum/witness_policy.txt"
+	proofBundlePath   = "sigsum/bt-proof-bundle.json"
+	submitKeyPath     = "keys/submit-key.pub"
+	logKeyPath        = "keys/log-key.pub"
 )
 
 func bootTransparencyOfflineCheck(fsys fs.FS, bootPolicyPath string, witnessPolicyPath string, submitKeyPath string, logKeyPath string, proofBundlePath string) (err error) {

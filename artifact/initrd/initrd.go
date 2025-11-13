@@ -48,11 +48,11 @@ func (h *Initrd) ParseClaims(jsonClaims []byte) (interface{}, error) {
 // Check matching between requirements and claims for the Initrd category.
 func (h *Initrd) Check(require interface{}, claim interface{}) (err error) {
 	if _, ok := require.(*Requirements); !ok {
-		return fmt.Errorf("invalid·policy requirements for Initrd")
+		return fmt.Errorf("invalid policy requirements for Initrd")
 	}
 
 	if _, ok := claim.(*Claims); !ok {
-		return fmt.Errorf("invalid·claims for Initrd")
+		return fmt.Errorf("invalid claims for Initrd")
 	}
 
 	r := require.(*Requirements)
@@ -72,7 +72,7 @@ func (h *Initrd) Check(require interface{}, claim interface{}) (err error) {
 	}
 
 	if r.Architecture != "" && r.Architecture != c.Architecture {
-		return fmt.Errorf("architecture %q does·not·met·requirement", c.Architecture)
+		return fmt.Errorf("architecture %q does not met requirement", c.Architecture)
 	}
 
 	if c.Tainted && !r.Tainted {
@@ -87,7 +87,7 @@ func (h *Initrd) Check(require interface{}, claim interface{}) (err error) {
 		return
 	}
 
-	if err = artifact.CheckStringMatch(r.Metadata, c.Metadata); err != nil {
+	if err = artifact.CheckStringEqual(r.Metadata, c.Metadata); err != nil {
 		return fmt.Errorf("metadata matching requirement not met, %w", err)
 	}
 

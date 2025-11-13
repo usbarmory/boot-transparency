@@ -48,18 +48,18 @@ func (h *UEFIBinary) ParseClaims(jsonClaims []byte) (interface{}, error) {
 // Check matching between requirements and claims for the UEFIBinary category.
 func (h *UEFIBinary) Check(require interface{}, claim interface{}) (err error) {
 	if _, ok := require.(*Requirements); !ok {
-		return fmt.Errorf("invalid·policy requirements for UEFIBinary")
+		return fmt.Errorf("invalid policy requirements for UEFIBinary")
 	}
 
 	if _, ok := claim.(*Claims); !ok {
-		return fmt.Errorf("invalid·claims for UEFIBinary")
+		return fmt.Errorf("invalid claims for UEFIBinary")
 	}
 
 	r := require.(*Requirements)
 	c := claim.(*Claims)
 
 	// Check all the supported policy requirements for UEFIBinary.
-	if err = artifact.CheckHash(r.Hash, c.Hash); err != nil {
+	if err = artifact.CheckHash(r.FileHash, c.FileHash); err != nil {
 		return
 	}
 
@@ -72,31 +72,31 @@ func (h *UEFIBinary) Check(require interface{}, claim interface{}) (err error) {
 	}
 
 	if r.Architecture != "" && r.Architecture != c.Architecture {
-		return fmt.Errorf("architecture %q does·not·met·requirement", c.Architecture)
+		return fmt.Errorf("architecture %q does not met requirement", c.Architecture)
+	}
+
+	if r.Reproducible && !c.Reproducible {
+		return fmt.Errorf("reproducible requirement not met")
 	}
 
 	if err = artifact.CheckArrayInclusion(r.License, c.License); err != nil {
 		return fmt.Errorf("license requirement not met, %w", err)
 	}
 
+	if err = artifact.CheckMap(r.BuildArgs, c.BuildArgs); err != nil {
+		return fmt.Errorf("build args requirement %q not met", r.BuildArgs)
+	}
+
+	if err = artifact.CheckStringEqual(r.ToolChain, c.ToolChain); err != nil {
+		return fmt.Errorf("toolchain requirement not met")
+	}
+
 	if err = artifact.CheckMinTimestamp(r.MinTimestamp, c.Timestamp); err != nil {
 		return
 	}
 
-	if err = artifact.CheckStringMatch(r.Metadata, c.Metadata); err != nil {
-		return fmt.Errorf("metadata matching requirement not met, %w", err)
-	}
-
-	for _, requireMetadata := range r.MetadataInclude {
-		if err = artifact.CheckStringInclude(requireMetadata, c.Metadata); err != nil {
-			return fmt.Errorf("metadata inclusion requirement not met, %w", err)
-		}
-	}
-
-	for _, requireMetadata := range r.MetadataNotInclude {
-		if err = artifact.CheckStringNotInclude(requireMetadata, c.Metadata); err != nil {
-			return fmt.Errorf("metadata non-inclusion requirement not met: %w", err)
-		}
+	if err = artifact.CheckMap(r.Metadata, c.Metadata); err != nil {
+		return fmt.Errorf("metadata requirement %q not met", r.Metadata)
 	}
 
 	return

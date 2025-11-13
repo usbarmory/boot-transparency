@@ -174,7 +174,8 @@ func writeSignedStatementFile(outputFile string, outputStatement *policy.Stateme
 		// Append the new signature, do not overwrite any existing one already present in the statement.
 		outputStatement.Signatures = append(outputStatement.Signatures, s)
 
-		if signedS, err = json.MarshalIndent(outputStatement, "", "\t"); err != nil {
+		if signedS, err = json.Marshal(outputStatement); err != nil {
+			//if signedS, err = json.MarshalIndent(outputStatement, "", "\t"); err != nil {
 			return err
 		}
 

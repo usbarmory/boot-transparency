@@ -29,7 +29,7 @@ type ProofBundle struct {
 	Format uint `json:"format"`
 
 	// Serialized JSON of Statement struct.
-	Statement []byte `json:"statement"`
+	Statement json.RawMessage `json:"statement"`
 
 	// Serialized inclusion proof probing data,
 	// its format depends by the chosen transparency engine.

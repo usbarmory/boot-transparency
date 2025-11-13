@@ -8,10 +8,12 @@
 package artifact
 
 import (
+	"crypto/sha256"
 	"crypto/sha512"
 	"crypto/subtle"
 	"encoding/hex"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -34,12 +36,16 @@ func CheckHash(requireHash string, claimHash string) (err error) {
 		return fmt.Errorf("invalid hash claim, %w", err)
 	}
 
-	if len(r) != sha512.Size {
+	if len(r) != sha512.Size && len(r) != sha256.Size {
 		return fmt.Errorf("invalid requirement hash length %q", requireHash)
 	}
 
-	if len(c) != sha512.Size {
+	if len(c) != sha512.Size && len(c) != sha256.Size {
 		return fmt.Errorf("invalid claim hash length %q", claimHash)
+	}
+
+	if len(r) != len(c) {
+		return fmt.Errorf("require and claim hashes must have the same length")
 	}
 
 	if subtle.ConstantTimeCompare([]byte(r), []byte(c)) != 1 {
@@ -82,6 +88,26 @@ func CheckMaxVersion(requireVersion string, claimVersion string) (err error) {
 	}
 	if semver.Compare(claimVersion, requireVersion) > 0 {
 		return fmt.Errorf("version %q does not met max version requirement", claimVersion)
+	}
+
+	return
+}
+
+// Traverse the entire map[string]string to ensure all the required keys
+// are matching (i.e. regular expression matching) the correpondent
+// claims.
+func CheckMap(require map[string]string, claim map[string]string) (err error) {
+	if len(require) != 0 {
+		for key, regexp := range require {
+			c, found := claim[key]
+			if !found {
+				return fmt.Errorf("required key not present in the claims")
+			}
+
+			if err = CheckStringMatch(c, regexp); err != nil {
+				return
+			}
+		}
 	}
 
 	return
@@ -136,14 +162,33 @@ func CheckMinTimestamp(requireMinTimestamp string, claimTimestamp string) (err e
 	return
 }
 
-// Check if string matching requirement is met.
+// Check if string matching regexp requirement is met.
 func CheckStringMatch(require string, claim string) (err error) {
 	if require == "" {
 		return
 	}
 
+	r, err := regexp.Compile(require)
+
+	if err != nil {
+		return fmt.Errorf("invalid regular expression")
+	}
+
+	if !r.MatchString(claim) {
+		return fmt.Errorf("claimed string does not match required regexp")
+	}
+
+	return
+}
+
+// Check if string matching equal requirement is met.
+func CheckStringEqual(require string, claim string) (err error) {
+	if require == "" {
+		return
+	}
+
 	if require != claim {
-		return fmt.Errorf("claimed string does not match requirement")
+		return fmt.Errorf("claimed string is not equal to the requirement")
 	}
 
 	return

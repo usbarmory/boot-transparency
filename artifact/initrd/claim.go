@@ -32,7 +32,7 @@ type Claims struct {
 
 	// Timestamp in RFC3339 format (e.g. "1985-04-12T23:20:50.52Z"): "2025-10-12T23:20:50.52Z".
 	// The claimant can use this field to expose any relevant timestamp for the artifact
-	// (e.g. the releasing date, the last source modification, ...) that should be verified
+	// (e.g. the releasing date, the last source modification) that should be verified
 	// by the boot policy.
 	Timestamp string `json:"timestamp,omitempty"`
 

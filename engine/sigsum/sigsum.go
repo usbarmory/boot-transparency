@@ -110,7 +110,7 @@ func (e *SigsumEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 	// JSON marshalling is required to ensure the message has been logged
 	// independently from its formatting (i.e. indent spaces, or tabs,
 	// that would be present in human-readable statement JSON).
-	statement, err := json.Marshal(pb.Statement)
+	statement, err := json.MarshalIndent(pb.Statement, "", "\t")
 
 	if err != nil {
 		return nil, err
@@ -253,7 +253,7 @@ func (e *SigsumEngine) VerifyProof(proofBundle interface{}) (err error) {
 	// JSON marshalling is required to ensure the message has been logged
 	// independently from its formatting (i.e. indent spaces, or tabs,
 	// that would be present in human-readable statement JSON).
-	statement, err := json.Marshal(pb.Statement)
+	statement, err := json.MarshalIndent(pb.Statement, "", "\t")
 
 	if err != nil {
 		return

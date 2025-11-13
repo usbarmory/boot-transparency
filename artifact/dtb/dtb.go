@@ -48,18 +48,18 @@ func (h *Dtb) ParseClaims(jsonClaims []byte) (interface{}, error) {
 // Check matching between requirements and claims for the Dtb category
 func (h *Dtb) Check(require interface{}, claim interface{}) (err error) {
 	if _, ok := require.(*Requirements); !ok {
-		return fmt.Errorf("invalid·policy requirements for Dtb")
+		return fmt.Errorf("invalid policy requirements for Dtb")
 	}
 
 	if _, ok := claim.(*Claims); !ok {
-		return fmt.Errorf("invalid·claims for Dtb")
+		return fmt.Errorf("invalid claims for Dtb")
 	}
 
 	r := require.(*Requirements)
 	c := claim.(*Claims)
 
 	// check all the supported policy requirements for Dtb
-	if err = artifact.CheckHash(r.Hash, c.Hash); err != nil {
+	if err = artifact.CheckHash(r.FileHash, c.FileHash); err != nil {
 		return
 	}
 
@@ -72,7 +72,7 @@ func (h *Dtb) Check(require interface{}, claim interface{}) (err error) {
 	}
 
 	if r.Architecture != "" && r.Architecture != c.Architecture {
-		return fmt.Errorf("architecture %q does·not·met·requirement", c.Architecture)
+		return fmt.Errorf("architecture %q does not met requirement", c.Architecture)
 	}
 
 	if err = artifact.CheckArrayInclusion(r.License, c.License); err != nil {
@@ -83,36 +83,12 @@ func (h *Dtb) Check(require interface{}, claim interface{}) (err error) {
 		return
 	}
 
-	if err = artifact.CheckStringMatch(r.Metadata, c.Metadata); err != nil {
-		return fmt.Errorf("metadata matching requirement not met, %w", err)
+	if err = artifact.CheckMap(r.BuildArgs, c.BuildArgs); err != nil {
+		return fmt.Errorf("build args requirement %q not met", r.BuildArgs)
 	}
 
-	for _, requireMetadata := range r.MetadataInclude {
-		if err = artifact.CheckStringInclude(requireMetadata, c.Metadata); err != nil {
-			return fmt.Errorf("metadata inclusion requirement not met, %w", err)
-		}
-	}
-
-	for _, requireMetadata := range r.MetadataNotInclude {
-		if err = artifact.CheckStringNotInclude(requireMetadata, c.Metadata); err != nil {
-			return fmt.Errorf("metadata non-inclusion requirement not met, %w", err)
-		}
-	}
-
-	if err = artifact.CheckStringMatch(r.Dts, c.Dts); err != nil {
-		return fmt.Errorf("dts matching requirement not met, %w", err)
-	}
-
-	for _, requireDts := range r.DtsInclude {
-		if err = artifact.CheckStringInclude(requireDts, c.Dts); err != nil {
-			return fmt.Errorf("dts inclusion requirement not met, %w", err)
-		}
-	}
-
-	for _, requireDts := range r.DtsNotInclude {
-		if err := artifact.CheckStringNotInclude(requireDts, c.Dts); err != nil {
-			return fmt.Errorf("dts non-inclusion requirement not met, %w", err)
-		}
+	if err = artifact.CheckMap(r.Metadata, c.Metadata); err != nil {
+		return fmt.Errorf("metadata requirement %q not met", r.Metadata)
 	}
 
 	return
