@@ -103,7 +103,7 @@ func bootTransparencyOfflineCheck(fsys fs.FS, bootPolicyPath string, witnessPoli
 	b := pb.(*sigsum.ProofBundle)
 
 	// Parse the statement included in the proof bundle.
-	c, err := policy.ParseClaims(b.Statement)
+	c, err := policy.ParseStatement(b.Statement)
 	if err != nil {
 		return err
 	}
@@ -202,7 +202,7 @@ func bootTransparencyOnlineCheck(fsys fs.FS, bootPolicyPath string, witnessPolic
 	b := pb.(*sigsum.ProofBundle)
 
 	// Parse the statement included in the proof bundle.
-	c, err := policy.ParseClaims(b.Statement)
+	c, err := policy.ParseStatement(b.Statement)
 	if err != nil {
 		return err
 	}

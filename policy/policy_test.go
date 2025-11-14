@@ -139,7 +139,7 @@ func TestCheck(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	statement, err := ParseClaims(s)
+	statement, err := ParseStatement(s)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -229,7 +229,7 @@ func TestNegativeCheck(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	statement, err := ParseClaims(s)
+	statement, err := ParseStatement(s)
 	if err != nil {
 		t.Fatal(err)
 	}

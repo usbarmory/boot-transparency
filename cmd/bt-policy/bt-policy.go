@@ -96,7 +96,7 @@ func readStatement(fileName string) (*policy.Statement, error) {
 		return nil, err
 	}
 
-	s, err = policy.ParseClaims(bytes)
+	s, err = policy.ParseStatement(bytes)
 	if err != nil {
 		return nil, err
 	}

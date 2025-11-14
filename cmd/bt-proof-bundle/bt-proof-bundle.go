@@ -165,7 +165,7 @@ Usage: bt-proof [--help]
 			log.Fatalf("cannot read statement, %v", err)
 		}
 
-		_, err = policy.ParseClaims(s)
+		_, err = policy.ParseStatement(s)
 		if err != nil {
 			log.Fatalf("parse statement failed, %v", err)
 		}

@@ -116,11 +116,9 @@ func (e *SigsumEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 		return nil, err
 	}
 
-	// Append a newline (i.e. 0x0a) to be consistent with the actual logged bytes.
-	statement = append(statement, "\n"...)
-
 	// The message chksum is a SHA-256 of the logged message,
 	// which in turn is a SHA-256 of the initial statement.
+	// This checksum should match the one shown by sigsum-monitor.
 	s := sha256.Sum256(statement)
 	s = sha256.Sum256(s[:])
 
@@ -259,10 +257,12 @@ func (e *SigsumEngine) VerifyProof(proofBundle interface{}) (err error) {
 		return
 	}
 
-	// Append a newline (i.e. 0x0a) to be consistent with the actual logged bytes.
-	statement = append(statement, "\n"...)
-
 	// The logged message is a SHA-256 of the original statement.
+	// Here message content should be aligned with the output of
+	// sha256sum out | cut -d' ' -f1 | base16 -d | hexdump -C
+	// This is not the leaf checksum shown by sigsum-monitor,
+	// indeed, this is the "actual" logged message.
+	// sigsum-monitor shows a sha256sum of this.
 	msg := crypto.Hash(sha256.Sum256(statement))
 
 	// Load the proof.

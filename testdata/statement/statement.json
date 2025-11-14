@@ -1,6 +1,8 @@
 {
-	"description": "Linux bundle",
-	"version": "v1",
+	"header": {
+		"description": "Linux bundle",
+		"revision": "v1"
+	},
 	"artifacts": [
 		{
 			"category": 1,
@@ -9,7 +11,7 @@
 				"file_hash": "8ba6bc3d9ccfe9c17ad7482d6c0160150c7d1da4b4a4f464744ce069291d6174ea9949574002f022e18585df04f57c192431794f36f40659930bd5c0b470eb59",
 				"version": "v6.14.0-29-generic",
 				"tainted": false,
-				"metadata": {
+				"build_args": {
 					"CONFIG_STACKPROTECTOR_STRONG": "y"
 				}
 			}

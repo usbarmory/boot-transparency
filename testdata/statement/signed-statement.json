@@ -1,6 +1,8 @@
 {
-	"description": "Linux bundle",
-	"version": "v1",
+	"header": {
+		"description": "Linux bundle",
+		"revision": "v1"
+	},
 	"artifacts": [
 		{
 			"category": 1,
@@ -9,7 +11,7 @@
 				"file_hash": "8ba6bc3d9ccfe9c17ad7482d6c0160150c7d1da4b4a4f464744ce069291d6174ea9949574002f022e18585df04f57c192431794f36f40659930bd5c0b470eb59",
 				"version": "v6.14.0-29-generic",
 				"tainted": false,
-				"metadata": {
+				"build_args": {
 					"CONFIG_STACKPROTECTOR_STRONG": "y"
 				}
 			}
@@ -26,11 +28,11 @@
 	"signatures": [
 		{
 			"pub_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP5rbNcIOcwqBHzLOhJEfdKFHa+pIs10idfTm8c+HDnK",
-			"signature": "320ffb07225fc6cd942e8e6a21782fa709fe653c411feae27606dd89c071e0ec1651815a9499d4fb0f2c9ca254d9b794f6d6e391b7d01fbe138f6500fda3c303"
+			"signature": "0f5b21c0d983e8834a7ba3b8cffca0d3891968a083aec3a3ca1f11ff51a426cafb96f5667be93546a183c78576d06a6b36f33648cffbf2fe345058c25268a508"
 		},
 		{
 			"pub_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL0zV5fSWzzXa4R7Kpk6RAXkvWsJGpvkQ+9/xxpHC49J",
-			"signature": "3334341f45f90b9534b413869a22f44caf35a51a0f837ecc9e7e6ee4e4bc69dcd3bc8501d1b28439fafce32a939536ab0d2ed33131951a3d6b9913f38bfcef0e"
+			"signature": "02d3a093acd48734ca6d4cecc109c6dda47c146fe9669603bf684c418a2cee2410693a8b75d85f4cdf9a03de58b44a6f8ae5bc0bc6a68a2326bbef32d58e3c0e"
 		}
 	]
 }

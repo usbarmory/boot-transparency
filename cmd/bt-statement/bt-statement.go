@@ -8,6 +8,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -20,9 +21,11 @@ import (
 	"sigsum.org/sigsum-go/pkg/crypto"
 	"sigsum.org/sigsum-go/pkg/key"
 
+	_ "github.com/usbarmory/boot-transparency/artifact/dtb"
 	_ "github.com/usbarmory/boot-transparency/artifact/initrd"
 	_ "github.com/usbarmory/boot-transparency/artifact/linux_kernel"
-	_ "github.com/usbarmory/boot-transparency/artifact/uefi_bios"
+	_ "github.com/usbarmory/boot-transparency/artifact/uefi_binary"
+	_ "github.com/usbarmory/boot-transparency/artifact/windows_bootmgr"
 	"github.com/usbarmory/boot-transparency/policy"
 )
 
@@ -142,7 +145,7 @@ func readStatement(fileName string) (*policy.Statement, error) {
 		return nil, err
 	}
 
-	s, err = policy.ParseClaims(bytes)
+	s, err = policy.ParseStatement(bytes)
 	if err != nil {
 		return nil, err
 	}
@@ -174,8 +177,7 @@ func writeSignedStatementFile(outputFile string, outputStatement *policy.Stateme
 		// Append the new signature, do not overwrite any existing one already present in the statement.
 		outputStatement.Signatures = append(outputStatement.Signatures, s)
 
-		if signedS, err = json.Marshal(outputStatement); err != nil {
-			//if signedS, err = json.MarshalIndent(outputStatement, "", "\t"); err != nil {
+		if signedS, err = json.MarshalIndent(outputStatement, "", "\t"); err != nil {
 			return err
 		}
 
@@ -238,12 +240,21 @@ Usage: bt-statement [--help]
 			log.Fatalf("cannot read statement, %v", err)
 		}
 
-		// Sign only the artifacts section of the bundle statement.
+		// Sign the whole statement (i.e. bundle header and artifacts).
+		header, err := json.Marshal(statement.Header)
+		if err != nil {
+			log.Fatalf("statement signing failed, %v", err)
+		}
+
 		artifacts, err := json.Marshal(statement.Artifacts)
 		if err != nil {
 			log.Fatalf("statement signing failed, %v", err)
 		}
-		signature, err := signer.Sign(artifacts)
+
+		parts := [][]byte{header, artifacts}
+		signedData := bytes.Join(parts, nil)
+
+		signature, err := signer.Sign(signedData)
 		if err != nil {
 			log.Fatalf("statement signing failed, %v", err)
 		}
@@ -267,10 +278,20 @@ Usage: bt-statement [--help]
 		if err != nil {
 			log.Fatalf("cannot read statement, %v", err)
 		}
+
+		//·Header·and·Artifacts·are·both·included·in·the·signed·data.
+		header, err := json.Marshal(statement.Header)
+		if err != nil {
+			log.Fatalf("statement signing failed, %v", err)
+		}
+
 		artifacts, err := json.Marshal(statement.Artifacts)
 		if err != nil {
-			log.Fatalf("signature verification failed, %v", err)
+			log.Fatalf("statement signing failed, %v", err)
 		}
+
+		parts := [][]byte{header, artifacts}
+		signedData := bytes.Join(parts, nil)
 
 		// The signed statement can contain multiple signatures.
 		foundValidSignature := false
@@ -280,7 +301,7 @@ Usage: bt-statement [--help]
 				log.Fatalf("signature verification failed, %v", err)
 			}
 
-			if crypto.Verify(&publicKey, artifacts, &s) {
+			if crypto.Verify(&publicKey, signedData, &s) {
 				log.Printf("signature is valid")
 				foundValidSignature = true
 				break

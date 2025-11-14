@@ -8,6 +8,7 @@
 package policy
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 
@@ -39,18 +40,27 @@ type Artifact struct {
 	Claims json.RawMessage `json:"claims"`
 }
 
-// Define the statement that is logged to the transparency log.
-type Statement struct {
-	// Human-readable title for the bundle.
+// Define the statement header.
+type StatementHeader struct {
+	// Human-readable description/title for the bundle.
 	Description string `json:"description,omitempty"`
 
 	// Bundle version, using Semantic Versioning 2.0.0 (see semver.org).
-	Version string `json:"version,omitempty"`
+	Revision string `json:"revision,omitempty"`
+
+	// Platform ID (optional)
+	PlatformID string `json:"platform_id,omitempty"`
+}
+
+// Define the statement that is logged to the transparency log.
+type Statement struct {
+	// Statement header.
+	Header StatementHeader `json:"header"`
 
 	// Artifact claims.
 	Artifacts []Artifact `json:"artifacts"`
 
-	// Statement signatures.
+	// Statement signatures (Header and Artifacts are included in the signed data).
 	Signatures []Signature `json:"signatures,omitempty"`
 }
 
@@ -95,7 +105,7 @@ type PolicyEntry struct {
 }
 
 // Parse the logged statement which is included as serialized JSON in the proof bundle.
-func ParseClaims(jsonStatement []byte) (s *Statement, err error) {
+func ParseStatement(jsonStatement []byte) (s *Statement, err error) {
 	var h artifact.Handler
 
 	if err = json.Unmarshal(jsonStatement, &s); err != nil {
@@ -251,11 +261,19 @@ func Check(p *[]PolicyEntry, s *Statement) (err error) {
 func isSigningQuorumSatisfied(p *SigningRequirement, s *Statement) (err error) {
 	var validSignatures uint64
 
-	artifacts, err := json.Marshal(s.Artifacts)
-
+	header, err := json.Marshal(s.Header)
 	if err != nil {
 		return
 	}
+
+	artifacts, err := json.Marshal(s.Artifacts)
+	if err != nil {
+		return
+	}
+
+	// Header and Artifacts are both included in the signed data.
+	parts := [][]byte{header, artifacts}
+	signedData := bytes.Join(parts, nil)
 
 	// Total valid signatures.
 	validSignatures = 0
@@ -275,7 +293,7 @@ func isSigningQuorumSatisfied(p *SigningRequirement, s *Statement) (err error) {
 				return
 			}
 
-			if crypto.Verify(&k, artifacts, &s) {
+			if crypto.Verify(&k, signedData, &s) {
 				gotValidSignature = true
 				break
 			}

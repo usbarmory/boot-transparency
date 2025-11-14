@@ -6,7 +6,7 @@
 				"requirements": {
 					"min_version": "v6.14.0-29",
 					"tainted": false,
-					"metadata": {
+					"build_args": {
 						"CONFIG_STACKPROTECTOR_STRONG": "y"
 					}
 				}
