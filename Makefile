@@ -10,7 +10,6 @@ test:
 	@cd artifact/initrd && ${GO} test -cover -v
 	@cd artifact/linux_kernel && ${GO} test -cover -v
 	@cd artifact/uefi_binary && ${GO} test -cover -v
-	@cd artifact/uefi_bios && ${GO} test -cover -v
 	@cd artifact/windows_bootmgr && ${GO} test -cover -v
 	@cd engine/sigsum && ${GO} test -cover -v
 	@cd engine/tessera && ${GO} test -cover -v

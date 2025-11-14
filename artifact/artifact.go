@@ -21,11 +21,7 @@ const (
 	WindowsBootMgr
 	_end_boot_categories = 0x8000
 
-	// 0x8001 - 0x8FFF reserved for bios artifacts.
-	UEFIBIOS
-	_end_bios_categories = 0x9000
-
-	// 0x9001 - 0x9FFF reserved for generic artifacts.
+	// 0x8001 - 0x9FFF reserved for generic artifacts.
 	CVE
 	_end_generic_categories = 0xA000
 
