@@ -66,7 +66,7 @@ bootPolicy = []byte(`[
             "requirements": {
                 "min_version": "v6.14.0-29",
                 "tainted": false,
-                "metadata": {
+                "build_args": {
                     "CONFIG_STACKPROTECTOR_STRONG": "y"
                 }
             }
@@ -150,7 +150,7 @@ if err != nil {
 b := pb.(*sigsum.ProofBundle)
 
 // Parse the statement claims included in the proof bundle.
-c, err := policy.ParseClaims(b.Statement)
+c, err := policy.ParseStatement(b.Statement)
 if err != nil {
     // Handle error: boot bundle parsing failed, cannot parse claims.
 }
