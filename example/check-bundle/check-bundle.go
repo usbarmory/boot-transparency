@@ -23,8 +23,8 @@ import (
 const (
 	// Boot-transparency
 	bootPolicyPath    = "policy/policy.json"
-	witnessPolicyPath = "sigsum/witness_policy.txt"
-	proofBundlePath   = "sigsum/bt-proof-bundle.json"
+	witnessPolicyPath = "sigsum/trust_policy"
+	proofBundlePath   = "sigsum/proof-bundle.json"
 	submitKeyPath     = "keys/submit-key.pub"
 	logKeyPath        = "keys/log-key.pub"
 )

@@ -20,13 +20,13 @@ var validWitnessPolicy []byte
 func TestLoadTestData(t *testing.T) {
 	var err error
 
-	validProofBundle, err = os.ReadFile("../../testdata/sigsum/bt-proof-bundle.json")
+	validProofBundle, err = os.ReadFile("../../testdata/sigsum/proof-bundle.json")
 
 	if err != nil {
 		t.Errorf("failed to load test proof bundle: %s", err)
 	}
 
-	validWitnessPolicy, err = os.ReadFile("../../testdata/sigsum/witness_policy.txt")
+	validWitnessPolicy, err = os.ReadFile("../../testdata/sigsum/trust_policy")
 
 	if err != nil {
 		t.Errorf("failed to load test witness policy: %s", err)

@@ -49,7 +49,7 @@ func init() {
 // the collectProof() from sigsum-go/pkg/submit/submit.go.
 func (e *SigsumEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 	if _, ok := proofBundle.(*ProofBundle); !ok {
-		return nil, fmt.Errorf("invalid·proof bundle for Sigsum engine")
+		return nil, fmt.Errorf("invalid proof bundle for Sigsum engine")
 	}
 
 	pb := proofBundle.(*ProofBundle)
