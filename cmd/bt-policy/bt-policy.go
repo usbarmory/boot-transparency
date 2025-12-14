@@ -18,7 +18,7 @@ import (
 	"github.com/usbarmory/boot-transparency/policy"
 )
 
-type CheckSettings struct {
+type ValidateSettings struct {
 	policyFile          string
 	signedStatementFile string
 }
@@ -27,9 +27,9 @@ type ParseSettings struct {
 	policyFile string
 }
 
-func (s *CheckSettings) parse(args []string) {
+func (s *ValidateSettings) parse(args []string) {
 	const usage = `
-Check a given signed statement against a boot-transparency policy,
+Validate a given signed statement against a boot-transparency policy,
 the result is printed to stdout.
 `
 	help := false
@@ -126,11 +126,11 @@ func readPolicy(fileName string) (*[]policy.PolicyEntry, error) {
 
 func main() {
 	const usage = `
-Parse or check a boot transparency policy.
+Parse or validate a boot transparency policy.
 
 Usage: bt-policy [--help]
    or: bt-policy parse [--help|options]
-   or: bt-policy check [--help|options]
+   or: bt-policy validate [--help|options]
 `
 
 	log.SetFlags(0)
@@ -154,8 +154,8 @@ Usage: bt-policy [--help]
 				log.Println(string(parsedPolicy))
 			}
 		}
-	case "check":
-		var settings CheckSettings
+	case "validate":
+		var settings ValidateSettings
 		settings.parse(os.Args)
 
 		s, err := readStatement(settings.signedStatementFile)
@@ -168,7 +168,7 @@ Usage: bt-policy [--help]
 			log.Fatalf("cannot read policy, %v", err)
 		}
 
-		if err = policy.Check(p, s); err != nil {
+		if err = policy.Validate(p, s); err != nil {
 			log.Fatal(err)
 		} else {
 			log.Printf("signed statement is matching the policy")

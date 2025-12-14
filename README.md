@@ -155,8 +155,8 @@ if err != nil {
     // Handle error: boot bundle parsing failed, cannot parse claims.
 }
 
-// Check if the logged claims are matching the policy requirements.
-if err = policy.Check(r, c); err != nil {
+// Validate the matching between the logged claims and the policy requirements.
+if err = policy.Validate(r, c); err != nil {
     // Handle error: boot bundle not authorized.
 }
 

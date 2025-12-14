@@ -34,7 +34,7 @@ type BtArtifact struct {
 	Requirements []byte
 }
 
-func bootTransparencyOfflineCheck(fsys fs.FS, bootPolicyPath string, witnessPolicyPath string, submitKeyPath string, logKeyPath string, proofBundlePath string) (err error) {
+func bootTransparencyOfflineValidate(fsys fs.FS, bootPolicyPath string, witnessPolicyPath string, submitKeyPath string, logKeyPath string, proofBundlePath string) (err error) {
 	bootPolicy, err := fs.ReadFile(fsys, bootPolicyPath)
 	if err != nil {
 		return fmt.Errorf("cannot read boot policy, %v", err)
@@ -113,8 +113,8 @@ func bootTransparencyOfflineCheck(fsys fs.FS, bootPolicyPath string, witnessPoli
 		return err
 	}
 
-	// Check if the hash of artifacts loaded during the booting process are matching
-	// the ones referenced in the proof bundle.
+	// Ensure the artifacts loaded during the booting process are matching
+	// the ones referenced in the proof bundle (i.e. file hash matching).
 	requiredLinuxKernel, _ := json.Marshal(map[string]string{
 		"file_hash": "8ba6bc3d9ccfe9c17ad7482d6c0160150c7d1da4b4a4f464744ce069291d6174ea9949574002f022e18585df04f57c192431794f36f40659930bd5c0b470eb59"})
 
@@ -130,17 +130,17 @@ func bootTransparencyOfflineCheck(fsys fs.FS, bootPolicyPath string, witnessPoli
 		return err
 	}
 
-	// Check if the logged claims are matching the policy requirements.
-	if err = policy.Check(r, c); err != nil {
+	// Validate the matching bewteen the logged claims and the policy requirements.
+	if err = policy.Validate(r, c); err != nil {
 		// The boot bundle is NOT authorized for boot.
 		return err
 	}
 
-	// All boot-transparency checks passed.
+	// All boot-transparency validations passed.
 	return
 }
 
-func bootTransparencyOnlineCheck(fsys fs.FS, bootPolicyPath string, witnessPolicyPath string, submitKeyPath string, logKeyPath string, proofBundlePath string) (err error) {
+func bootTransparencyOnlineValidate(fsys fs.FS, bootPolicyPath string, witnessPolicyPath string, submitKeyPath string, logKeyPath string, proofBundlePath string) (err error) {
 	bootPolicy, err := fs.ReadFile(fsys, bootPolicyPath)
 	if err != nil {
 		return fmt.Errorf("cannot read boot policy, %v", err)
@@ -229,8 +229,8 @@ func bootTransparencyOnlineCheck(fsys fs.FS, bootPolicyPath string, witnessPolic
 		return err
 	}
 
-	// Check if the hash of artifacts loaded during the booting process are matching
-	// the ones referenced in the proof bundle.
+	// Ensure the artifacts loaded during the booting process are matching
+	// the ones referenced in the proof bundle (i.e. file hash matching).
 	requiredLinuxKernel, _ := json.Marshal(map[string]string{
 		"file_hash": "8ba6bc3d9ccfe9c17ad7482d6c0160150c7d1da4b4a4f464744ce069291d6174ea9949574002f022e18585df04f57c192431794f36f40659930bd5c0b470eb59"})
 
@@ -246,17 +246,17 @@ func bootTransparencyOnlineCheck(fsys fs.FS, bootPolicyPath string, witnessPolic
 		return err
 	}
 
-	// Check if the logged claims are matching the policy requirements.
-	if err = policy.Check(r, c); err != nil {
+	// Validate the matching beween the logged claims and the policy requirements.
+	if err = policy.Validate(r, c); err != nil {
 		// The boot bundle is NOT authorized for boot.
 		return err
 	}
 
-	// All boot-transparency checks passed.
+	// All boot-transparency validations passed.
 	return
 }
 
-// Check the matching of the boot artifacts with the ones included into a given proof bundle.
+// Ensure the matching between the boot artifacts and the ones included into a given proof bundle.
 // This step is vital to ensure the correspondency between the artifacts actually
 // loaded during the boot and the claims that will be validated by the  boot-transparency
 // policy function.
@@ -283,9 +283,9 @@ func validateArtifacts(s *policy.Statement, btArtifacts []BtArtifact) (err error
 					return err
 				}
 
-				err = h.Check(r, c)
+				err = h.Validate(r, c)
 				if err != nil {
-					return fmt.Errorf("loaded boot artifacts do not correspond to the proof bundle ones, file hash mistmatch.")
+					return fmt.Errorf("loaded boot artifacts do not correspond to the proof bundle ones, file hash mistmatch")
 				}
 
 				found = true
@@ -294,7 +294,7 @@ func validateArtifacts(s *policy.Statement, btArtifacts []BtArtifact) (err error
 		}
 
 		if !found {
-			return fmt.Errorf("loaded boot artifacts do not correspond to the proof bundle ones, one or more artifacts are not present in the proof bundle.")
+			return fmt.Errorf("loaded boot artifacts do not correspond to the proof bundle ones, one or more artifacts are not present in the proof bundle")
 		}
 	}
 
@@ -306,15 +306,15 @@ func main() {
 	root := os.DirFS(rootPath)
 
 	// Boot-transparency
-	if err := bootTransparencyOfflineCheck(root, bootPolicyPath, witnessPolicyPath, submitKeyPath, logKeyPath, proofBundlePath); err != nil {
-		log.Fatalf("boot-transparency off-line check failed\n%v", err)
+	if err := bootTransparencyOfflineValidate(root, bootPolicyPath, witnessPolicyPath, submitKeyPath, logKeyPath, proofBundlePath); err != nil {
+		log.Fatalf("boot-transparency off-line validation failed\n%v", err)
 	} else {
-		log.Printf("boot-transparency off-line check passed\n")
+		log.Printf("boot-transparency off-line validation passed\n")
 	}
 
-	if err := bootTransparencyOnlineCheck(root, bootPolicyPath, witnessPolicyPath, submitKeyPath, logKeyPath, proofBundlePath); err != nil {
-		log.Fatalf("boot-transparency on-line check failed\n%v", err)
+	if err := bootTransparencyOnlineValidate(root, bootPolicyPath, witnessPolicyPath, submitKeyPath, logKeyPath, proofBundlePath); err != nil {
+		log.Fatalf("boot-transparency on-line validation failed\n%v", err)
 	} else {
-		log.Printf("boot-transparency on-line check passed\n")
+		log.Printf("boot-transparency on-line validation passed\n")
 	}
 }

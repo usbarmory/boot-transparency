@@ -161,8 +161,7 @@ func ParseRequirements(jsonPolicy []byte) (policy *[]PolicyEntry, err error) {
 	return
 }
 
-// Check if the claims present in a given statement are satisfying
-// the policy requirements.
+// Validate the claims present in a given statement against the policy requirements.
 //
 // The policy array (i.e. list of per-artifact bundle requirements) is
 // traversed to verify whether there is at least one entry
@@ -175,7 +174,7 @@ func ParseRequirements(jsonPolicy []byte) (policy *[]PolicyEntry, err error) {
 //   - the bundle does not met the policy requirements
 //   - the claim parsing fails
 //   - the requirement parsing fails.
-func Check(p *[]PolicyEntry, s *Statement) (err error) {
+func Validate(p *[]PolicyEntry, s *Statement) (err error) {
 	var h artifact.Handler
 
 	// Traverse the policy.
@@ -192,10 +191,10 @@ func Check(p *[]PolicyEntry, s *Statement) (err error) {
 			}
 		}
 
-		// Check all the per-category requirements against the claimed
+		// Validate all the per-category requirements against the claimed
 		// properties for the artifacts present in the bundle.
 		for _, policyArtifact := range entry.Artifacts {
-			// This means that the latest checked artifact did not met the requirements.
+			// This means that the latest validated artifact did not met the requirements.
 			if err != nil {
 				break // Try with the next policy entry.
 			}
@@ -203,7 +202,7 @@ func Check(p *[]PolicyEntry, s *Statement) (err error) {
 			h, err = artifact.GetHandler(policyArtifact.Category)
 
 			// Return immediately if the policy requirements for this artifact
-			// cannot be checked. The handler for this category, that is included
+			// cannot be validated. The handler for this category, that is included
 			// in the policy, is not registered.
 			if err != nil {
 				return
@@ -225,16 +224,16 @@ func Check(p *[]PolicyEntry, s *Statement) (err error) {
 						return parseError
 					}
 
-					// Stop checking this bundle at the first artifact that
+					// Stop validating this bundle at the first artifact that
 					// does not met the requirements.
-					err = h.Check(r, c)
+					err = h.Validate(r, c)
 					if err != nil {
 						break
 					}
 				}
 			}
 
-			// Do not continue checking this bundle.
+			// Do not continue validation for this bundle.
 			// It cannot authorize bundles that are not containing at least one artifact
 			// that is compatible (i.e. same category) with the one required by this policy entry.
 			if !matchCategory {

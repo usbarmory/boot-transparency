@@ -54,7 +54,7 @@ func (e *SigsumEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 
 	pb := proofBundle.(*ProofBundle)
 
-	// Check that the format set in the bundle is correct.
+	// Validate the correctness of the proof bundle format.
 	if pb.Format != transparency.Sigsum {
 		return nil, fmt.Errorf("invalid bundle format %q, expected %q (transparency.Sigsum)", pb.Format, transparency.Sigsum)
 	}
@@ -67,8 +67,7 @@ func (e *SigsumEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 		return nil, fmt.Errorf("trusted log public key is not set")
 	}
 
-	// Check if the log key hash included in the proof probe corresponds
-	// to one of the trusted log keys.
+	// Validate the trustworthiness of the log key included in the proof probe.
 	lk, err := getTrustedKeyFromHash(e.logPubkey, pb.Probe.LogPublicKeyHash)
 
 	if err != nil {
@@ -79,8 +78,7 @@ func (e *SigsumEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 		return nil, fmt.Errorf("trusted submit public key is not set")
 	}
 
-	// Check if the submit key hash included in the proof probe corresponds
-	// to one of the trusted submit keys.
+	// Validate the trustworthiness of the submit key included in the proof probe.
 	sk, err := getTrustedKeyFromHash(e.submitPubkey, pb.Probe.SubmitPublicKeyHash)
 
 	if err != nil {
@@ -241,7 +239,7 @@ func (e *SigsumEngine) VerifyProof(proofBundle interface{}) (err error) {
 
 	pb := proofBundle.(*ProofBundle)
 
-	// Check that the format set in the bundle is correct.
+	// Validate the correctness of the proof bundle format.
 	if pb.Format != transparency.Sigsum {
 		return fmt.Errorf("invalid bundle format %q, expected %q (transparency.SigsumBundle)", pb.Format, transparency.Sigsum)
 	}
@@ -271,12 +269,12 @@ func (e *SigsumEngine) VerifyProof(proofBundle interface{}) (err error) {
 		return
 	}
 
-	// Check if at least one trusted submitter key has been set.
+	// Ensure at least one trusted submitter key has been set.
 	if len(e.submitPubkey) == 0 {
 		return fmt.Errorf("submitter public key is not set")
 	}
 
-	// Check if at least one trusted log key has been set.
+	// Ensure at least one trusted log key has been set.
 	// The log key is read directly from the witness policy (when present).
 	if e.witnessPolicy == nil && len(e.logPubkey) == 0 {
 		return fmt.Errorf("log public key is not set")
@@ -331,7 +329,7 @@ func (e *SigsumEngine) ParseProof(jsonProofBundle []byte) (interface{}, []byte, 
 	// Do not parse the statement, only focus on the inclusion proof
 	// and the probing data.
 
-	// Check if this is a Sigsum proof bundle.
+	// Validate the correctness of the proof bundle format.
 	if pb.Format != transparency.Sigsum {
 		return nil, nil, fmt.Errorf("invalid bundle format %q, expected %q (transparency.Sigsum)", pb.Format, transparency.Sigsum)
 	}

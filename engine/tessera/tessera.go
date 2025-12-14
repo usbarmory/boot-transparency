@@ -49,7 +49,7 @@ func (e *TesseraEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 
 	pb := proofBundle.(*ProofBundle)
 
-	// Check that the format set in the bundle is correct.
+	// Validate the correctness of the proof bundle format.
 	if pb.Format != transparency.Tessera {
 		return nil, fmt.Errorf("invalid bundle format %q, expected %q (transparency.Tessera)", pb.Format, transparency.Tessera)
 	}
@@ -62,8 +62,7 @@ func (e *TesseraEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 		return nil, fmt.Errorf("log public key is not set")
 	}
 
-	// Check if the log key included in the proof probe
-	// corresponds to one of the trusted log public keys.
+	// Validate the trustworthiness of the log key included in the proof probe.
 	lk, err := getTrustedKey(e.logPubkey, pb.Probe.LogPublicKey)
 
 	if err != nil {
@@ -209,7 +208,7 @@ func (e *TesseraEngine) VerifyProof(proofBundle interface{}) (err error) {
 
 	pb := proofBundle.(*ProofBundle)
 
-	// Check that the format set in the bundle is correct.
+	// Validate the correctness of the proof bundle format.
 	if pb.Format != transparency.Tessera {
 		return fmt.Errorf("invalid bundle format %q, expected %q (transparency.Tessera)", pb.Format, transparency.Tessera)
 	}
@@ -226,7 +225,7 @@ func (e *TesseraEngine) VerifyProof(proofBundle interface{}) (err error) {
 
 	leafHash := rfc6962.DefaultHasher.HashLeaf(statement)
 
-	// Check if at least one trusted log key has been set.
+	// Validate the trustworthiness of the log key included in the proof probe.
 	if len(e.logPubkey) == 0 {
 		return fmt.Errorf("log public key is not set")
 	}
@@ -266,7 +265,7 @@ func (e *TesseraEngine) ParseProof(jsonProofBundle []byte) (interface{}, []byte,
 	// Do not parse the statement, only focus on the inclusion proof
 	// and the probing data.
 
-	// Check if this is a Tessera proof bundle.
+	// Validate the correctness of the proof bundle format.
 	if pb.Format != transparency.Tessera {
 		return nil, nil, fmt.Errorf("invalid bundle format %q, expected %q (transparency.Tessera)", pb.Format, transparency.Tessera)
 	}

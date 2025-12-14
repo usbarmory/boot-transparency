@@ -14,16 +14,16 @@ import (
 	"github.com/usbarmory/boot-transparency/artifact"
 )
 
-// Define the Dtb handler
+// Define the Dtb handler.
 type Dtb struct{}
 
-// Register the handler for the Dtb category
+// Register the handler for the Dtb category.
 func init() {
 	h := Dtb{}
 	artifact.Add(&h, artifact.Dtb)
 }
 
-// Parse requirements for the Dtb category
+// Parse requirements for the Dtb category.
 func (h *Dtb) ParseRequirements(jsonRequirements []byte) (interface{}, error) {
 	var r Requirements
 
@@ -34,7 +34,7 @@ func (h *Dtb) ParseRequirements(jsonRequirements []byte) (interface{}, error) {
 	return &r, nil
 }
 
-// Parse claims for the Dtb category
+// Parse claims for the Dtb category.
 func (h *Dtb) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	var c Claims
 
@@ -45,8 +45,8 @@ func (h *Dtb) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	return &c, nil
 }
 
-// Check matching between requirements and claims for the Dtb category
-func (h *Dtb) Check(require interface{}, claim interface{}) (err error) {
+// Validate matching between requirements and claims for the Dtb category.
+func (h *Dtb) Validate(require interface{}, claim interface{}) (err error) {
 	if _, ok := require.(*Requirements); !ok {
 		return fmt.Errorf("invalid policy requirements for Dtb")
 	}
@@ -58,16 +58,16 @@ func (h *Dtb) Check(require interface{}, claim interface{}) (err error) {
 	r := require.(*Requirements)
 	c := claim.(*Claims)
 
-	// check all the supported policy requirements for Dtb
-	if err = artifact.CheckHash(r.FileHash, c.FileHash); err != nil {
+	// Go through all the supported policy requirements for Dtb.
+	if err = artifact.ValidateHash(r.FileHash, c.FileHash); err != nil {
 		return
 	}
 
-	if err = artifact.CheckMinVersion(r.MinVersion, c.Version); err != nil {
+	if err = artifact.ValidateMinVersion(r.MinVersion, c.Version); err != nil {
 		return
 	}
 
-	if err = artifact.CheckMaxVersion(r.MaxVersion, c.Version); err != nil {
+	if err = artifact.ValidateMaxVersion(r.MaxVersion, c.Version); err != nil {
 		return
 	}
 
@@ -75,19 +75,19 @@ func (h *Dtb) Check(require interface{}, claim interface{}) (err error) {
 		return fmt.Errorf("architecture %q does not met requirement", c.Architecture)
 	}
 
-	if err = artifact.CheckArrayInclusion(r.License, c.License); err != nil {
+	if err = artifact.ValidateArrayInclusion(r.License, c.License); err != nil {
 		return fmt.Errorf("license requirement not met, %w", err)
 	}
 
-	if err = artifact.CheckMinTimestamp(r.MinTimestamp, c.Timestamp); err != nil {
+	if err = artifact.ValidateMinTimestamp(r.MinTimestamp, c.Timestamp); err != nil {
 		return
 	}
 
-	if err = artifact.CheckMap(r.BuildArgs, c.BuildArgs); err != nil {
+	if err = artifact.ValidateMap(r.BuildArgs, c.BuildArgs); err != nil {
 		return fmt.Errorf("build args requirement %q not met", r.BuildArgs)
 	}
 
-	if err = artifact.CheckMap(r.Metadata, c.Metadata); err != nil {
+	if err = artifact.ValidateMap(r.Metadata, c.Metadata); err != nil {
 		return fmt.Errorf("metadata requirement %q not met", r.Metadata)
 	}
 

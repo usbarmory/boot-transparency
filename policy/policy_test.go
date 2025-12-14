@@ -49,7 +49,7 @@ func TestParseRequirements(t *testing.T) {
 	}
 }
 
-func TestCheck(t *testing.T) {
+func TestValidate(t *testing.T) {
 	p := []byte(`[
 {
     "artifacts": [
@@ -145,12 +145,12 @@ func TestCheck(t *testing.T) {
 	}
 
 	// success expected here: the claims match the second policy entry
-	if err = Check(policy, statement); err != nil {
+	if err = Validate(policy, statement); err != nil {
 		t.Fatal(err)
 	}
 }
 
-func TestNegativeCheck(t *testing.T) {
+func TestNegativeValidate(t *testing.T) {
 	p := []byte(`[
 {
     "artifacts": [
@@ -235,7 +235,7 @@ func TestNegativeCheck(t *testing.T) {
 	}
 
 	// error expected here: the claims do not match the (single) policy entry
-	if err = Check(policy, statement); err == nil {
+	if err = Validate(policy, statement); err == nil {
 		t.Fatal(err)
 	}
 }

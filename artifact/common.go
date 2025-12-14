@@ -21,7 +21,7 @@ import (
 )
 
 // Compare claimed file hash to ensure hash requirement is met.
-func CheckHash(requireHash string, claimHash string) (err error) {
+func ValidateHash(requireHash string, claimHash string) (err error) {
 	if requireHash == "" {
 		return
 	}
@@ -56,7 +56,7 @@ func CheckHash(requireHash string, claimHash string) (err error) {
 }
 
 // Compare semantic versions to ensure minimum version requirement is met.
-func CheckMinVersion(requireVersion string, claimVersion string) (err error) {
+func ValidateMinVersion(requireVersion string, claimVersion string) (err error) {
 	if requireVersion == "" {
 		return
 	}
@@ -75,7 +75,7 @@ func CheckMinVersion(requireVersion string, claimVersion string) (err error) {
 }
 
 // Compare semantic versions to ensure maximum version requirement is met.
-func CheckMaxVersion(requireVersion string, claimVersion string) (err error) {
+func ValidateMaxVersion(requireVersion string, claimVersion string) (err error) {
 	if requireVersion == "" {
 		return
 	}
@@ -96,7 +96,7 @@ func CheckMaxVersion(requireVersion string, claimVersion string) (err error) {
 // Traverse the entire map[string]string to ensure all the required keys
 // are matching (i.e. regular expression matching) the correpondent
 // claims.
-func CheckMap(require map[string]string, claim map[string]string) (err error) {
+func ValidateMap(require map[string]string, claim map[string]string) (err error) {
 	if len(require) != 0 {
 		for key, regexp := range require {
 			c, found := claim[key]
@@ -104,7 +104,7 @@ func CheckMap(require map[string]string, claim map[string]string) (err error) {
 				return fmt.Errorf("required key not present in the claims")
 			}
 
-			if err = CheckStringMatch(c, regexp); err != nil {
+			if err = ValidateStringMatch(c, regexp); err != nil {
 				return
 			}
 		}
@@ -113,14 +113,14 @@ func CheckMap(require map[string]string, claim map[string]string) (err error) {
 	return
 }
 
-// Check the inclusion of an array of claimed strings within the required one.
-func CheckArrayInclusion(require []string, claim []string) (err error) {
+// Validate inclusion of an array of claimed strings within the required one.
+func ValidateArrayInclusion(require []string, claim []string) (err error) {
 	if len(require) == 0 {
 		return
 	}
 
 	for _, c := range claim {
-		if !CheckElementInclusion(require, c) {
+		if !ValidateElementInclusion(require, c) {
 			return fmt.Errorf("%q not allowed", c)
 		}
 	}
@@ -128,8 +128,8 @@ func CheckArrayInclusion(require []string, claim []string) (err error) {
 	return
 }
 
-// Check the inclusion of a claimed string within an array of required ones.
-func CheckElementInclusion(slice []string, element string) bool {
+// Validate inclusion of a claimed string within an array of required ones.
+func ValidateElementInclusion(slice []string, element string) bool {
 	for _, v := range slice {
 		if v == element {
 			return true
@@ -139,8 +139,8 @@ func CheckElementInclusion(slice []string, element string) bool {
 	return false
 }
 
-// Check the claimed timestamp to ensure the min timestamp requirement is met.
-func CheckMinTimestamp(requireMinTimestamp string, claimTimestamp string) (err error) {
+// Validate the claimed timestamp to ensure the min timestamp requirement is met.
+func ValidateMinTimestamp(requireMinTimestamp string, claimTimestamp string) (err error) {
 	if requireMinTimestamp == "" {
 		return
 	}
@@ -162,8 +162,8 @@ func CheckMinTimestamp(requireMinTimestamp string, claimTimestamp string) (err e
 	return
 }
 
-// Check if string matching regexp requirement is met.
-func CheckStringMatch(require string, claim string) (err error) {
+// Validate if string is matching a regexp requirement.
+func ValidateStringMatch(require string, claim string) (err error) {
 	if require == "" {
 		return
 	}
@@ -181,8 +181,8 @@ func CheckStringMatch(require string, claim string) (err error) {
 	return
 }
 
-// Check if string matching equal requirement is met.
-func CheckStringEqual(require string, claim string) (err error) {
+// Validate if string matching equal requirement is met.
+func  ValidateStringEqual(require string, claim string) (err error) {
 	if require == "" {
 		return
 	}
@@ -194,8 +194,8 @@ func CheckStringEqual(require string, claim string) (err error) {
 	return
 }
 
-// Check if string inclusion requirement is met.
-func CheckStringInclude(require string, claim string) (err error) {
+// Validate if string inclusion requirement is met.
+func ValidateStringInclude(require string, claim string) (err error) {
 	if require == "" {
 		return
 	}
@@ -207,8 +207,8 @@ func CheckStringInclude(require string, claim string) (err error) {
 	return
 }
 
-// Check if string non-inclusion requirement is met.
-func CheckStringNotInclude(require string, claim string) (err error) {
+// Validate if string non-inclusion requirement is met.
+func ValidateStringNotInclude(require string, claim string) (err error) {
 	if require == "" {
 		return
 	}

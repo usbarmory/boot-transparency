@@ -47,8 +47,8 @@ func (h *WindowsBootMgr) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	return &c, nil
 }
 
-// Check matching between requirements and claims for the WindowsBootMgr category.
-func (h *WindowsBootMgr) Check(require interface{}, claim interface{}) (err error) {
+// Validate matching between requirements and claims for the WindowsBootMgr category.
+func (h *WindowsBootMgr) Validate(require interface{}, claim interface{}) (err error) {
 	if _, ok := require.(*Requirements); !ok {
 		return fmt.Errorf("invalid policy requirements for WindowsBootMgr")
 	}
@@ -60,20 +60,20 @@ func (h *WindowsBootMgr) Check(require interface{}, claim interface{}) (err erro
 	r := require.(*Requirements)
 	c := claim.(*Claims)
 
-	// Check all the supported policy requirements for WindowsBootMgr.
-	if err = artifact.CheckHash(r.FileHash, c.FileHash); err != nil {
+	// Go through all the supported policy requirements for WindowsBootMgr.
+	if err = artifact.ValidateHash(r.FileHash, c.FileHash); err != nil {
 		return
 	}
 
-	if err = artifact.CheckHash(r.Authenticode, c.Authenticode); err != nil {
+	if err = artifact.ValidateHash(r.Authenticode, c.Authenticode); err != nil {
 		return
 	}
 
-	if err = checkMinVersion(r.MinVersion, c.Version); err != nil {
+	if err = validateMinVersion(r.MinVersion, c.Version); err != nil {
 		return
 	}
 
-	if err = checkMaxVersion(r.MaxVersion, c.Version); err != nil {
+	if err = validateMaxVersion(r.MaxVersion, c.Version); err != nil {
 		return
 	}
 
@@ -81,15 +81,15 @@ func (h *WindowsBootMgr) Check(require interface{}, claim interface{}) (err erro
 		return fmt.Errorf("architecture %q does not met requirement", c.Architecture)
 	}
 
-	if !artifact.CheckElementInclusion(r.CompanyName, c.CompanyName) {
+	if !artifact.ValidateElementInclusion(r.CompanyName, c.CompanyName) {
 		return fmt.Errorf("company name requirement not met")
 	}
 
-	if !artifact.CheckElementInclusion(r.SigningAuthority, c.SigningAuthority) {
+	if !artifact.ValidateElementInclusion(r.SigningAuthority, c.SigningAuthority) {
 		return fmt.Errorf("signing authority requirement not met")
 	}
 
-	if err = artifact.CheckMinVersion(r.MinSVN, c.SVN); err != nil {
+	if err = artifact.ValidateMinVersion(r.MinSVN, c.SVN); err != nil {
 		return fmt.Errorf("minimum SVN (Secure Version Number) requirement not met")
 	}
 
@@ -101,34 +101,34 @@ func (h *WindowsBootMgr) Check(require interface{}, claim interface{}) (err erro
 		return fmt.Errorf("reproducible requirement not met")
 	}
 
-	if err = artifact.CheckArrayInclusion(r.License, c.License); err != nil {
+	if err = artifact.ValidateArrayInclusion(r.License, c.License); err != nil {
 		return fmt.Errorf("license requirement not met, %w", err)
 	}
 
-	if err = artifact.CheckMap(r.BuildArgs, c.BuildArgs); err != nil {
+	if err = artifact.ValidateMap(r.BuildArgs, c.BuildArgs); err != nil {
 		return fmt.Errorf("build args requirement %q not met", r.BuildArgs)
 	}
 
-	if err = artifact.CheckStringEqual(r.ToolChain, c.ToolChain); err != nil {
+	if err = artifact.ValidateStringEqual(r.ToolChain, c.ToolChain); err != nil {
 		return fmt.Errorf("toolchain requirement not met")
 	}
 
-	if err = artifact.CheckMinTimestamp(r.MinTimestamp, c.Timestamp); err != nil {
+	if err = artifact.ValidateMinTimestamp(r.MinTimestamp, c.Timestamp); err != nil {
 		return
 	}
 
-	if err = artifact.CheckMap(r.Metadata, c.Metadata); err != nil {
+	if err = artifact.ValidateMap(r.Metadata, c.Metadata); err != nil {
 		return fmt.Errorf("metadata requirement %q not met", r.Metadata)
 	}
 
 	return
 }
 
-// Check the minimum versioning requirement supporting two formats:
+// Validate the minimum versioning requirement supporting two formats:
 // 1. try using the Windows versioning (e.g. 20H2)
 // 2. if 1. fails, try using the semantic versioning
 // if both 1. and 2. fails return error.
-func checkMinVersion(require string, claim string) (err error) {
+func validateMinVersion(require string, claim string) (err error) {
 	if require == "" {
 		return
 	}
@@ -173,18 +173,18 @@ func checkMinVersion(require string, claim string) (err error) {
 	}
 
 	// 2. Otherwise try to use semantic versioning check.
-	if err = artifact.CheckMinVersion(require, claim); err != nil {
+	if err = artifact.ValidateMinVersion(require, claim); err != nil {
 		return
 	}
 
 	return
 }
 
-// Check the maximum versioning requirement supporting two formats:
+// Validate the maximum versioning requirement supporting two formats:
 // 1. try using the Windows versioning (e.g. 20H2)
 // 2. if 1. fails, try using the semantic versioning
 // if both 1. and 2. fails return error.
-func checkMaxVersion(require string, claim string) (err error) {
+func validateMaxVersion(require string, claim string) (err error) {
 	if require == "" {
 		return
 	}
@@ -229,7 +229,7 @@ func checkMaxVersion(require string, claim string) (err error) {
 	}
 
 	// 2. Otherwise try to use semantic versioning check.
-	if err = artifact.CheckMaxVersion(require, claim); err != nil {
+	if err = artifact.ValidateMaxVersion(require, claim); err != nil {
 		return
 	}
 

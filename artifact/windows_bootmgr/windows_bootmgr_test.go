@@ -53,7 +53,7 @@ func TestNegativeWindowsBootMgrParseClaims(t *testing.T) {
 	}
 }
 
-func TestWindowsBootMgrCheck(t *testing.T) {
+func TestWindowsBootMgrValidate(t *testing.T) {
 	r := []byte(`{"flatHash": "86E5B25AA8072895E72E3D5F4BEACCC1488A434FB10BABE17FB9010DA4ED93BC", "revoked": true, "companyName":["Microsoft"], "signingAuthority": ["CN = Microsoft Windows Production PCA 2011"]}`)
 
 	c := []byte(`{"filename": "bootmgfw.efi", "flatHash": "86E5B25AA8072895E72E3D5F4BEACCC1488A434FB10BABE17FB9010DA4ED93BC", "authenticodeHash": "07B6D3AA86D0A8D5F46BDD5886D8F20FA2DD9377898D1139BD74B41F5E7AE44B", "revoked": true, "reproducible": false, "companyName": "Microsoft", "signingAuthority": "CN = Microsoft Windows Production PCA 2011"}`)
@@ -73,12 +73,12 @@ func TestWindowsBootMgrCheck(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err = h.Check(parsedRequirements, parsedClaims); err != nil {
+	if err = h.Validate(parsedRequirements, parsedClaims); err != nil {
 		t.Fatal(err)
 	}
 }
 
-func TestNegativeWindowsBootMgrCheck(t *testing.T) {
+func TestNegativeWindowsBootMgrValidate(t *testing.T) {
 	r := []byte(`{"revoked": false, "companyName":["Microsoft"], "signingAuthority": ["CN = Microsoft Windows Production PCA 2011"]}`)
 
 	c := []byte(`{"filename": "bootmgfw.efi", "flatHash": "86E5B25AA8072895E72E3D5F4BEACCC1488A434FB10BABE17FB9010DA4ED93BC", "authenticodeHash": "07B6D3AA86D0A8D5F46BDD5886D8F20FA2DD9377898D1139BD74B41F5E7AE44B", "revoked": true, "reproducible": false, "companyName": "Microsoft", "signingAuthority": "CN = Microsoft Windows Production PCA 2011"}`)
@@ -99,7 +99,7 @@ func TestNegativeWindowsBootMgrCheck(t *testing.T) {
 	}
 
 	// Error expected: the claimed boot manager is "revoked", which does not match the requirements.
-	if err = h.Check(parsedRequirements, parsedClaims); err == nil {
+	if err = h.Validate(parsedRequirements, parsedClaims); err == nil {
 		t.Fatal(err)
 	}
 }

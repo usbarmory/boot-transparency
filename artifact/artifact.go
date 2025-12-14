@@ -38,8 +38,8 @@ type Handler interface {
 	ParseRequirements(jsonRequirements []byte) (interface{}, error)
 	// Parse serialized JSON containing claims for a given artifact.
 	ParseClaims(jsonClaims []byte) (interface{}, error)
-	// Check matching between requirements and claims for a given artifact.
-	Check(requirements interface{}, claims interface{}) error
+	// Validate matching between requirements and claims for a given artifact.
+	Validate(requirements interface{}, claims interface{}) error
 }
 
 // Define the list of registered artifact handlers.

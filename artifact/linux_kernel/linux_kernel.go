@@ -45,8 +45,8 @@ func (h *LinuxKernel) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	return &c, nil
 }
 
-// Check matching between requirements and claims for the LinuxKernel category.
-func (h *LinuxKernel) Check(require interface{}, claim interface{}) (err error) {
+// Validate matching between requirements and claims for the LinuxKernel category.
+func (h *LinuxKernel) Validate(require interface{}, claim interface{}) (err error) {
 	if _, ok := require.(*Requirements); !ok {
 		return fmt.Errorf("invalid policy requirements for LinuxKernel")
 	}
@@ -58,16 +58,16 @@ func (h *LinuxKernel) Check(require interface{}, claim interface{}) (err error) 
 	r := require.(*Requirements)
 	c := claim.(*Claims)
 
-	// Check all the supported policy requirements for LinuxKernel.
-	if err = artifact.CheckHash(r.FileHash, c.FileHash); err != nil {
+	// Go through all the supported policy requirements for LinuxKernel.
+	if err = artifact.ValidateHash(r.FileHash, c.FileHash); err != nil {
 		return
 	}
 
-	if err = artifact.CheckMinVersion(r.MinVersion, c.Version); err != nil {
+	if err = artifact.ValidateMinVersion(r.MinVersion, c.Version); err != nil {
 		return
 	}
 
-	if err = artifact.CheckMaxVersion(r.MaxVersion, c.Version); err != nil {
+	if err = artifact.ValidateMaxVersion(r.MaxVersion, c.Version); err != nil {
 		return
 	}
 
@@ -83,23 +83,23 @@ func (h *LinuxKernel) Check(require interface{}, claim interface{}) (err error) 
 		return fmt.Errorf("reproducible requirement not met")
 	}
 
-	if err = artifact.CheckArrayInclusion(r.License, c.License); err != nil {
+	if err = artifact.ValidateArrayInclusion(r.License, c.License); err != nil {
 		return fmt.Errorf("license requirement not met, %w", err)
 	}
 
-	if err = artifact.CheckMap(r.BuildArgs, c.BuildArgs); err != nil {
+	if err = artifact.ValidateMap(r.BuildArgs, c.BuildArgs); err != nil {
 		return fmt.Errorf("build args requirement %q not met", r.BuildArgs)
 	}
 
-	if err = artifact.CheckStringEqual(r.ToolChain, c.ToolChain); err != nil {
+	if err = artifact.ValidateStringEqual(r.ToolChain, c.ToolChain); err != nil {
 		return fmt.Errorf("toolchain requirement not met")
 	}
 
-	if err = artifact.CheckMinTimestamp(r.MinTimestamp, c.Timestamp); err != nil {
+	if err = artifact.ValidateMinTimestamp(r.MinTimestamp, c.Timestamp); err != nil {
 		return
 	}
 
-	if err = artifact.CheckMap(r.Metadata, c.Metadata); err != nil {
+	if err = artifact.ValidateMap(r.Metadata, c.Metadata); err != nil {
 		return fmt.Errorf("metadata requirement %q not met", r.Metadata)
 	}
 

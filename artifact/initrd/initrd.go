@@ -45,8 +45,8 @@ func (h *Initrd) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	return &c, nil
 }
 
-// Check matching between requirements and claims for the Initrd category.
-func (h *Initrd) Check(require interface{}, claim interface{}) (err error) {
+// Validate matching between requirements and claims for the Initrd category.
+func (h *Initrd) Validate(require interface{}, claim interface{}) (err error) {
 	if _, ok := require.(*Requirements); !ok {
 		return fmt.Errorf("invalid policy requirements for Initrd")
 	}
@@ -58,16 +58,16 @@ func (h *Initrd) Check(require interface{}, claim interface{}) (err error) {
 	r := require.(*Requirements)
 	c := claim.(*Claims)
 
-	// Check all the supported policy requirements for Initrd.
-	if err = artifact.CheckHash(r.FileHash, c.FileHash); err != nil {
+	// Go through all the supported policy requirements for Initrd.
+	if err = artifact.ValidateHash(r.FileHash, c.FileHash); err != nil {
 		return
 	}
 
-	if err = artifact.CheckMinVersion(r.MinVersion, c.Version); err != nil {
+	if err = artifact.ValidateMinVersion(r.MinVersion, c.Version); err != nil {
 		return
 	}
 
-	if err = artifact.CheckMaxVersion(r.MaxVersion, c.Version); err != nil {
+	if err = artifact.ValidateMaxVersion(r.MaxVersion, c.Version); err != nil {
 		return
 	}
 
@@ -79,26 +79,26 @@ func (h *Initrd) Check(require interface{}, claim interface{}) (err error) {
 		return fmt.Errorf("tainted requirement not met")
 	}
 
-	if err = artifact.CheckArrayInclusion(r.License, c.License); err != nil {
+	if err = artifact.ValidateArrayInclusion(r.License, c.License); err != nil {
 		return fmt.Errorf("license requirement not met, %w", err)
 	}
 
-	if err = artifact.CheckMinTimestamp(r.MinTimestamp, c.Timestamp); err != nil {
+	if err = artifact.ValidateMinTimestamp(r.MinTimestamp, c.Timestamp); err != nil {
 		return
 	}
 
-	if err = artifact.CheckStringEqual(r.Metadata, c.Metadata); err != nil {
+	if err = artifact.ValidateStringEqual(r.Metadata, c.Metadata); err != nil {
 		return fmt.Errorf("metadata matching requirement not met, %w", err)
 	}
 
 	for _, requireMetadata := range r.MetadataInclude {
-		if err = artifact.CheckStringInclude(requireMetadata, c.Metadata); err != nil {
+		if err = artifact.ValidateStringInclude(requireMetadata, c.Metadata); err != nil {
 			return fmt.Errorf("metadata inclusion requirement not met, %w", err)
 		}
 	}
 
 	for _, requireMetadata := range r.MetadataNotInclude {
-		if err = artifact.CheckStringNotInclude(requireMetadata, c.Metadata); err != nil {
+		if err = artifact.ValidateStringNotInclude(requireMetadata, c.Metadata); err != nil {
 			return fmt.Errorf("metadata non-inclusion requirement not met, %w", err)
 		}
 	}

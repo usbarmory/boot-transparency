@@ -53,7 +53,7 @@ func TestNegativeDtbParseClaims(t *testing.T) {
 	}
 }
 
-func TestDtbCheck(t *testing.T) {
+func TestDtbValidate(t *testing.T) {
 	r := []byte(`{"min_version": "v6.14.0-29", "architecture":"x64", "metadata":{"model": "Inverse Path USB armory"}}`)
 
 	c := []byte(`{"file_name": "test.dtb", "file_hash": "8ba6bc3d9ccfe9c17ad7482d6c0160150c7d1da4b4a4f464744ce069291d6174ea9949574002f022e18585df04f57c192431794f36f40659930bd5c0b470eb59", "version":"v6.14.0-29-generic" ,"architecture":"x64", "metadata":{"model":"USB armory"}}`)
@@ -73,12 +73,12 @@ func TestDtbCheck(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err = h.Check(parsedRequirements, parsedClaims); err != nil {
+	if err = h.Validate(parsedRequirements, parsedClaims); err != nil {
 		t.Fatal(err)
 	}
 }
 
-func TestNegativeDtbCheck(t *testing.T) {
+func TestNegativeDtbValidate(t *testing.T) {
 	r := []byte(`{"min_version": "v6.14.0-29", "architecture":"x64", "metadata":{"model": "Inverse Path USB armory"}}`)
 
 	c := []byte(`{"file_name": "test.dtb", "file_hash": "8ba6bc3d9ccfe9c17ad7482d6c0160150c7d1da4b4a4f464744ce069291d6174ea9949574002f022e18585df04f57c192431794f36f40659930bd5c0b470eb59", "version":"v6.14.0-29-generic" ,"architecture":"x64", "metadata":{"model":"something else"}}`)
@@ -99,7 +99,7 @@ func TestNegativeDtbCheck(t *testing.T) {
 	}
 
 	// error expected: the claimed "metadata" is not matching the required one
-	if err = h.Check(parsedRequirements, parsedClaims); err == nil {
+	if err = h.Validate(parsedRequirements, parsedClaims); err == nil {
 		t.Fatal(err)
 	}
 }

@@ -53,7 +53,7 @@ func TestNegativeUEFIBinaryParseClaims(t *testing.T) {
 	}
 }
 
-func TestUEFIBinaryCheck(t *testing.T) {
+func TestUEFIBinaryValidate(t *testing.T) {
 	r := []byte(`{"min_version": "v2.0"}`)
 
 	c := []byte(`{"file_name": "boot64.efi", "file_hash": "8ba6bc3d9ccfe9c17ad7482d6c0160150c7d1da4b4a4f464744ce069291d6174ea9949574002f022e18585df04f57c192431794f36f40659930bd5c0b470eb59", "version":"v2.1"}`)
@@ -73,12 +73,12 @@ func TestUEFIBinaryCheck(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err = h.Check(parsedRequirements, parsedClaims); err != nil {
+	if err = h.Validate(parsedRequirements, parsedClaims); err != nil {
 		t.Fatal(err)
 	}
 }
 
-func TestNegativeUEFIBinaryCheck(t *testing.T) {
+func TestNegativeUEFIBinaryValidate(t *testing.T) {
 	r := []byte(`{"min_version": "v3.0", "architecture":"x64"}`)
 
 	c := []byte(`{"file_name": "boot64.efi", "file_hash": "8ba6bc3d9ccfe9c17ad7482d6c0160150c7d1da4b4a4f464744ce069291d6174ea9949574002f022e18585df04f57c192431794f36f40659930bd5c0b470eb59", "version":"v2.1"}`)
@@ -99,7 +99,7 @@ func TestNegativeUEFIBinaryCheck(t *testing.T) {
 	}
 
 	// Error expected: the claimed "version" does not met requirements.
-	if err = h.Check(parsedRequirements, parsedClaims); err == nil {
+	if err = h.Validate(parsedRequirements, parsedClaims); err == nil {
 		t.Fatal(err)
 	}
 }
