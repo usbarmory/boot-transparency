@@ -10,7 +10,7 @@ package initrd
 // Supported policy requirements for Initrd artifact.
 type Requirements struct {
 	// Required SHA-512 hash of the artifact.
-	Hash string `json:"hash,omitempty"`
+	FileHash string `json:"file_hash,omitempty"`
 
 	// Required minimum version, expressed using Semantic Versioning 2.0.0 (see semver.org).
 	MinVersion string `json:"min_version,omitempty"`

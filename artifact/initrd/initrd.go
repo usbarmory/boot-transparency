@@ -59,7 +59,7 @@ func (h *Initrd) Check(require interface{}, claim interface{}) (err error) {
 	c := claim.(*Claims)
 
 	// Check all the supported policy requirements for Initrd.
-	if err = artifact.CheckHash(r.Hash, c.Hash); err != nil {
+	if err = artifact.CheckHash(r.FileHash, c.FileHash); err != nil {
 		return
 	}
 
