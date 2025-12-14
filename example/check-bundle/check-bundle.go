@@ -8,14 +8,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"log"
 	"os"
 
-	// Load a specific transparency engine among the supported ones
+	"github.com/usbarmory/boot-transparency/artifact"
 	"github.com/usbarmory/boot-transparency/engine/sigsum"
-	// Load the support for the policy and transparency layers from boot-transparency
 	"github.com/usbarmory/boot-transparency/policy"
 	"github.com/usbarmory/boot-transparency/transparency"
 )
@@ -28,6 +28,11 @@ const (
 	submitKeyPath     = "keys/submit-key.pub"
 	logKeyPath        = "keys/log-key.pub"
 )
+
+type BtArtifact struct {
+	Category     uint
+	Requirements []byte
+}
 
 func bootTransparencyOfflineCheck(fsys fs.FS, bootPolicyPath string, witnessPolicyPath string, submitKeyPath string, logKeyPath string, proofBundlePath string) (err error) {
 	bootPolicy, err := fs.ReadFile(fsys, bootPolicyPath)
@@ -105,6 +110,23 @@ func bootTransparencyOfflineCheck(fsys fs.FS, bootPolicyPath string, witnessPoli
 	// Parse the statement included in the proof bundle.
 	c, err := policy.ParseStatement(b.Statement)
 	if err != nil {
+		return err
+	}
+
+	// Check if the hash of artifacts loaded during the booting process are matching
+	// the ones referenced in the proof bundle.
+	requiredLinuxKernel, _ := json.Marshal(map[string]string{
+		"file_hash": "8ba6bc3d9ccfe9c17ad7482d6c0160150c7d1da4b4a4f464744ce069291d6174ea9949574002f022e18585df04f57c192431794f36f40659930bd5c0b470eb59"})
+
+	requiredInitrd, _ := json.Marshal(map[string]string{
+		"file_hash": "9f5db8bc106c426a6654aa53ada75db307adb6dcb59291aa0a874898bc197b3dad8d2ebef985936bba94e9ae34b52a79e8f9045346cde2326baf4feba73ab66c"})
+
+	btArtifacts := []BtArtifact{
+		{Category: artifact.LinuxKernel, Requirements: requiredLinuxKernel},
+		{Category: artifact.Initrd, Requirements: requiredInitrd},
+	}
+
+	if err = validateArtifacts(c, btArtifacts); err != nil {
 		return err
 	}
 
@@ -207,6 +229,23 @@ func bootTransparencyOnlineCheck(fsys fs.FS, bootPolicyPath string, witnessPolic
 		return err
 	}
 
+	// Check if the hash of artifacts loaded during the booting process are matching
+	// the ones referenced in the proof bundle.
+	requiredLinuxKernel, _ := json.Marshal(map[string]string{
+		"file_hash": "8ba6bc3d9ccfe9c17ad7482d6c0160150c7d1da4b4a4f464744ce069291d6174ea9949574002f022e18585df04f57c192431794f36f40659930bd5c0b470eb59"})
+
+	requiredInitrd, _ := json.Marshal(map[string]string{
+		"file_hash": "9f5db8bc106c426a6654aa53ada75db307adb6dcb59291aa0a874898bc197b3dad8d2ebef985936bba94e9ae34b52a79e8f9045346cde2326baf4feba73ab66c"})
+
+	btArtifacts := []BtArtifact{
+		{Category: artifact.LinuxKernel, Requirements: requiredLinuxKernel},
+		{Category: artifact.Initrd, Requirements: requiredInitrd},
+	}
+
+	if err = validateArtifacts(c, btArtifacts); err != nil {
+		return err
+	}
+
 	// Check if the logged claims are matching the policy requirements.
 	if err = policy.Check(r, c); err != nil {
 		// The boot bundle is NOT authorized for boot.
@@ -214,6 +253,51 @@ func bootTransparencyOnlineCheck(fsys fs.FS, bootPolicyPath string, witnessPolic
 	}
 
 	// All boot-transparency checks passed.
+	return
+}
+
+// Check the matching of the boot artifacts with the ones included into a given proof bundle.
+// This step is vital to ensure the correspondency between the artifacts actually
+// loaded during the boot and the claims that will be validated by the  boot-transparency
+// policy function.
+func validateArtifacts(s *policy.Statement, btArtifacts []BtArtifact) (err error) {
+	var h artifact.Handler
+
+	for _, bootArtifact := range btArtifacts {
+		found := false
+
+		for _, a := range s.Artifacts {
+			if bootArtifact.Category == a.Category {
+				h, err = artifact.GetHandler(a.Category)
+				if err != nil {
+					return
+				}
+
+				r, err := h.ParseRequirements([]byte(bootArtifact.Requirements))
+				if err != nil {
+					return err
+				}
+
+				c, err := h.ParseClaims([]byte(a.Claims))
+				if err != nil {
+					return err
+				}
+
+				err = h.Check(r, c)
+				if err != nil {
+					return fmt.Errorf("loaded boot artifacts do not correspond to the proof bundle ones, file hash mistmatch.")
+				}
+
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			return fmt.Errorf("loaded boot artifacts do not correspond to the proof bundle ones, one or more artifacts are not present in the proof bundle.")
+		}
+	}
+
 	return
 }
 
