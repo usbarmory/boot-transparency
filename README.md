@@ -21,7 +21,7 @@ API
 
 The `boot-transparency` API is designed with the following high-level goals:
 
-* Make it easy to check a boot policy
+* Make it easy to validate a boot policy
     * Support verification for the matching of the claimed data and
       the configured boot policy
     * Support signing policy quorums
@@ -137,7 +137,7 @@ pb, _, err := te.ParseProof(jsonProofBundle)
 // considers the co-signing quorum as defined in the witness policy.
 err = te.VerifyProof(pb)
 if err != nil {
-    // Handle error: boot bundle not allowed - transparency check failed.
+    // Handle error: boot bundle not authorized - transparency validation failed.
 }
 
 // Parse the boot policy requirements.
@@ -160,5 +160,5 @@ if err = policy.Validate(r, c); err != nil {
     // Handle error: boot bundle not authorized.
 }
 
-// All boot-transparency checks passed.
+// boot-transparency validation passed.
 ```
