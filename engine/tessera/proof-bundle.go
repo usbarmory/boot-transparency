@@ -11,11 +11,17 @@ import (
 	"encoding/json"
 )
 
-// Define Tessera proof bundle structure
-// Tessera stores inclusion proof as [][]byte.
+// ProofBundle represents a Tessera proof bundle.
 type ProofBundle struct {
-	Format    uint            `json:"format"`
+	// Proof bundle format.
+	Format uint `json:"format"`
+
+	// Logged claims.
 	Statement json.RawMessage `json:"statement"`
-	Probe     Probe           `json:"probe,omitempty"`
-	Proof     []string        `json:"proof,omitempty"`
+
+	// Probing data required to request a fresh proof bundle to the public log.
+	Probe Probe `json:"probe,omitempty"`
+
+	// Tessera stores inclusion proof as [][]byte.
+	Proof []string `json:"proof,omitempty"`
 }

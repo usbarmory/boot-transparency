@@ -23,7 +23,7 @@ import (
 	"golang.org/x/mod/sumdb/note"
 )
 
-// Defines the Tessera transparency engine and its configuration parameters.
+// TesseraEngine represents the Tessera transparency engine and its configuration parameters.
 type TesseraEngine struct {
 	// List of trusted public keys to verify log signatures.
 	logPubkey []string
@@ -38,6 +38,7 @@ func init() {
 	transparency.Add(&e, transparency.Tessera)
 }
 
+// GetProof implements transparency.GetProof() for the Tessera engine.
 func (e *TesseraEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 	var logReadBaseURL *url.URL
 	var logReadCP client.CheckpointFetcherFunc
@@ -159,6 +160,7 @@ func (e *TesseraEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 	return builtProof, nil
 }
 
+// ParseWitnessPolicy implements transparency.ParseWitnessPolicy() for the Tessera engine.
 func (e *TesseraEngine) ParseWitnessPolicy(wp []byte) (interface{}, error) {
 	p, err := tessera.NewWitnessGroupFromPolicy(wp)
 
@@ -169,6 +171,7 @@ func (e *TesseraEngine) ParseWitnessPolicy(wp []byte) (interface{}, error) {
 	return &p, err
 }
 
+// SetKey implements transparency.SetKey() for the Tessera engine.
 func (e *TesseraEngine) SetKey(logKey []string, submitKey []string) (err error) {
 	// Reset any previously stored key.
 	e.logPubkey = []string{}
@@ -187,6 +190,7 @@ func (e *TesseraEngine) SetKey(logKey []string, submitKey []string) (err error) 
 	return
 }
 
+// SetWitnessPolicy implements transparency.SetWitnessPolicy for the Tessera engine.
 func (e *TesseraEngine) SetWitnessPolicy(wp interface{}) (err error) {
 	if _, ok := wp.(*tessera.WitnessGroup); !ok {
 		return fmt.Errorf("invalid policy, type assertion to Tessera *tessera.WitnessGroup failed")
@@ -197,10 +201,12 @@ func (e *TesseraEngine) SetWitnessPolicy(wp interface{}) (err error) {
 	return
 }
 
+// ResetWitnessPolicy implements transparency.ResetWitnessPolicy() for the Tessera engine.
 func (e *TesseraEngine) ResetWitnessPolicy() {
 	e.witnessPolicy = nil
 }
 
+// VerifyProof implements transparency.VerifyProof() for the Tessera engine.
 func (e *TesseraEngine) VerifyProof(proofBundle interface{}) (err error) {
 	if _, ok := proofBundle.(*ProofBundle); !ok {
 		return fmt.Errorf("invalid proof bundle for Tessera engine")
@@ -255,6 +261,7 @@ func (e *TesseraEngine) VerifyProof(proofBundle interface{}) (err error) {
 	return
 }
 
+// ParseProof implements transparency.ParseProof() for the Sigsum engine.
 func (e *TesseraEngine) ParseProof(jsonProofBundle []byte) (interface{}, []byte, error) {
 	var pb ProofBundle
 

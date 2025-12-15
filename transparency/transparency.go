@@ -18,21 +18,20 @@ const (
 	Tessera
 )
 
-// Define the transparency proof bundle which includes:
-// - the bundle format (i.e. sigsum, tessera)
-// - the logged statement (i.e. claims)
-// - the probing data to request the inclusion proof to the log
-// - the inclusion proof.
+// ProofBundle represents the transparency proof bundle.
 type ProofBundle struct {
 	// Specify which transparency engine should be used to
-	// verify this proof (i.e. Sigsum, Tessera).
+	// verify this proof bundle (i.e. Sigsum, Tessera).
 	Format uint `json:"format"`
 
-	// Serialized JSON of Statement struct.
+	// Serialized JSON of Statement structure that includes
+	// the logged claims for a given bundle.
 	Statement json.RawMessage `json:"statement"`
 
-	// Serialized inclusion proof probing data,
-	// its format depends by the chosen transparency engine.
+	// Serialized probing data, its format depends by the
+	// chosen transparency engine.
+	// This information is used to request the inclusion
+	// proof from the remote log.
 	Probe json.RawMessage `json:"probe,omitempty"`
 
 	// Inclusion proof, its format depends by the chosen
@@ -40,15 +39,15 @@ type ProofBundle struct {
 	Proof json.RawMessage `json:"proof,omitempty"`
 }
 
-// Define high-level interface for transparency layer.
+// Engine defines a high-level interface for transparency layer.
 //
 // This interface abstracts the functionalities implemented by
 // the underlying transparency engine.
 type Engine interface {
-	// Request to the public log the information required to assemble a
-	// proof bundle.
+	// GetProof request to the public log the data required to
+	// assemble a proof bundle.
 	// The public log is identified via its origin while the information
-	// from ProofBundle allow to assemble the request for the log leaf.
+	// from ProofBundle allow to prepare the request of the correspondent log leaf.
 	// The function expects as input a ProofBundle as returned by ProofParse().
 	// The function does not require any previous log status (i.e. checkpoint).
 	// The latest signed tree-head is fetched from the log along with the leaf
@@ -64,31 +63,31 @@ type Engine interface {
 	//   - any other error is returned by the public log.
 	GetProof(proofBundle interface{}) ([]byte, error)
 
-	// Parse the witness policy according with the format expected by the
-	// chosen transparency engine.
+	// ParseWitnessPolicy parses the witness policy according with the format
+	// expected by thecchosen transparency engine.
 	//
 	// Return error if:
 	//   - the parsing of the policy fails.
 	ParseWitnessPolicy(wp []byte) (interface{}, error)
 
-	// Set log and submitter keys that will be used by the transparency
-	// engine to fetch, or verify, the proof.
+	// SetKey sets the log and submitter keys that will be used by the
+	// transparency engine to fetch, or verify, the proof.
 	//
 	// Return error if:
 	//    - the parsing of the public keys fails.
 	SetKey(logKey []string, submitKey []string) error
 
-	// Set the witness policy for the transparency engine.
+	// SetWitnessPolicy sets the witness policy for the transparency engine.
 	// The function expects in input a policy as returned by ParseWitnessPolicy().
 	//
 	// Return error if:
 	//   - the parsing of the policy fails.
 	SetWitnessPolicy(wp interface{}) error
 
-	// Reset the witness policy for the transparency engine.
+	// ResetWitnessPolicy resets the witness policy for the transparency engine.
 	ResetWitnessPolicy()
 
-	// Verify the proof of the log, expects an input proof bundle
+	// VerifyProof verifies the proof of the log, expects an input proof bundle
 	// as returned by ParseProof().
 	//
 	// Return error if:
@@ -98,10 +97,10 @@ type Engine interface {
 	//    - the witness signing quorum is not reached.
 	VerifyProof(proofBundle interface{}) error
 
-	// Parse the probing data, and the inclusion proof (if present)
-	// of a given proof bundle in JSON format, return the proof bundle
-	// as expected by the given transparency engine.
-	// The function also return, as second value, a JSON marshal
+	// ParseProof parses the probing data, and the inclusion proof
+	// (if present) of a given proof bundle in JSON format, returns
+	// the proof bundle as expected by the chosen transparency engine.
+	// The function also returns, as second value, a JSON marshalled
 	// version of the parsed proof bundle.
 	//
 	// Return error if the parsing fails.
@@ -111,12 +110,12 @@ type Engine interface {
 // Define the list of registered transparency engines.
 var engines = make(map[uint]*Engine)
 
-// Register a transparency engine.
+// Add a transparency engine.
 func Add(e Engine, t uint) {
 	engines[t] = &e
 }
 
-// Return the registered transparency engine, if present.
+// GetEngine returns the registered transparency engine, if present.
 func GetEngine(t uint) (Engine, error) {
 	e := engines[t]
 	if e == nil {

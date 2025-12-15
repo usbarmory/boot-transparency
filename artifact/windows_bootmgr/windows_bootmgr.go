@@ -16,7 +16,7 @@ import (
 	"github.com/usbarmory/boot-transparency/artifact"
 )
 
-// Define the WindowsBootMgr handler.
+// WindowsBootMgr represents the WindowsBootMgr handler.
 type WindowsBootMgr struct{}
 
 // Register the handler for the WindowsBootMgr category.
@@ -25,7 +25,7 @@ func init() {
 	artifact.Add(&h, artifact.WindowsBootMgr)
 }
 
-// Parse requirements for the WindowsBootMgr category.
+// ParseRequirements parses requirements for the WindowsBootMgr category.
 func (h *WindowsBootMgr) ParseRequirements(jsonRequirements []byte) (interface{}, error) {
 	var r Requirements
 
@@ -36,7 +36,7 @@ func (h *WindowsBootMgr) ParseRequirements(jsonRequirements []byte) (interface{}
 	return &r, nil
 }
 
-// Parse claims for the WindowsBootMgr category.
+// ParseClaims parses claims for the WindowsBootMgr category.
 func (h *WindowsBootMgr) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	var c Claims
 
@@ -47,7 +47,7 @@ func (h *WindowsBootMgr) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	return &c, nil
 }
 
-// Validate matching between requirements and claims for the WindowsBootMgr category.
+// Validate validates matching between requirements and claims for the WindowsBootMgr category.
 func (h *WindowsBootMgr) Validate(require interface{}, claim interface{}) (err error) {
 	if _, ok := require.(*Requirements); !ok {
 		return fmt.Errorf("invalid policy requirements for WindowsBootMgr")

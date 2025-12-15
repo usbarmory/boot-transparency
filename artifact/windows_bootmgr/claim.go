@@ -7,8 +7,8 @@
 
 package windows_bootmgr
 
-// Supported claims for WindowsBootMgr artifact.
-// where applicable, the JSON keys are reflecting the ones used in the Microsoft Revocation list:
+// Claims represents the supported claims for WindowsBootMgr artifact.
+// Where applicable, the JSON keys are reflecting the ones used in the Microsoft Revocation list:
 // https://uefi.org/revocationlistfile
 // https://github.com/microsoft/secureboot_objects/blob/main/PreSignedObjects/DBX/HashesJsonSchema.json
 type Claims struct {

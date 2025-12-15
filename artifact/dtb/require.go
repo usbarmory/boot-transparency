@@ -7,7 +7,7 @@
 
 package dtb
 
-// Supported policy requirements for Dtb artifact.
+// Requirements represent the supported policy requirements for Dtb artifact.
 type Requirements struct {
 	// Required SHA-512 hash of the artifact.
 	FileHash string `json:"file_hash,omitempty"`

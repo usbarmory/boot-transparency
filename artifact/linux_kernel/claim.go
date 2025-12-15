@@ -7,7 +7,7 @@
 
 package linux_kernel
 
-// Supported claims for LinuxKernel artifact.
+// Claims represents the supported claims for LinuxKernel artifact.
 type Claims struct {
 	// Filename of the artifact.
 	FileName string `json:"file_name,omitempty"`

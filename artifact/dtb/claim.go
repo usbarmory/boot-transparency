@@ -7,7 +7,7 @@
 
 package dtb
 
-// Supported claims for Dtb artifact.
+// Claims represents the supported claims for Dtb artifact.
 type Claims struct {
 	// Filename of the artifact.
 	FileName string `json:"file_name,omitempty"`

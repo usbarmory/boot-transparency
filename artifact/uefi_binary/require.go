@@ -7,7 +7,7 @@
 
 package uefi_binary
 
-// Supported policy requirements for UEFIBinary artifact.
+// Requirements represents the supported policy requirements for UEFIBinary artifact.
 type Requirements struct {
 	// Required SHA-512 hash of the artifact.
 	FileHash string `json:"file_hash,omitempty"`

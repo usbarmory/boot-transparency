@@ -7,7 +7,10 @@
 
 package tessera
 
-// Simplified version of the Tessera inclusionProbe structure.
+// Probe represents the data required to request an inclusion proof
+// for a given lead to a Tessera log.
+// This structure is a simplified version of the Tessera inclusionProbe
+// structure.
 type Probe struct {
 	// Log origin is needed to probe the correct log where
 	// the leaf has been logged to.

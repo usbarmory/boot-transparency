@@ -18,8 +18,8 @@ import (
 	"github.com/usbarmory/boot-transparency/artifact"
 )
 
-// Statement signature including the signer's public key to ease the verifier
-// while checking its validity.
+// Signature represents a Statement signature including the signer's public key
+// to ease the verifier while checking its validity.
 type Signature struct {
 	// Ed25519 signer public key in OpenSSH format.
 	PubKey string `json:"pub_key"`
@@ -28,7 +28,7 @@ type Signature struct {
 	Signature string `json:"signature"`
 }
 
-// Define Artifact structure as a claims container for a given artifact.
+// Artifact represents the artifact structure containing the claims for a given artifact.
 type Artifact struct {
 	// Type of artifact (e.g. 1: LinuxKernel, 2: Initrd, 3: Dtb, ...).
 	Category uint `json:"category"`
@@ -40,7 +40,7 @@ type Artifact struct {
 	Claims json.RawMessage `json:"claims"`
 }
 
-// Define the statement header.
+// StatementHeader represents the statement header.
 type StatementHeader struct {
 	// Human-readable description/title for the bundle.
 	Description string `json:"description,omitempty"`
@@ -52,7 +52,7 @@ type StatementHeader struct {
 	PlatformID string `json:"platform_id,omitempty"`
 }
 
-// Define the statement that is logged to the transparency log.
+// Statements represents the entire statement that is logged to the transparency log.
 type Statement struct {
 	// Statement header.
 	Header StatementHeader `json:"header"`
@@ -64,7 +64,7 @@ type Statement struct {
 	Signatures []Signature `json:"signatures,omitempty"`
 }
 
-// Define a trusted signer that can be used to verify statement signatures.
+// Signer represents a trusted signer that can be used to verify statement signatures.
 type Signer struct {
 	// Human-readable signer name.
 	Name string `json:"name,omitempty"`
@@ -73,7 +73,7 @@ type Signer struct {
 	PubKey string `json:"pub_key"`
 }
 
-// Define a signing quorum that must be satisfied to authorize the bundle.
+// SigningRequirement represents a signing quorum that must be satisfied to authorize the bundle.
 type SigningRequirement struct {
 	// List of trusted signers that are participating to the quorum.
 	Signers []Signer `json:"signers"`
@@ -82,7 +82,8 @@ type SigningRequirement struct {
 	Quorum uint64 `json:"quorum"`
 }
 
-// Define the required set of properties to authorize an artifact from a given category.
+// ArtifactRequirements represents a set of properties that are required to authorize
+// an artifact from a given category.
 type ArtifactRequirements struct {
 	// Define the artifact category (e.g. LinuxKernel, Initrd, Dtb, ...).
 	Category uint `json:"category"`
@@ -95,7 +96,8 @@ type ArtifactRequirements struct {
 	Requirements json.RawMessage `json:"requirements"`
 }
 
-// Define the policy entry as a set of requirements to authorize a given bundle of artifacts.
+// PolicyEntry represents a policy entry, which is as a set of requirements
+// to authorize a given bundle of artifacts.
 type PolicyEntry struct {
 	// Artifact rules.
 	Artifacts []ArtifactRequirements `json:"artifacts"`
@@ -104,7 +106,7 @@ type PolicyEntry struct {
 	Signatures SigningRequirement `json:"signatures,omitempty"`
 }
 
-// Parse the logged statement which is included as serialized JSON in the proof bundle.
+// ParseStatement parses the logged statement which is included as serialized JSON in the proof bundle.
 func ParseStatement(jsonStatement []byte) (s *Statement, err error) {
 	var h artifact.Handler
 
@@ -129,7 +131,7 @@ func ParseStatement(jsonStatement []byte) (s *Statement, err error) {
 	return
 }
 
-// Parse the boot policy requirements from the serialized JSON.
+// ParseRequirements parses the boot policy requirements from the serialized JSON.
 //
 // Return error if:
 //   - the parsing fails.
@@ -161,7 +163,7 @@ func ParseRequirements(jsonPolicy []byte) (policy *[]PolicyEntry, err error) {
 	return
 }
 
-// Validate the claims present in a given statement against the policy requirements.
+// Validate validates the claims present in a given statement against the policy requirements.
 //
 // The policy array (i.e. list of per-artifact bundle requirements) is
 // traversed to verify whether there is at least one entry

@@ -14,7 +14,7 @@ import (
 	"github.com/usbarmory/boot-transparency/artifact"
 )
 
-// Define the Dtb handler.
+// Dts represents the Dtb handler.
 type Dtb struct{}
 
 // Register the handler for the Dtb category.
@@ -23,7 +23,7 @@ func init() {
 	artifact.Add(&h, artifact.Dtb)
 }
 
-// Parse requirements for the Dtb category.
+// ParseRequirements parses requirements for the Dtb category.
 func (h *Dtb) ParseRequirements(jsonRequirements []byte) (interface{}, error) {
 	var r Requirements
 
@@ -34,7 +34,7 @@ func (h *Dtb) ParseRequirements(jsonRequirements []byte) (interface{}, error) {
 	return &r, nil
 }
 
-// Parse claims for the Dtb category.
+// ParseClaims parses claims for the Dtb category.
 func (h *Dtb) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	var c Claims
 
@@ -45,7 +45,7 @@ func (h *Dtb) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	return &c, nil
 }
 
-// Validate matching between requirements and claims for the Dtb category.
+// Validate validates matching between requirements and claims for the Dtb category.
 func (h *Dtb) Validate(require interface{}, claim interface{}) (err error) {
 	if _, ok := require.(*Requirements); !ok {
 		return fmt.Errorf("invalid policy requirements for Dtb")

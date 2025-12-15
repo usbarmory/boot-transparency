@@ -7,7 +7,7 @@
 
 package uefi_binary
 
-// Supported claims for UEFIBinary artifact.
+// Claims represents the supported claims for UEFIBinary artifact.
 type Claims struct {
 	// Filename of the artifact.
 	FileName string `json:"file_name,omitempty"`

@@ -7,7 +7,7 @@
 
 package initrd
 
-// Supported claims for Initrd artifact.
+// Claims represents the supported claims for Initrd artifact.
 type Claims struct {
 	// Filename of the artifact.
 	FileName string `json:"file_name,omitempty"`

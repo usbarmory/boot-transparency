@@ -29,7 +29,7 @@ const (
 	//_end_reserved = 0xFFFF
 )
 
-// Define a high-level interface for artifact handlers.
+// Handler represents a high-level interface for artifact handlers.
 //
 // This interface abstracts the functionalities implemented by the
 // underlying artifact category package.
@@ -42,15 +42,15 @@ type Handler interface {
 	Validate(requirements interface{}, claims interface{}) error
 }
 
-// Define the list of registered artifact handlers.
+// List of registered artifact handlers.
 var handlers = make(map[uint]*Handler)
 
-// Register an artifact handler for a given category.
+// Add an artifact handler for a given category.
 func Add(h Handler, c uint) {
 	handlers[c] = &h
 }
 
-// Return the registered artifact handler, if any, for a given category.
+// GetHandler returns the registered artifact handler, if any, for a given category.
 func GetHandler(c uint) (Handler, error) {
 	h := handlers[c]
 	if h == nil {

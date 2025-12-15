@@ -7,7 +7,7 @@
 
 package windows_bootmgr
 
-// Supported policy requirements for WindowsBootMgr artifact.
+// Requirements represents the supported policy requirements for WindowsBootMgr artifact.
 type Requirements struct {
 	// Required Authenticode hash of the artifact.
 	Authenticode string `json:"authenticodeHash,omitempty"`

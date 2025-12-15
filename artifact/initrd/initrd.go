@@ -14,7 +14,7 @@ import (
 	"github.com/usbarmory/boot-transparency/artifact"
 )
 
-// Define the Initrd handler.
+// Initrd represents the Initrd handler.
 type Initrd struct{}
 
 // Register the handler for the Initrd category.
@@ -23,7 +23,7 @@ func init() {
 	artifact.Add(&h, artifact.Initrd)
 }
 
-// Parse requirements for the Initrd category.
+// ParseRequirements parses requirements for the Initrd category.
 func (h *Initrd) ParseRequirements(jsonRequirements []byte) (interface{}, error) {
 	var r Requirements
 
@@ -34,7 +34,7 @@ func (h *Initrd) ParseRequirements(jsonRequirements []byte) (interface{}, error)
 	return &r, nil
 }
 
-// Parse claims for the Initrd category.
+// ParseClaims parses claims for the Initrd category.
 func (h *Initrd) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	var c Claims
 
@@ -45,7 +45,7 @@ func (h *Initrd) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	return &c, nil
 }
 
-// Validate matching between requirements and claims for the Initrd category.
+// Validate validates matching between requirements and claims for the Initrd category.
 func (h *Initrd) Validate(require interface{}, claim interface{}) (err error) {
 	if _, ok := require.(*Requirements); !ok {
 		return fmt.Errorf("invalid policy requirements for Initrd")

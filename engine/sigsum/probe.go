@@ -7,7 +7,7 @@
 
 package sigsum
 
-// Define the set of inputs required to probe for an inclusion proof
+// Probe represents the data required to request (i.e. probe) an inclusion proof
 // for a given leaf to a Sigsum log.
 type Probe struct {
 	// Log origin.

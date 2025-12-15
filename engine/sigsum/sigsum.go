@@ -27,7 +27,7 @@ import (
 	"sigsum.org/sigsum-go/pkg/types"
 )
 
-// Define the Sigsum transparency engine and its configuration parameters.
+// SigsumEngine represents the Sigsum transparency engine and its configuration parameters.
 type SigsumEngine struct {
 	// List of trusted public keys to verify log signatures.
 	logPubkey []string
@@ -45,6 +45,7 @@ func init() {
 	transparency.Add(&e, transparency.Sigsum)
 }
 
+// GetProof implements transparency.GetProof() for the Sigsum engine.
 // The logic implemented for the Sigsum engine is partially replicating
 // the collectProof() from sigsum-go/pkg/submit/submit.go.
 func (e *SigsumEngine) GetProof(proofBundle interface{}) ([]byte, error) {
@@ -174,6 +175,7 @@ func (e *SigsumEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 	return sigsumProofBundle, nil
 }
 
+// ParseWitnessPolicy implements transparency.ParseWitnessPolicy() for the Sigsum engine.
 func (e *SigsumEngine) ParseWitnessPolicy(wp []byte) (interface{}, error) {
 	p, err := policy.ParseConfig(bytes.NewReader(wp))
 
@@ -184,6 +186,7 @@ func (e *SigsumEngine) ParseWitnessPolicy(wp []byte) (interface{}, error) {
 	return p, err
 }
 
+// SetKey implements transparency.SetKey() for the Sigsum engine.
 func (e *SigsumEngine) SetKey(logKey []string, submitKey []string) (err error) {
 	// Reset any previously stored key.
 	e.logPubkey = []string{}
@@ -214,6 +217,7 @@ func (e *SigsumEngine) SetKey(logKey []string, submitKey []string) (err error) {
 	return
 }
 
+// SetWitnessPolicy implements transparency.SetWitnessPolicy for the Sigsum engine.
 func (e *SigsumEngine) SetWitnessPolicy(wp interface{}) (err error) {
 	if _, ok := wp.(*policy.Policy); !ok {
 		return fmt.Errorf("invalid policy, type assertion to Sigsum *policy.Policy failed")
@@ -224,10 +228,12 @@ func (e *SigsumEngine) SetWitnessPolicy(wp interface{}) (err error) {
 	return
 }
 
+// ResetWitnessPolicy implements transparency.ResetWitnessPolicy() for the Sigsum engine.
 func (e *SigsumEngine) ResetWitnessPolicy() {
 	e.witnessPolicy = nil
 }
 
+// VerifyProof implements transparency.VerifyProof() for the Sigsum engine.
 func (e *SigsumEngine) VerifyProof(proofBundle interface{}) (err error) {
 	var proof proof.SigsumProof
 	var lk crypto.PublicKey
@@ -317,6 +323,7 @@ func (e *SigsumEngine) VerifyProof(proofBundle interface{}) (err error) {
 	return
 }
 
+// ParseProof implements transparency.ParseProof() for the Sigsum engine.
 func (e *SigsumEngine) ParseProof(jsonProofBundle []byte) (interface{}, []byte, error) {
 	var pb ProofBundle
 	var proof proof.SigsumProof

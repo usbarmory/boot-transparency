@@ -14,7 +14,7 @@ import (
 	"github.com/usbarmory/boot-transparency/artifact"
 )
 
-// Define the UEFIBinary handler.
+// UEFIBinary represents the UEFIBinary handler.
 type UEFIBinary struct{}
 
 // Register the handler for the UEFIBinary category.
@@ -23,7 +23,7 @@ func init() {
 	artifact.Add(&h, artifact.UEFIBinary)
 }
 
-// Parse requirements for the UEFIBinary category.
+// ·ParseRequirements parses requirements for the UEFIBinary category.
 func (h *UEFIBinary) ParseRequirements(jsonRequirements []byte) (interface{}, error) {
 	var r Requirements
 
@@ -34,7 +34,7 @@ func (h *UEFIBinary) ParseRequirements(jsonRequirements []byte) (interface{}, er
 	return &r, nil
 }
 
-// Parse claims for the UEFIBinary category.
+// ·ParseClaims parses claims for the UEFIBinary category.
 func (h *UEFIBinary) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	var c Claims
 
@@ -45,7 +45,7 @@ func (h *UEFIBinary) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	return &c, nil
 }
 
-// Validate matching between requirements and claims for the UEFIBinary category.
+// Validate validates matching between requirements and claims for the UEFIBinary category.
 func (h *UEFIBinary) Validate(require interface{}, claim interface{}) (err error) {
 	if _, ok := require.(*Requirements); !ok {
 		return fmt.Errorf("invalid policy requirements for UEFIBinary")

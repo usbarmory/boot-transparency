@@ -7,7 +7,7 @@
 
 package initrd
 
-// Supported policy requirements for Initrd artifact.
+// Requirements represents the supported policy requirements for Initrd artifact.
 type Requirements struct {
 	// Required SHA-512 hash of the artifact.
 	FileHash string `json:"file_hash,omitempty"`
