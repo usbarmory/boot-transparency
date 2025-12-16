@@ -7,9 +7,9 @@
 		{
 			"category": 1,
 			"claims": {
-				"file_name": "vmlinuz-6.14.0-29-generic",
-				"file_hash": "8ba6bc3d9ccfe9c17ad7482d6c0160150c7d1da4b4a4f464744ce069291d6174ea9949574002f022e18585df04f57c192431794f36f40659930bd5c0b470eb59",
-				"version": "v6.14.0-29-generic",
+				"file_name": "vmlinuz-6.14.0-36-generic",
+				"file_hash": "4551848b4ab43cb4321c4d6ba98e1d215f950cee21bfd82c8c82ab64e34ec9a6",
+				"version": "v6.14.0-36-generic",
 				"tainted": false,
 				"build_args": {
 					"CONFIG_STACKPROTECTOR_STRONG": "y"
@@ -19,8 +19,8 @@
 		{
 			"category": 2,
 			"claims": {
-				"file_name": "initrd.img-6.14.0-29-generic",
-				"file_hash": "9f5db8bc106c426a6654aa53ada75db307adb6dcb59291aa0a874898bc197b3dad8d2ebef985936bba94e9ae34b52a79e8f9045346cde2326baf4feba73ab66c",
+				"file_name": "initrd.img-6.14.0-36-generic",
+				"file_hash": "337630b74e55eae241f460faadf5a2f9a2157d6de2853d4106c35769e4acf538",
 				"tainted": false
 			}
 		}
@@ -28,11 +28,11 @@
 	"signatures": [
 		{
 			"pub_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP5rbNcIOcwqBHzLOhJEfdKFHa+pIs10idfTm8c+HDnK",
-			"signature": "0f5b21c0d983e8834a7ba3b8cffca0d3891968a083aec3a3ca1f11ff51a426cafb96f5667be93546a183c78576d06a6b36f33648cffbf2fe345058c25268a508"
+			"signature": "d29fe25fb7b0f8e977662bd50adac19ce0fdf3a51d8c2d8142d3fdd8a856200c7c4f1bf9ac8bb0bb011070869e585ebc8237d1e863e108b35788404de40bb40a"
 		},
 		{
 			"pub_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL0zV5fSWzzXa4R7Kpk6RAXkvWsJGpvkQ+9/xxpHC49J",
-			"signature": "02d3a093acd48734ca6d4cecc109c6dda47c146fe9669603bf684c418a2cee2410693a8b75d85f4cdf9a03de58b44a6f8ae5bc0bc6a68a2326bbef32d58e3c0e"
+			"signature": "fac959414a3032f93490790193460e3ab014eaae674dd2fef1211edaf0630d47eac774065e6f9897b1a49b6e66c89ec7c3cc4387068dc2261bd4115be096aa0d"
 		}
 	]
 }

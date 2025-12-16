@@ -27,7 +27,7 @@ func TestUEFIBinaryParseRequirements(t *testing.T) {
 }
 
 func TestUEFIBinaryParseClaims(t *testing.T) {
-	c := []byte(`{"file_name": "boot64.efi", "file_hash": "8ba6bc3d9ccfe9c17ad7482d6c0160150c7d1da4b4a4f464744ce069291d6174ea9949574002f022e18585df04f57c192431794f36f40659930bd5c0b470eb59", "version":"v2.1"}`)
+	c := []byte(`{"file_name": "boot64.efi", "file_hash": "537dd1218ace36669ed96fe97be77b874f53203033db64661608e08b3a6970db", "version":"v2.1"}`)
 
 	h, err := artifact.GetHandler(artifact.UEFIBinary)
 	if err != nil {
@@ -40,7 +40,7 @@ func TestUEFIBinaryParseClaims(t *testing.T) {
 }
 
 func TestNegativeUEFIBinaryParseClaims(t *testing.T) {
-	c := []byte(`{"file_hash": [ "8ba6bc3d9ccfe9c17ad7482d6c0160150c7d1da4b4a4f464744ce069291d6174ea9949574002f022e18585df04f57c192431794f36f40659930bd5c0b470eb59" ], "version":"v2.1"}"`)
+	c := []byte(`{"file_hash": [ "537dd1218ace36669ed96fe97be77b874f53203033db64661608e08b3a6970db" ], "version":"v2.1"}"`)
 
 	h, err := artifact.GetHandler(artifact.UEFIBinary)
 	if err != nil {
@@ -56,7 +56,7 @@ func TestNegativeUEFIBinaryParseClaims(t *testing.T) {
 func TestUEFIBinaryValidate(t *testing.T) {
 	r := []byte(`{"min_version": "v2.0"}`)
 
-	c := []byte(`{"file_name": "boot64.efi", "file_hash": "8ba6bc3d9ccfe9c17ad7482d6c0160150c7d1da4b4a4f464744ce069291d6174ea9949574002f022e18585df04f57c192431794f36f40659930bd5c0b470eb59", "version":"v2.1"}`)
+	c := []byte(`{"file_name": "boot64.efi", "file_hash": "537dd1218ace36669ed96fe97be77b874f53203033db64661608e08b3a6970db", "version":"v2.1"}`)
 
 	h, err := artifact.GetHandler(artifact.UEFIBinary)
 	if err != nil {
@@ -81,7 +81,7 @@ func TestUEFIBinaryValidate(t *testing.T) {
 func TestNegativeUEFIBinaryValidate(t *testing.T) {
 	r := []byte(`{"min_version": "v3.0", "architecture":"x64"}`)
 
-	c := []byte(`{"file_name": "boot64.efi", "file_hash": "8ba6bc3d9ccfe9c17ad7482d6c0160150c7d1da4b4a4f464744ce069291d6174ea9949574002f022e18585df04f57c192431794f36f40659930bd5c0b470eb59", "version":"v2.1"}`)
+	c := []byte(`{"file_name": "boot64.efi", "file_hash": "537dd1218ace36669ed96fe97be77b874f53203033db64661608e08b3a6970db", "version":"v2.1"}`)
 
 	h, err := artifact.GetHandler(artifact.UEFIBinary)
 	if err != nil {

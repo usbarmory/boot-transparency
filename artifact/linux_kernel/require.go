@@ -9,7 +9,7 @@ package linux_kernel
 
 // Requirements represents the supported policy requirements for LinuxKernel artifact.
 type Requirements struct {
-	// Required SHA-512 hash of the artifact.
+	// Required SHA-256 hash of the artifact.
 	FileHash string `json:"file_hash,omitempty"`
 
 	// Required minimum version, expressed using Semantic Versioning 2.0.0 (see semver.org).

@@ -12,7 +12,7 @@ type Claims struct {
 	// Filename of the artifact.
 	FileName string `json:"file_name,omitempty"`
 
-	// SHA-512 hash of the artifact
+	// SHA-256 hash of the artifact
 	FileHash string `json:"file_hash,omitempty"`
 
 	// Artifact version, using Semantic Versioning 2.0.0 (see semver.org).
