@@ -79,28 +79,24 @@ func (h *Initrd) Validate(require interface{}, claim interface{}) (err error) {
 		return fmt.Errorf("tainted requirement not met")
 	}
 
+	if r.Reproducible && !c.Reproducible {
+		return fmt.Errorf("reproducible requirement not met")
+	}
+
 	if err = artifact.ValidateArrayInclusion(r.License, c.License); err != nil {
 		return fmt.Errorf("license requirement not met, %w", err)
+	}
+
+	if err = artifact.ValidateMap(r.BuildArgs, c.BuildArgs); err != nil {
+		return fmt.Errorf("build args requirement %q not met", r.BuildArgs)
 	}
 
 	if err = artifact.ValidateMinTimestamp(r.MinTimestamp, c.Timestamp); err != nil {
 		return
 	}
 
-	if err = artifact.ValidateStringEqual(r.Metadata, c.Metadata); err != nil {
-		return fmt.Errorf("metadata matching requirement not met, %w", err)
-	}
-
-	for _, requireMetadata := range r.MetadataInclude {
-		if err = artifact.ValidateStringInclude(requireMetadata, c.Metadata); err != nil {
-			return fmt.Errorf("metadata inclusion requirement not met, %w", err)
-		}
-	}
-
-	for _, requireMetadata := range r.MetadataNotInclude {
-		if err = artifact.ValidateStringNotInclude(requireMetadata, c.Metadata); err != nil {
-			return fmt.Errorf("metadata non-inclusion requirement not met, %w", err)
-		}
+	if err = artifact.ValidateMap(r.Metadata, c.Metadata); err != nil {
+		return fmt.Errorf("metadata requirement %q not met", r.Metadata)
 	}
 
 	return

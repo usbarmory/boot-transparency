@@ -9,38 +9,44 @@ package initrd
 
 // Claims represents the supported claims for Initrd artifact.
 type Claims struct {
-	// Filename of the artifact.
+	// Filename represents the artifact filename.
 	FileName string `json:"file_name,omitempty"`
 
-	// SHA-256 hash of the artifact
+	// FileHash represents the hash of the artifact (currently only SHA-256 is supported).
 	FileHash string `json:"file_hash,omitempty"`
 
-	// Artifact version, using Semantic Versioning 2.0.0 (see semver.org).
+	// Version represents the artifact version, using Semantic Versioning 2.0.0 (see semver.org).
 	Version string `json:"version,omitempty"`
 
-	// The architecture vocabulary is the one defined by the EFI specification (i.e. IA32, x64, IA64, ARM, AA64, ...).
+	// Architecture represents the artifact architecture using the vocabulary defined
+	// by the EFI specification (i.e. IA32, x64, IA64, ARM, AA64, ...).
 	Architecture string `json:"architecture,omitempty"`
 
-	// true if the init ram disk contains any tainted kernel module.
+	// Tainted represents the tainted contition of the init ram disk, this field
+	// is set to true if the init ram disk contains any tainted kernel module.
 	Tainted bool `json:"tainted,omitempty"`
 
-	// License(s) associated to this artifact.
+	// Reproductible represets the reproducibility of the artifact binary.
+	Reproducible bool `json:"reproducible,omitempty"`
+
+	// License represents the licenses associated to this artifact.
 	// Where applicable, licenses should be expressed as SPDX short-form IDs
 	// (e.g.MIT, GPL-2.0-or-later, BSD-2-Clause):
 	// https://spdx.github.io/spdx-spec/v2.3/SPDX-license-list/ .
 	License []string `json:"license,omitempty"`
 
-	// Timestamp in RFC3339 format (e.g. "1985-04-12T23:20:50.52Z"): "2025-10-12T23:20:50.52Z".
-	// The claimant can use this field to expose any relevant timestamp for the artifact
-	// (e.g. the releasing date, the last source modification) that should be verified
-	// by the boot policy.
+	// BuildArgs represents a sub-set of build arguments considered by the claimant
+	// potentially relevant·to authorize the artifact.
+	BuildArgs map[string]string `json:"build_args,omitempty"`
+
+	// Timestamp represents the timestamp associated to the artifact in RFC3339 format
+	// (e.g. "1985-04-12T23:20:50.52Z"): "2025-10-12T23:20:50.52Z".
+	// The claimant can decide to use this field to expose any relevant timestamp for the artifact
+	// (e.g. the releasing date, tha building time) that should be verified by the boot policy.
 	Timestamp string `json:"timestamp,omitempty"`
 
-	// Public URLs to download the source code required to build the artifact.
-	SourceURLs []string `json:"source_urls,omitempty"`
-
-	// Serialized JSON containing arbitrary artifact information.
-	// As an example, developers could include among metadata relevant arguments, configuration flags,
-	// toolchain information, or any other detail used during the building of the artifact.
-	Metadata string `json:"metadata,omitempty"`
+	// Metadata represents ancillary information on the artifact.
+	// As an example, the complete information required to reproduce the build of the artifact
+	// could be included, or linked, in the metadata.
+	Metadata map[string]string `json:"metadata,omitempty"`
 }
