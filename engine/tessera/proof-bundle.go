@@ -9,19 +9,20 @@ package tessera
 
 import (
 	"encoding/json"
+	"github.com/usbarmory/boot-transparency/transparency"
 )
 
 // ProofBundle represents a Tessera proof bundle.
 type ProofBundle struct {
-	// Proof bundle format.
-	Format uint `json:"format"`
+	// Format represents the proof bundle format.
+	Format transparency.EngineCode `json:"format"`
 
-	// Logged claims.
+	// Statement represents the logged claims.
 	Statement json.RawMessage `json:"statement"`
 
-	// Probing data required to request a fresh proof bundle to the public log.
+	// Probe represents the probing data required to request a fresh proof bundle to the public log.
 	Probe Probe `json:"probe,omitempty"`
 
-	// Tessera stores inclusion proof as [][]byte.
+	// Proof represents the Tessera inclusion proof (underlying Tessera stores inclusion proofs as [][]byte).
 	Proof []string `json:"proof,omitempty"`
 }

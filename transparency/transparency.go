@@ -12,17 +12,29 @@ import (
 	"fmt"
 )
 
+type EngineCode uint
+
 // Supported transparency engines.
 const (
-	Sigsum uint = iota + 0x0001
+	Sigsum EngineCode = iota + 0x0001
 	Tessera
 )
+
+// Resolve resolves transparency engine codes into a human-readable strings.
+func (e EngineCode) Resolve() string {
+	name := map[EngineCode]string{
+		Sigsum: "Sigsum",
+		Tessera: "Tessera",
+	}
+
+	return name[e]
+}
 
 // ProofBundle represents the transparency proof bundle.
 type ProofBundle struct {
 	// Specify which transparency engine should be used to
 	// verify this proof bundle (i.e. Sigsum, Tessera).
-	Format uint `json:"format"`
+	Format EngineCode `json:"format"`
 
 	// Serialized JSON of Statement structure that includes
 	// the logged claims for a given bundle.
@@ -108,15 +120,15 @@ type Engine interface {
 }
 
 // Define the list of registered transparency engines.
-var engines = make(map[uint]*Engine)
+var engines = make(map[EngineCode]*Engine)
 
 // Add a transparency engine.
-func Add(e Engine, t uint) {
+func Add(e Engine, t EngineCode) {
 	engines[t] = &e
 }
 
 // GetEngine returns the registered transparency engine, if present.
-func GetEngine(t uint) (Engine, error) {
+func GetEngine(t EngineCode) (Engine, error) {
 	e := engines[t]
 	if e == nil {
 		return nil, fmt.Errorf("transparency engine not registered")

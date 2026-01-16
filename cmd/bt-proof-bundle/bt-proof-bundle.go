@@ -140,7 +140,7 @@ Usage: bt-proof [--help]
 		if jsonProofBundle, err := readFile(settings.proofBundleFile); err != nil {
 			log.Fatalf("cannot read proof bundle, %v", err)
 		} else {
-			e, err := transparency.GetEngine(uint(format))
+			e, err := transparency.GetEngine(transparency.EngineCode(format))
 			if err != nil {
 				log.Fatalf("unsupported bundle format, %v", err)
 			}
@@ -186,7 +186,7 @@ Usage: bt-proof [--help]
 		}
 
 		// For Sigsum the inclusion proof need to be marshal to JSON string.
-		if uint(format) == transparency.Sigsum {
+		if transparency.EngineCode(format) == transparency.Sigsum {
 			ip, err = json.Marshal(string(ip))
 			if err != nil {
 				log.Fatalf("failed to marshal inclusion proof, %v", err)
@@ -195,7 +195,7 @@ Usage: bt-proof [--help]
 
 		// Assemble a preliminary proof bundle.
 		pb := transparency.ProofBundle{
-			Format:    uint(format),
+			Format:    transparency.EngineCode(format),
 			Statement: s,
 			Probe:     p,
 			Proof:     ip,
