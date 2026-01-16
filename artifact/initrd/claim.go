@@ -26,7 +26,7 @@ type Claims struct {
 	// is set to true if the init ram disk contains any tainted kernel module.
 	Tainted bool `json:"tainted,omitempty"`
 
-	// Reproductible represets the reproducibility of the artifact binary.
+	// Reproducible represents the reproducibility of the artifact binary.
 	Reproducible bool `json:"reproducible,omitempty"`
 
 	// License represents the licenses associated to this artifact.

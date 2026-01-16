@@ -309,7 +309,7 @@ func (e *TesseraEngine) ParseProof(jsonProofBundle []byte) (interface{}, []byte,
 	return &pb, pbMarshal, nil
 }
 
-// Search for a public key among a set of trusted ones.
+// getTrustedKey search for a public key among a set of trusted ones.
 func getTrustedKey(trusted []string, probe string) (string, error) {
 	_, err := note.NewVerifier(probe)
 
@@ -335,8 +335,8 @@ func getTrustedKey(trusted []string, probe string) (string, error) {
 	return "", fmt.Errorf("public key is not matching any of the trusted keys")
 }
 
-// Convert the inclusion proof from what is provided in the JSON
-// proof bundle (i.e. []string) to what Tessera functions expects
+// inclusionProofFromJSON converts the inclusion proof from what is provided
+// in the JSON proof bundle (i.e. []string) to what Tessera functions expects
 // to verify the inclusion proof (i.e. [][]byte).
 func inclusionProofFromJSON(pbProof []string) [][]byte {
 	tesseraProof := make([][]byte, len(pbProof))

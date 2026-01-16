@@ -21,19 +21,19 @@ import (
 // Signature represents a Statement signature including the signer's public key
 // to ease the verifier while checking its validity.
 type Signature struct {
-	// Ed25519 signer public key in OpenSSH format.
+	// PubKey represents the Ed25519 signer public key in OpenSSH format.
 	PubKey string `json:"pub_key"`
 
-	// Ed25519 signature in hex format.
+	// Signature represents the Ed25519 signature in hex format.
 	Signature string `json:"signature"`
 }
 
 // Artifact represents the artifact structure containing the claims for a given artifact.
 type Artifact struct {
-	// Type of artifact (e.g. 1: LinuxKernel, 2: Initrd, 3: Dtb, ...).
+	// Category represents the type of artifact (e.g. 1: LinuxKernel, 2: Initrd, 3: Dtb, ...).
 	Category uint `json:"category"`
 
-	// JSON containing the claims for a given artifact.
+	// Claims represents a JSON containing the claims for a given artifact.
 	// The set of claims that are supported depends by the artifact category,
 	// the JSON format must reflect the underlying structure that is defined
 	// in the artifact package for the given category.
@@ -42,53 +42,55 @@ type Artifact struct {
 
 // StatementHeader represents the statement header.
 type StatementHeader struct {
-	// Human-readable description/title for the bundle.
+	// Description represents a human-readable description/title for the bundle.
 	Description string `json:"description,omitempty"`
 
-	// Bundle version, using Semantic Versioning 2.0.0 (see semver.org).
+	// Revision represents the bundle version, using Semantic Versioning 2.0.0 (see semver.org).
 	Revision string `json:"revision,omitempty"`
 
-	// Platform ID (optional)
+	// PlatformID represents an (optional) platform identifier.
 	PlatformID string `json:"platform_id,omitempty"`
 }
 
 // Statements represents the entire statement that is logged to the transparency log.
 type Statement struct {
-	// Statement header.
+	// Header represents the Statement header.
 	Header StatementHeader `json:"header"`
 
-	// Artifact claims.
+	// Artifacts represents the artifact claims.
 	Artifacts []Artifact `json:"artifacts"`
 
-	// Statement signatures (Header and Artifacts are included in the signed data).
+	// Signatures represents the Statement signatures
+	// (Header and Artifacts fields are both included in the signed data).
 	Signatures []Signature `json:"signatures,omitempty"`
 }
 
 // Signer represents a trusted signer that can be used to verify statement signatures.
 type Signer struct {
-	// Human-readable signer name.
+	// Name represents a human-readable signer name.
 	Name string `json:"name,omitempty"`
 
-	// Signer's public key.
+	// PubKey represents a signer's public key.
 	PubKey string `json:"pub_key"`
 }
 
 // SigningRequirement represents a signing quorum that must be satisfied to authorize the bundle.
 type SigningRequirement struct {
-	// List of trusted signers that are participating to the quorum.
+	// Signers represents the list of trusted signers that are participating to the quorum.
 	Signers []Signer `json:"signers"`
 
-	// Require at least n signatures out of the total number of trusted signers.
+	// Quorum represents the required quorum:
+	// require at least n signatures out of the total number of trusted signers.
 	Quorum uint64 `json:"quorum"`
 }
 
 // ArtifactRequirements represents a set of properties that are required to authorize
 // an artifact from a given category.
 type ArtifactRequirements struct {
-	// Define the artifact category (e.g. LinuxKernel, Initrd, Dtb, ...).
+	// Category represents the artifact category (e.g. LinuxKernel, Initrd, Dtb, ...).
 	Category uint `json:"category"`
 
-	// JSON containing the list of properties that must.
+	// Requirements represents a JSON containing the list of properties that must.
 	// match the claims for an artifact of this category.
 	// The set of properties that are supported depends by the artifact category.
 	// The JSON format should reflect the underlying structure that is defined
@@ -99,10 +101,11 @@ type ArtifactRequirements struct {
 // PolicyEntry represents a policy entry, which is as a set of requirements
 // to authorize a given bundle of artifacts.
 type PolicyEntry struct {
-	// Artifact rules.
+	// Artifacts represents the list of per-artifact category rules.
 	Artifacts []ArtifactRequirements `json:"artifacts"`
 
-	// Require at least a quorum of n signatures for the bundle.
+	// Signatures represents the required signing quorum:
+	// requires at least a quorum of n signatures to be present in the bundle.
 	Signatures SigningRequirement `json:"signatures,omitempty"`
 }
 
@@ -255,8 +258,8 @@ func Validate(p *[]PolicyEntry, s *Statement) (err error) {
 	return
 }
 
-// Check validity of the signatures present in the statement against
-// the required quorum.
+// isSigningQuorumSatisfied validates the presence of a sufficient number of valid signatures in the statement,
+// according with the specified quorum.
 //
 // Return error if an insufficient number of valid signatures is found.
 func isSigningQuorumSatisfied(p *SigningRequirement, s *Statement) (err error) {

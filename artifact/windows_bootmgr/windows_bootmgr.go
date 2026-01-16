@@ -60,7 +60,6 @@ func (h *WindowsBootMgr) Validate(require interface{}, claim interface{}) (err e
 	r := require.(*Requirements)
 	c := claim.(*Claims)
 
-	// Go through all the supported policy requirements for WindowsBootMgr.
 	if err = artifact.ValidateHash(r.FileHash, c.FileHash); err != nil {
 		return
 	}

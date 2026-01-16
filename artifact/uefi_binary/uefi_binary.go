@@ -23,7 +23,7 @@ func init() {
 	artifact.Add(&h, artifact.UEFIBinary)
 }
 
-// ·ParseRequirements parses requirements for the UEFIBinary category.
+// ParseRequirements parses requirements for the UEFIBinary category.
 func (h *UEFIBinary) ParseRequirements(jsonRequirements []byte) (interface{}, error) {
 	var r Requirements
 
@@ -34,7 +34,7 @@ func (h *UEFIBinary) ParseRequirements(jsonRequirements []byte) (interface{}, er
 	return &r, nil
 }
 
-// ·ParseClaims parses claims for the UEFIBinary category.
+// ParseClaims parses claims for the UEFIBinary category.
 func (h *UEFIBinary) ParseClaims(jsonClaims []byte) (interface{}, error) {
 	var c Claims
 
@@ -58,7 +58,6 @@ func (h *UEFIBinary) Validate(require interface{}, claim interface{}) (err error
 	r := require.(*Requirements)
 	c := claim.(*Claims)
 
-	// Go through all the supported policy requirements for UEFIBinary.
 	if err = artifact.ValidateHash(r.FileHash, c.FileHash); err != nil {
 		return
 	}

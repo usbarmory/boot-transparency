@@ -29,14 +29,15 @@ import (
 
 // SigsumEngine represents the Sigsum transparency engine and its configuration parameters.
 type SigsumEngine struct {
-	// List of trusted public keys to verify log signatures.
+	// logPubkey represents the list of trusted public keys to verify log signatures.
 	logPubkey []string
 
-	// List of trusted public keys to verify leaf signatures.
+	// submitPubkey represents the list of trusted public keys to verify leaf signatures.
 	submitPubkey []string
 
-	// The witness policy, the actual format should be aligned
-	// with the one supported one by the chosen transparency engine.
+	// witnessPolicy represents the witness policy the engine will use to perform any transparency
+	// validation, its actual format should be aligned with the one supported one by the chosen
+	// transparency engine.
 	witnessPolicy *policy.Policy
 }
 
@@ -359,7 +360,7 @@ func (e *SigsumEngine) ParseProof(jsonProofBundle []byte) (interface{}, []byte, 
 	return &pb, pbMarshal, nil
 }
 
-// If present, return the key that corresponds to a given key hash.
+// getTrustedKeyFromHash returns, if present, the key that corresponds to a given key hash.
 // The key is searched among all the trusted keys configured for the transparency engine.
 func getTrustedKeyFromHash(trustedKeys []string, hash string) (crypto.PublicKey, error) {
 	var k crypto.PublicKey

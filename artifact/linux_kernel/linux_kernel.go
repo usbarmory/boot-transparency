@@ -58,7 +58,6 @@ func (h *LinuxKernel) Validate(require interface{}, claim interface{}) (err erro
 	r := require.(*Requirements)
 	c := claim.(*Claims)
 
-	// Go through all the supported policy requirements for LinuxKernel.
 	if err = artifact.ValidateHash(r.FileHash, c.FileHash); err != nil {
 		return
 	}

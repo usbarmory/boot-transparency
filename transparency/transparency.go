@@ -23,7 +23,7 @@ const (
 // Resolve resolves transparency engine codes into a human-readable strings.
 func (e EngineCode) Resolve() string {
 	name := map[EngineCode]string{
-		Sigsum: "Sigsum",
+		Sigsum:  "Sigsum",
 		Tessera: "Tessera",
 	}
 
@@ -32,26 +32,25 @@ func (e EngineCode) Resolve() string {
 
 // ProofBundle represents the transparency proof bundle.
 type ProofBundle struct {
-	// Specify which transparency engine should be used to
+	// Format represents the transparency engine that should be used to
 	// verify this proof bundle (i.e. Sigsum, Tessera).
 	Format EngineCode `json:"format"`
 
-	// Serialized JSON of Statement structure that includes
-	// the logged claims for a given bundle.
+	// Statement represents a serialized JSON of the Statement structure
+	// which includes the logged claims for a given bundle.
 	Statement json.RawMessage `json:"statement"`
 
-	// Serialized probing data, its format depends by the
-	// chosen transparency engine.
-	// This information is used to request the inclusion
-	// proof from the remote log.
+	// Probe represents a serialized probing data, its format depends
+	// by the chosen transparency engine.
+	// This information is used to request the inclusion proof from the remote log.
 	Probe json.RawMessage `json:"probe,omitempty"`
 
-	// Inclusion proof, its format depends by the chosen
+	// Proof represents the inclusion proof, its format depends by the chosen
 	// transparency engine.
 	Proof json.RawMessage `json:"proof,omitempty"`
 }
 
-// Engine defines a high-level interface for transparency layer.
+// Engine represents a high-level interface for transparency layer.
 //
 // This interface abstracts the functionalities implemented by
 // the underlying transparency engine.

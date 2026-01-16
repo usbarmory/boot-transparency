@@ -10,19 +10,23 @@ package sigsum
 // Probe represents the data required to request (i.e. probe) an inclusion proof
 // for a given leaf to a Sigsum log.
 type Probe struct {
-	// Log origin.
+	// Origin represents the log origin.
 	Origin string `json:"origin"`
 
-	// Sigsum uses leaf signature to identify the leaf into the log.
+	// LeafSignature represents the leaf signature, used by Sigsum
+	// to identify the leaf into the log.
 	LeafSignature string `json:"leaf_signature"`
 
-	// Log key hash in hex format as expected in Sigsum proof bundle.
+	// LogPublicKeyHash represents the log key hash in hex format as expected
+	// in Sigsum proof bundle.
 	LogPublicKeyHash string `json:"log_public_key_hash"`
 
-	// Submitter key hash in hex format as expected in Sigsum proof bundle.
+	// SubmitPublicKeyHash represents the submitter key hash in hex format
+	// as expected in Sigsum proof bundle.
 	SubmitPublicKeyHash string `json:"submit_public_key_hash"`
 
-	// The LeafHash is not present as it is computed hashing the statement
-	// that is included in the proof bundle.
+	// LeafHash represents the leaf hash, this field is commented out as
+	// the leaf hash is computed from the actual statement included in
+	// the proof bundle.
 	// LeafHash []byte    `json:"leafHash"`
 }

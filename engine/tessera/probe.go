@@ -12,24 +12,24 @@ package tessera
 // This structure is a simplified version of the Tessera inclusionProbe
 // structure.
 type Probe struct {
-	// Log origin is needed to probe the correct log where
-	// the leaf has been logged to.
+	// Origin represents the log origin that is needed, during the probing,
+	// to identify the correct log where the leaf has been logged to.
 	Origin string `json:"origin"`
 
-	// Leaf index.
+	// LeafIdx represents the leaf index.
 	LeafIdx uint64 `json:"leafIdx"`
 
-	// Tree size.
+	// TreeSize represents the tree size.
 	TreeSize uint64 `json:"treeSize"`
 
-	// Root hash.
+	// Root represents the root hash.
 	Root []byte `json:"root"`
 
-	// The LeafHash is not present as it is computed hashing
-	// the ProofBundle.Statement.
-	// LeafHash []byte   `json:"leafHash"`
+	// LeafHash represents the leaf hash, this field is commented out as
+	// the leaf hash is computed from the actual statement included in
+	// the proof bundle.
 
-	// Log public key is needed to verify that the proof is
-	// signed with a trusted log key.
+	// LogPublicKey represents the log public key which is needed to
+	// verify that the proof has been signed by a trusted log key.
 	LogPublicKey string `json:"log_public_key"`
 }

@@ -9,7 +9,7 @@ package initrd
 
 // Requirements represents the supported policy requirements for Initrd artifact.
 type Requirements struct {
-	// FileHash represents the hash of the artifact (currently only SHA-256 is supported).
+	// FileHash represents the required hash of the artifact (currently only SHA-256 is supported).
 	FileHash string `json:"file_hash,omitempty"`
 
 	// MinVersion represents the required minimum version, expressed using Semantic Versioning 2.0.0 (see semver.org).
@@ -22,10 +22,12 @@ type Requirements struct {
 	// by the EFI specification (i.e. IA32, x64, IA64, ARM, AA64, ...).
 	Architecture string `json:"architecture,omitempty"`
 
-	// true if init ram disk containing any tainted kernel module are allowed.
+	// Tainted represents the required tainted condition.
+	// This allows to authorize only init ram disks that do not contain any
+	// tainted kernel module.
 	Tainted bool `json:"tainted,omitempty"`
 
-	// Reproductible represets the reproducibility of the artifact binary.
+	// Reproducible represents the reproducibility of the artifact binary.
 	// This allows to authorize only artifacts built via a reproducible process.
 	Reproducible bool `json:"reproducible,omitempty"`
 
@@ -36,7 +38,7 @@ type Requirements struct {
 	// https://spdx.github.io/spdx-spec/v2.3/SPDX-license-list/ .
 	License []string `json:"license,omitempty"`
 
-	// BuildArgs repsents the allowed build arguments for the artifact.
+	// BuildArgs represents the allowed build arguments for the artifact.
 	// This allows to authorize only artifacts that have been built with certain
 	// building arguments.
 	// The matching rules are expressed via map[string]string where the keys are
@@ -46,7 +48,7 @@ type Requirements struct {
 	// claims, the test will fail as the matching rule cannot be tested.
 	BuildArgs map[string]string `json:"build_args,omitempty"`
 
-	// MinTimestamp represent the required minimum timestamp in RFC3339 format
+	// MinTimestamp represents the required minimum timestamp in RFC3339 format
 	// (e.g. "1985-04-12T23:20:50.52Z").
 	MinTimestamp string `json:"min_timestamp,omitempty"`
 

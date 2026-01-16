@@ -58,7 +58,6 @@ func (h *Initrd) Validate(require interface{}, claim interface{}) (err error) {
 	r := require.(*Requirements)
 	c := claim.(*Claims)
 
-	// Go through all the supported policy requirements for Initrd.
 	if err = artifact.ValidateHash(r.FileHash, c.FileHash); err != nil {
 		return
 	}
