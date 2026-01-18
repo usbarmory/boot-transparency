@@ -40,7 +40,7 @@ func TestTesseraEngineSetKey(t *testing.T) {
 	submitKey := []string{}
 
 	e, err := transparency.GetEngine(transparency.Tessera)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "tessera support is incomplete"){
 		t.Fatal(err)
 	}
 
@@ -58,7 +58,7 @@ func TestNegativeTesseraEngineSetKey(t *testing.T) {
 	submitKey := []string{}
 
 	e, err := transparency.GetEngine(transparency.Tessera)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "tessera support is incomplete"){
 		t.Fatal(err)
 	}
 
@@ -71,7 +71,7 @@ func TestNegativeTesseraEngineSetKey(t *testing.T) {
 
 func TestTesseraEngineParseWitnessPolicy(t *testing.T) {
 	e, err := transparency.GetEngine(transparency.Tessera)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "tessera support is incomplete"){
 		t.Fatal(err)
 	}
 
@@ -95,7 +95,7 @@ func TestTesseraEngineNegativeNoCosignaturesVerifyProof(t *testing.T) {
 	logKey := []string{"PeterNeumann+c74f20a3+ARpc2QcUPDhMQegwxbzhKqiBfsVkmqq/LDE4izWy10TW"}
 
 	e, err := transparency.GetEngine(transparency.Tessera)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "tessera support is incomplete"){
 		t.Fatal(err)
 	}
 

@@ -127,11 +127,15 @@ func Add(e Engine, t EngineCode) {
 }
 
 // GetEngine returns the registered transparency engine, if present.
-func GetEngine(t EngineCode) (Engine, error) {
-	e := engines[t]
+func GetEngine(t EngineCode) (e Engine, err error) {
+	e = *engines[t]
+
 	if e == nil {
-		return nil, fmt.Errorf("transparency engine not registered")
+		err = fmt.Errorf("transparency engine not registered")
+	}
+	if t == Tessera {
+		err = fmt.Errorf("tessera support is incomplete")
 	}
 
-	return *e, nil
+	return e, err
 }
