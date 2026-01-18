@@ -23,11 +23,18 @@ const (
 // Resolve resolves transparency engine codes into a human-readable strings.
 func (e EngineCode) Resolve() string {
 	name := map[EngineCode]string{
-		Sigsum:  "Sigsum",
-		Tessera: "Tessera",
+		Sigsum:  "sigsum",
+		Tessera: "tessera",
 	}
 
 	return name[e]
+}
+
+// EngineCodeFromString represents the mapping between a human-readable
+// engine name and its correspondent EngineCode.
+var EngineCodeFromString = map[string]EngineCode{
+	"sigsum": Sigsum,
+	"tessera": Tessera,
 }
 
 // ProofBundle represents the transparency proof bundle.
