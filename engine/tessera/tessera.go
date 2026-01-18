@@ -39,7 +39,7 @@ func init() {
 }
 
 // GetProof implements transparency.GetProof() for the Tessera engine.
-func (e *TesseraEngine) GetProof(proofBundle interface{}) ([]byte, error) {
+func (e *TesseraEngine) GetProof(proofBundle interface{}, updateProofBundle bool) ([]byte, error) {
 	var logReadBaseURL *url.URL
 	var logReadCP client.CheckpointFetcherFunc
 	var logReadTile client.TileFetcherFunc
@@ -155,6 +155,11 @@ func (e *TesseraEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 
 	if err != nil {
 		return nil, err
+	}
+
+	// Overwrites the inclusion proof in the original ProofBundle.
+	if updateProofBundle {
+		pb.Proof[0] = string(builtProof)
 	}
 
 	return builtProof, nil

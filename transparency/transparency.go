@@ -72,6 +72,9 @@ type Engine interface {
 	// inclusion proof.
 	// The inclusion proof is returned as []byte where its actual
 	// content depends by the chosen transparency engine.
+	// If updateProofBundle is set to true, the inclusion proof in the original
+	// proof bundle is overwritten with the fresh copy downloaded from the remote
+	// log.
 	//
 	// Return error if:
 	//   - the transparency engine is configured off-line
@@ -79,7 +82,7 @@ type Engine interface {
 	//   - the submitter key is not configured
 	//   - the statement leaf is not present in the log
 	//   - any other error is returned by the public log.
-	GetProof(proofBundle interface{}) ([]byte, error)
+	GetProof(proofBundle interface{}, updateProofBundle bool) ([]byte, error)
 
 	// ParseWitnessPolicy parses the witness policy according with the format
 	// expected by thecchosen transparency engine.

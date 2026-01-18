@@ -344,7 +344,7 @@ func TestSigsumEngineGetProof(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	pr, err := e.GetProof(pb)
+	pr, err := e.GetProof(pb, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -352,8 +352,46 @@ func TestSigsumEngineGetProof(t *testing.T) {
 	freshBundle := pb.(*ProofBundle)
 	freshBundle.Proof = string(pr)
 
-	err = e.VerifyProof(freshBundle)
+	if err = e.VerifyProof(freshBundle); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestSigsumEngineGetProofUpdateOriginalProofBundle(t *testing.T) {
+	e, err := transparency.GetEngine(transparency.Sigsum)
+
 	if err != nil {
+		t.Fatal(err)
+	}
+
+	logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEZEryq9QPSJWgA7yjUPnVkSqzAaScd/E+W22QXCCl/m"}
+	submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqym9S/tFn6B/Eri5hGJiEV8BpGumEPcm65uxC+FG6K"}
+
+	err = e.SetKey(logKey, submitKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	p, err := e.ParseWitnessPolicy(validWitnessPolicy)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = e.SetWitnessPolicy(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pb, _, err := e.ParseProof(validProofBundle)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err = e.GetProof(pb, true); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = e.VerifyProof(pb); err != nil {
 		t.Fatal(err)
 	}
 }

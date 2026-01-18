@@ -198,19 +198,14 @@ func bootTransparencyOnlineValidate(fsys fs.FS, bootPolicyPath string, witnessPo
 	}
 
 	// Probe the log to obtain a fresh inclusion proof.
-	pr, err := te.GetProof(pb)
-	if err != nil {
+	if _, err = te.GetProof(pb, true); err != nil {
 		return err
 	}
-
-	freshBundle := pb.(*sigsum.ProofBundle)
-	freshBundle.Proof = string(pr)
 
 	// Inclusion proof verification,
 	// use the fresh inclusion proof obtained from the log, include
 	// verification of the co-signing quorum as defined in the witness policy.
-	err = te.VerifyProof(freshBundle)
-	if err != nil {
+	if err = te.VerifyProof(pb); err != nil {
 		return err
 	}
 

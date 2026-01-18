@@ -49,7 +49,7 @@ func init() {
 // GetProof implements transparency.GetProof() for the Sigsum engine.
 // The logic implemented for the Sigsum engine is partially replicating
 // the collectProof() from sigsum-go/pkg/submit/submit.go.
-func (e *SigsumEngine) GetProof(proofBundle interface{}) ([]byte, error) {
+func (e *SigsumEngine) GetProof(proofBundle interface{}, updateProofBundle bool) ([]byte, error) {
 	if _, ok := proofBundle.(*ProofBundle); !ok {
 		return nil, fmt.Errorf("invalid proof bundle for Sigsum engine")
 	}
@@ -171,6 +171,11 @@ func (e *SigsumEngine) GetProof(proofBundle interface{}) ([]byte, error) {
 	sigsumProofBundle, err := buildSigsumProofBundle(pr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to assemble the proof bundle, %w", err)
+	}
+
+	// Overwrites the inclusion proof in the original ProofBundle.
+	if updateProofBundle {
+		pb.Proof = string(sigsumProofBundle)
 	}
 
 	return sigsumProofBundle, nil
