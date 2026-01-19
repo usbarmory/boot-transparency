@@ -140,16 +140,19 @@ Usage: bt-proof [--help]
 		if jsonProofBundle, err := readFile(settings.proofBundleFile); err != nil {
 			log.Fatalf("cannot read proof bundle, %v", err)
 		} else {
-			e, err := transparency.GetEngine(transparency.EngineCode(format))
+			_, err := transparency.GetEngine(transparency.EngineCode(format))
 			if err != nil {
 				log.Fatalf("unsupported bundle format, %v", err)
 			}
 
 			// Use the marshal version of the parsed proof bundle
-			// (i.e. []byte output returned as second value by the parsing function).
-			_, parsed, err := e.ParseProof(jsonProofBundle)
+			// (i.e. []byte output returned as last value by the parsing function).
+			f, _, _, _, parsed, err := transparency.ParseProofBundle(jsonProofBundle)
 			if err != nil {
 				log.Fatalf("invalid proof bundle, %v", err)
+			}
+			if f != transparency.EngineCode(format) {
+				log.Fatalf("proof bundle format %q is not matching the selected transparency engine %q", f, format)
 			}
 
 			// Print result to stdout.
@@ -208,16 +211,19 @@ Usage: bt-proof [--help]
 
 		// Parse the preliminary bundle to ensure it is consistent
 		// with the transparency engine format.
-		e, err := transparency.GetEngine(pb.Format)
+		_, err = transparency.GetEngine(pb.Format)
 		if err != nil {
 			log.Fatalf("unsupported bundle format, %v", err)
 		}
 
 		// Use the marshal version of the parsed proof bundle
-		// (i.e. []byte output returned as second value by the parsing function).
-		_, parsed, err := e.ParseProof(jsonProofBundle)
+		// (i.e. []byte output returned as last value by the parsing function).
+		f, _, _, _, parsed, err := transparency.ParseProofBundle(jsonProofBundle)
 		if err != nil {
 			log.Fatalf("invalid proof bundle, %v", err)
+		}
+		if f != transparency.EngineCode(format) {
+			log.Fatalf("proof bundle format %q is not matching the selected transparency engine %q", f, format)
 		}
 
 		// Print result to stdout.

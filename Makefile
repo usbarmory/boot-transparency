@@ -14,6 +14,7 @@ test:
 	@cd engine/sigsum && ${GO} test -cover -v
 	@cd engine/tessera && ${GO} test -cover -v
 	@cd policy && ${GO} test -cover -v
+	@cd transparency && ${GO} test -cover -v
 
 docs:
 	@${GOPATH}/bin/gomarkdoc artifact/artifact.go policy/policy.go transparency/transparency.go > ./doc/API.md
@@ -22,3 +23,6 @@ tools:
 	@cd cmd/bt-statement && ${GO} build
 	@cd cmd/bt-policy && ${GO} build
 	@cd cmd/bt-proof-bundle && ${GO} build
+
+examples:
+	@cd example/validate-bundle && ${GO} build

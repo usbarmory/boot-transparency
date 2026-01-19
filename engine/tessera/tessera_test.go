@@ -21,7 +21,7 @@ var validWitnessPolicy []byte
 func TestLoadTestData(t *testing.T) {
 	var err error
 
-	validProofBundle, err = os.ReadFile("../../testdata/tessera/proof_bundle.json")
+	validProofBundle, err = os.ReadFile("../../testdata/tessera/proof-bundle.json")
 
 	if err != nil {
 		t.Errorf("failed to load test proof bundle: %s", err)
@@ -40,7 +40,7 @@ func TestTesseraEngineSetKey(t *testing.T) {
 	submitKey := []string{}
 
 	e, err := transparency.GetEngine(transparency.Tessera)
-	if err != nil && !strings.Contains(err.Error(), "tessera support is incomplete"){
+	if err != nil && !strings.Contains(err.Error(), "tessera support is incomplete") {
 		t.Fatal(err)
 	}
 
@@ -58,7 +58,7 @@ func TestNegativeTesseraEngineSetKey(t *testing.T) {
 	submitKey := []string{}
 
 	e, err := transparency.GetEngine(transparency.Tessera)
-	if err != nil && !strings.Contains(err.Error(), "tessera support is incomplete"){
+	if err != nil && !strings.Contains(err.Error(), "tessera support is incomplete") {
 		t.Fatal(err)
 	}
 
@@ -69,21 +69,13 @@ func TestNegativeTesseraEngineSetKey(t *testing.T) {
 	}
 }
 
-func TestTesseraEngineParseWitnessPolicy(t *testing.T) {
+func TestTesseraEngineSetWitnessPolicy(t *testing.T) {
 	e, err := transparency.GetEngine(transparency.Tessera)
-	if err != nil && !strings.Contains(err.Error(), "tessera support is incomplete"){
+	if err != nil && !strings.Contains(err.Error(), "tessera support is incomplete") {
 		t.Fatal(err)
 	}
 
-	p, err := e.ParseWitnessPolicy(validWitnessPolicy)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = e.SetWitnessPolicy(p)
-
-	if err != nil {
+	if err = e.SetWitnessPolicy(validWitnessPolicy); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -95,7 +87,7 @@ func TestTesseraEngineNegativeNoCosignaturesVerifyProof(t *testing.T) {
 	logKey := []string{"PeterNeumann+c74f20a3+ARpc2QcUPDhMQegwxbzhKqiBfsVkmqq/LDE4izWy10TW"}
 
 	e, err := transparency.GetEngine(transparency.Tessera)
-	if err != nil && !strings.Contains(err.Error(), "tessera support is incomplete"){
+	if err != nil && !strings.Contains(err.Error(), "tessera support is incomplete") {
 		t.Fatal(err)
 	}
 
@@ -104,13 +96,16 @@ func TestTesseraEngineNegativeNoCosignaturesVerifyProof(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	pb, _, err := e.ParseProof(validProofBundle)
+	format, statement, proof, probe, _, err := transparency.ParseProofBundle(validProofBundle)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = e.VerifyProof(pb)
+	if format != transparency.Tessera {
+		t.Errorf("not a valid Tessera proof bundle")
+	}
 
+	err = e.VerifyProof(statement, proof, probe)
 	// Error expected: the log public key will not pass log signature verification.
 	if err != nil && !strings.Contains(err.Error(), "does not match expected root") {
 		t.Fatal(err)

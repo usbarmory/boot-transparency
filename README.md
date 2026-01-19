@@ -106,7 +106,7 @@ if err != nil {
 
 // Set public keys.
 if err := te.SetKey(logKey, submitKey); err != nil {
-    // Handle error: unable to parse the log or submitter keys.
+	// Handle error: unable to parse the log or submitter keys.
 }
 
 witnessPolicy := []byte(`log 4644af2abd40f4895a003bca350f9d5912ab301a49c77f13e5b6d905c20a5fe6 https://test.sigsum.org/barreleye
@@ -118,46 +118,68 @@ group  demo-quorum-rule any poc.sigsum.org/nisse rgdd.se/poc-witness
 quorum demo-quorum-rule
 `)
 
-// Parse witness policy.
-wp, err := te.ParseWitnessPolicy(witnessPolicy)
-if err != nil {
-    // handle error: unable to parse witness policy
-}
-
 // Set witness policy.
 if err = te.SetWitnessPolicy(wp); err != nil {
-    // Handle error: unable to set witness policy.
+	// Handle error: unable to set witness policy.
 }
 
-// Parse the proof bundle, which is expected to contain
-// the logged statement and its inclusion proof.
-pb, _, err := te.ParseProof(jsonProofBundle)
-
-// Inclusion proof verification
-// considers the co-signing quorum as defined in the witness policy.
-err = te.VerifyProof(pb)
+// Parse the proof bundle, which is expected to contain,
+// the logged statement, its inclusion proof and the probing information.
+format, statement, proof, probe, _, err := transparency.ParseProofBundle(proofBundle)
 if err != nil {
-    // Handle error: boot bundle not authorized - transparency validation failed.
+	// Handle error: unable to parse proof bundle.
+	return err
+}
+if format != transparency.Sigsum {
+	// Handle error: invalid proof bundle format.
 }
 
-// Parse the boot policy requirements.
+// If online, the inclusion proof verification is performed against a
+// fresh copy of the proof fetched directly from the remote log.
+if online {
+	proof, err = te.GetProof(statement, probe)
+	if err != nil {
+		// Handle error: unable to fetch a fresh inclusion proof.
+	}
+}
+
+// Inclusion proof verification, including the co-signing quorum verification
+// as defined in the witness policy.
+err = te.VerifyProof(statement, proof, nil)
+if err != nil {
+	// Handle error: inclusion proof verification failed.
+}
+
 r, err := policy.ParseRequirements(bootPolicy)
 if err != nil {
-    // Handle error: boot policy parsing failed.
+	// Handle error: unable to parse the requirements from the boot policy.
 }
 
-// Convert to the proof bundle type expected by the selected engine.
-b := pb.(*sigsum.ProofBundle)
-
-// Parse the statement claims included in the proof bundle.
-c, err := policy.ParseStatement(b.Statement)
+c, err := policy.ParseStatement(statement)
 if err != nil {
-    // Handle error: boot bundle parsing failed, cannot parse claims.
+	// Handle error: unable to parse the claims from the boot policy.
 }
 
-// Validate the matching between the logged claims and the policy requirements.
+// Ensure the artifacts loaded during the booting process are matching
+// the ones referenced in the proof bundle (i.e. file hash matching).
+b := BootEntry{
+	Artifact{
+		Category: artifact.LinuxKernel,
+		Hash:     "4551848b4ab43cb4321c4d6ba98e1d215f950cee21bfd82c8c82ab64e34ec9a6",
+	},
+	Artifact{
+		Category: artifact.Initrd,
+		Hash:     "337630b74e55eae241f460faadf5a2f9a2157d6de2853d4106c35769e4acf538",
+	},
+}
+
+if err = b.validateProofHashes(c); err != nil {
+	// Handle error: file hashes are not matching the ones included in the logged statement.
+}
+
+// Validate the matching bewteen the logged claims and the policy requirements.
 if err = policy.Validate(r, c); err != nil {
-    // Handle error: boot bundle not authorized.
+	// Handle error: the boot bundle is NOT authorized for boot.
 }
 
 // boot-transparency validation passed.

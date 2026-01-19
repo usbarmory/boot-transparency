@@ -21,15 +21,13 @@ func TestLoadTestData(t *testing.T) {
 	var err error
 
 	validProofBundle, err = os.ReadFile("../../testdata/sigsum/proof-bundle.json")
-
 	if err != nil {
-		t.Errorf("failed to load test proof bundle: %s", err)
+		t.Fatal(err)
 	}
 
 	validWitnessPolicy, err = os.ReadFile("../../testdata/sigsum/trust_policy")
-
 	if err != nil {
-		t.Errorf("failed to load test witness policy: %s", err)
+		t.Fatal(err)
 	}
 }
 
@@ -49,7 +47,7 @@ func TestSigsumEngineSetKey(t *testing.T) {
 	}
 }
 
-func TestSigsumEngineParseWitnessPolicy(t *testing.T) {
+func TestSigsumEngineSetWitnessPolicy(t *testing.T) {
 	policy := []byte(`
 # example config
 log aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa http://sigsum.example.org
@@ -73,25 +71,7 @@ quorum G
 		t.Fatal(err)
 	}
 
-	p, err := e.ParseWitnessPolicy(policy)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = e.SetWitnessPolicy(p)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestSigsumEngineParseProof(t *testing.T) {
-	e, err := transparency.GetEngine(transparency.Sigsum)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if _, _, err := e.ParseProof(validProofBundle); err != nil {
+	if err = e.SetWitnessPolicy(policy); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -119,14 +99,21 @@ func TestSigsumEngineNoCosignaturesVerifyProof(t *testing.T) {
 
 	// Reset the witness policy to induce the engine to verify the proof using
 	// the no-cosignature verification.
-	e.ResetWitnessPolicy()
-
-	pb, _, err := e.ParseProof(validProofBundle)
+	err = e.SetWitnessPolicy(nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = e.VerifyProof(pb)
+	format, statement, proof, _, _, err := transparency.ParseProofBundle(validProofBundle)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if format != transparency.Sigsum {
+		t.Errorf("not a valid Sigsum proof bundle")
+	}
+
+	err = e.VerifyProof(statement, proof, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -147,22 +134,21 @@ func TestSigsumEngineCosignaturesVerifyProof(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	p, err := e.ParseWitnessPolicy(validWitnessPolicy)
+	err = e.SetWitnessPolicy(validWitnessPolicy)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = e.SetWitnessPolicy(p)
+	format, statement, proof, _, _, err := transparency.ParseProofBundle(validProofBundle)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	pb, _, err := e.ParseProof(validProofBundle)
-	if err != nil {
-		t.Fatal(err)
+	if format != transparency.Sigsum {
+		t.Errorf("not a valid Sigsum proof bundle")
 	}
 
-	err = e.VerifyProof(pb)
+	err = e.VerifyProof(statement, proof, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -184,22 +170,21 @@ func TestSigsumEngineCosignaturesVerifyProofInvalidLogKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	p, err := e.ParseWitnessPolicy(validWitnessPolicy)
+	err = e.SetWitnessPolicy(validWitnessPolicy)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = e.SetWitnessPolicy(p)
+	format, statement, proof, _, _, err := transparency.ParseProofBundle(validProofBundle)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	pb, _, err := e.ParseProof(validProofBundle)
-	if err != nil {
-		t.Fatal(err)
+	if format != transparency.Sigsum {
+		t.Errorf("not a valid Sigsum proof bundle")
 	}
 
-	err = e.VerifyProof(pb)
+	err = e.VerifyProof(statement, proof, nil)
 	// Error expected: VerifyProof must return the log keyhash mismatch error.
 	if err != nil && err.Error() != "unknown log key hash" {
 		t.Fatal(err)
@@ -221,22 +206,21 @@ func TestSigsumEngineCosignaturesVerifyProofInvalidSubmitKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	p, err := e.ParseWitnessPolicy(validWitnessPolicy)
+	err = e.SetWitnessPolicy(validWitnessPolicy)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = e.SetWitnessPolicy(p)
+	format, statement, proof, _, _, err := transparency.ParseProofBundle(validProofBundle)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	pb, _, err := e.ParseProof(validProofBundle)
-	if err != nil {
-		t.Fatal(err)
+	if format != transparency.Sigsum {
+		t.Errorf("not a valid Sigsum proof bundle")
 	}
 
-	err = e.VerifyProof(pb)
+	err = e.VerifyProof(statement, proof, nil)
 	// Error expected: VerifyProof must return the leaf key hash (i.e. submitter's key) mismatch error.
 	if err != nil && err.Error() != "unknown leaf key hash" {
 		t.Fatal(err)
@@ -258,69 +242,26 @@ func TestSigsumEngineGetProof(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	p, err := e.ParseWitnessPolicy(validWitnessPolicy)
+	err = e.SetWitnessPolicy(validWitnessPolicy)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = e.SetWitnessPolicy(p)
+	format, statement, _, probe, _, err := transparency.ParseProofBundle(validProofBundle)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	pb, _, err := e.ParseProof(validProofBundle)
+	if format != transparency.Sigsum {
+		t.Errorf("not a valid Sigsum proof bundle")
+	}
+
+	proof, err := e.GetProof(statement, probe)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	pr, err := e.GetProof(pb, false)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	freshBundle := pb.(*ProofBundle)
-	freshBundle.Proof = string(pr)
-
-	if err = e.VerifyProof(freshBundle); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestSigsumEngineGetProofUpdateOriginalProofBundle(t *testing.T) {
-	e, err := transparency.GetEngine(transparency.Sigsum)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEZEryq9QPSJWgA7yjUPnVkSqzAaScd/E+W22QXCCl/m"}
-	submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqym9S/tFn6B/Eri5hGJiEV8BpGumEPcm65uxC+FG6K"}
-
-	err = e.SetKey(logKey, submitKey)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := e.ParseWitnessPolicy(validWitnessPolicy)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = e.SetWitnessPolicy(p)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	pb, _, err := e.ParseProof(validProofBundle)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if _, err = e.GetProof(pb, true); err != nil {
-		t.Fatal(err)
-	}
-
-	if err = e.VerifyProof(pb); err != nil {
+	if err = e.VerifyProof(statement, proof, nil); err != nil {
 		t.Fatal(err)
 	}
 }

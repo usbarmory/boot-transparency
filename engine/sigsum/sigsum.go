@@ -22,7 +22,7 @@ import (
 	"sigsum.org/sigsum-go/pkg/crypto"
 	"sigsum.org/sigsum-go/pkg/key"
 	"sigsum.org/sigsum-go/pkg/policy"
-	"sigsum.org/sigsum-go/pkg/proof"
+	s_proof "sigsum.org/sigsum-go/pkg/proof"
 	"sigsum.org/sigsum-go/pkg/requests"
 	"sigsum.org/sigsum-go/pkg/types"
 )
@@ -49,16 +49,11 @@ func init() {
 // GetProof implements transparency.GetProof() for the Sigsum engine.
 // The logic implemented for the Sigsum engine is partially replicating
 // the collectProof() from sigsum-go/pkg/submit/submit.go.
-func (e *SigsumEngine) GetProof(proofBundle interface{}, updateProofBundle bool) ([]byte, error) {
-	if _, ok := proofBundle.(*ProofBundle); !ok {
-		return nil, fmt.Errorf("invalid proof bundle for Sigsum engine")
-	}
+func (e *SigsumEngine) GetProof(statement []byte, probe []byte) (proof []byte, err error) {
+	var p Probe
 
-	pb := proofBundle.(*ProofBundle)
-
-	// Validate the correctness of the proof bundle format.
-	if pb.Format != transparency.Sigsum {
-		return nil, fmt.Errorf("invalid bundle format %q, expected %q (transparency.Sigsum)", pb.Format, transparency.Sigsum)
+	if err = json.Unmarshal(probe, &p); err != nil {
+		return nil, fmt.Errorf("invalid probe data, %w", err)
 	}
 
 	if e.witnessPolicy == nil {
@@ -70,10 +65,10 @@ func (e *SigsumEngine) GetProof(proofBundle interface{}, updateProofBundle bool)
 	}
 
 	// Validate the trustworthiness of the log key included in the proof probe.
-	lk, err := getTrustedKeyFromHash(e.logPubkey, pb.Probe.LogPublicKeyHash)
+	lk, err := getTrustedKeyFromHash(e.logPubkey, p.LogPublicKeyHash)
 
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	if len(e.submitPubkey) == 0 {
@@ -81,13 +76,13 @@ func (e *SigsumEngine) GetProof(proofBundle interface{}, updateProofBundle bool)
 	}
 
 	// Validate the trustworthiness of the submit key included in the proof probe.
-	sk, err := getTrustedKeyFromHash(e.submitPubkey, pb.Probe.SubmitPublicKeyHash)
+	sk, err := getTrustedKeyFromHash(e.submitPubkey, p.SubmitPublicKeyHash)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if _, err := url.Parse(pb.Probe.Origin); err != nil {
+	if _, err := url.Parse(p.Origin); err != nil {
 		return nil, fmt.Errorf("invalid log origin, %w", err)
 	}
 
@@ -101,7 +96,7 @@ func (e *SigsumEngine) GetProof(proofBundle interface{}, updateProofBundle bool)
 
 	client := client.New(client.Config{
 		UserAgent:  "boot-transparency",
-		URL:        pb.Probe.Origin,
+		URL:        p.Origin,
 		HTTPClient: httpClient,
 	})
 
@@ -110,12 +105,6 @@ func (e *SigsumEngine) GetProof(proofBundle interface{}, updateProofBundle bool)
 	// JSON marshalling is required to ensure the message has been logged
 	// independently from its formatting (i.e. indent spaces, or tabs,
 	// that would be present in human-readable statement JSON).
-	statement, err := json.MarshalIndent(pb.Statement, "", "\t")
-
-	if err != nil {
-		return nil, err
-	}
-
 	// The message chksum is a SHA-256 of the logged message,
 	// which in turn is a SHA-256 of the initial statement.
 	// This checksum should match the one shown by sigsum-monitor.
@@ -124,10 +113,10 @@ func (e *SigsumEngine) GetProof(proofBundle interface{}, updateProofBundle bool)
 
 	msgChksum := crypto.Hash(s)
 
-	sig, _ := crypto.SignatureFromHex(pb.Probe.LeafSignature)
+	sig, _ := crypto.SignatureFromHex(p.LeafSignature)
 
 	// proof.ShortLeaf is used by GetTreeHead().
-	shortLeaf := proof.ShortLeaf{
+	shortLeaf := s_proof.ShortLeaf{
 		Signature: sig,
 		KeyHash:   crypto.HashBytes(sk[:]),
 	}
@@ -140,7 +129,7 @@ func (e *SigsumEngine) GetProof(proofBundle interface{}, updateProofBundle bool)
 		KeyHash:   crypto.HashBytes(sk[:]),
 	}
 
-	pr := proof.SigsumProof{
+	pr := s_proof.SigsumProof{
 		LogKeyHash: crypto.HashBytes(lk[:]),
 		Leaf:       shortLeaf,
 	}
@@ -167,29 +156,16 @@ func (e *SigsumEngine) GetProof(proofBundle interface{}, updateProofBundle bool)
 		return nil, fmt.Errorf("invalid inclusion proof, %w", err)
 	}
 
-	// Save the whole inclusion proof in ASCII format in the proof bundle.
-	sigsumProofBundle, err := buildSigsumProofBundle(pr)
+	// Returns the inclusion proof in ASCII format
+	// (i.e. the same format used in a proof bundle escaped JSON string).
+	proof, err = buildSigsumProofBundle(pr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to assemble the proof bundle, %w", err)
 	}
 
-	// Overwrites the inclusion proof in the original ProofBundle.
-	if updateProofBundle {
-		pb.Proof = string(sigsumProofBundle)
-	}
+	proof, err = json.Marshal(string(proof))
 
-	return sigsumProofBundle, nil
-}
-
-// ParseWitnessPolicy implements transparency.ParseWitnessPolicy() for the Sigsum engine.
-func (e *SigsumEngine) ParseWitnessPolicy(wp []byte) (interface{}, error) {
-	p, err := policy.ParseConfig(bytes.NewReader(wp))
-
-	if err != nil {
-		return nil, err
-	}
-
-	return p, err
+	return
 }
 
 // SetKey implements transparency.SetKey() for the Sigsum engine.
@@ -224,48 +200,22 @@ func (e *SigsumEngine) SetKey(logKey []string, submitKey []string) (err error) {
 }
 
 // SetWitnessPolicy implements transparency.SetWitnessPolicy for the Sigsum engine.
-func (e *SigsumEngine) SetWitnessPolicy(wp interface{}) (err error) {
-	if _, ok := wp.(*policy.Policy); !ok {
-		return fmt.Errorf("invalid policy, type assertion to Sigsum *policy.Policy failed")
+func (e *SigsumEngine) SetWitnessPolicy(wp []byte) (err error) {
+	if wp == nil {
+		e.witnessPolicy = nil
+		return
 	}
 
-	e.witnessPolicy = wp.(*policy.Policy)
+	e.witnessPolicy, err = policy.ParseConfig(bytes.NewReader(wp))
 
 	return
 }
 
-// ResetWitnessPolicy implements transparency.ResetWitnessPolicy() for the Sigsum engine.
-func (e *SigsumEngine) ResetWitnessPolicy() {
-	e.witnessPolicy = nil
-}
-
 // VerifyProof implements transparency.VerifyProof() for the Sigsum engine.
-func (e *SigsumEngine) VerifyProof(proofBundle interface{}) (err error) {
-	var proof proof.SigsumProof
+func (e *SigsumEngine) VerifyProof(statement []byte, proof []byte, probe []byte) (err error) {
+	var sigsumProof s_proof.SigsumProof
 	var lk crypto.PublicKey
 	var sk crypto.PublicKey
-
-	if _, ok := proofBundle.(*ProofBundle); !ok {
-		return fmt.Errorf("invalid proof bundle for Sigsum engine")
-	}
-
-	pb := proofBundle.(*ProofBundle)
-
-	// Validate the correctness of the proof bundle format.
-	if pb.Format != transparency.Sigsum {
-		return fmt.Errorf("invalid bundle format %q, expected %q (transparency.SigsumBundle)", pb.Format, transparency.Sigsum)
-	}
-
-	// Load the statement and compute its checksum, which is the logged
-	// message to be verified.
-	// JSON marshalling is required to ensure the message has been logged
-	// independently from its formatting (i.e. indent spaces, or tabs,
-	// that would be present in human-readable statement JSON).
-	statement, err := json.MarshalIndent(pb.Statement, "", "\t")
-
-	if err != nil {
-		return
-	}
 
 	// The logged message is a SHA-256 of the original statement.
 	// Here message content should be aligned with the output of
@@ -275,9 +225,12 @@ func (e *SigsumEngine) VerifyProof(proofBundle interface{}) (err error) {
 	// sigsum-monitor shows a sha256sum of this.
 	msg := crypto.Hash(sha256.Sum256(statement))
 
-	// Load the proof.
-	asciiProof := []byte(pb.Proof)
-	if err = proof.FromASCII(bytes.NewReader(asciiProof)); err != nil {
+	if proof, err = e.parseProof(proof); err != nil {
+		return
+	}
+
+	// Import the proof according with Sigsum format.
+	if err = sigsumProof.FromASCII(bytes.NewReader(proof)); err != nil {
 		return
 	}
 
@@ -312,10 +265,10 @@ func (e *SigsumEngine) VerifyProof(proofBundle interface{}) (err error) {
 
 			// Include quorum verification only if the witness policy is set.
 			if e.witnessPolicy != nil {
-				err = proof.Verify(&msg, map[crypto.Hash]crypto.PublicKey{
+				err = sigsumProof.Verify(&msg, map[crypto.Hash]crypto.PublicKey{
 					crypto.HashBytes(sk[:]): sk}, e.witnessPolicy)
 			} else { // Verification do not include any witness quorum verification.
-				err = proof.VerifyNoCosignatures(&msg, map[crypto.Hash]crypto.PublicKey{
+				err = sigsumProof.VerifyNoCosignatures(&msg, map[crypto.Hash]crypto.PublicKey{
 					crypto.HashBytes(sk[:]): sk}, &lk)
 			}
 
@@ -329,40 +282,17 @@ func (e *SigsumEngine) VerifyProof(proofBundle interface{}) (err error) {
 	return
 }
 
-// ParseProof implements transparency.ParseProof() for the Sigsum engine.
-func (e *SigsumEngine) ParseProof(jsonProofBundle []byte) (interface{}, []byte, error) {
+// parseProof implements the proof parsing for Sigsum engine.
+// Sigsum internally stores the proof as []byte.
+func (e *SigsumEngine) parseProof(jsonProof []byte) (proof []byte, err error) {
 	var pb ProofBundle
-	var proof proof.SigsumProof
-	var pbMarshal []byte
 
-	if err := json.Unmarshal(jsonProofBundle, &pb); err != nil {
-		return nil, nil, err
+	if err = json.Unmarshal(jsonProof, &pb.Proof); err != nil {
+		return
 	}
+	proof = []byte(pb.Proof)
 
-	// Do not parse the statement, only focus on the inclusion proof
-	// and the probing data.
-
-	// Validate the correctness of the proof bundle format.
-	if pb.Format != transparency.Sigsum {
-		return nil, nil, fmt.Errorf("invalid bundle format %q, expected %q (transparency.Sigsum)", pb.Format, transparency.Sigsum)
-	}
-
-	// Try to import the proof as proof.SigsumProof, if present, to confirm it
-	// can be handled correctly by sigsum libraries.
-	if pb.Proof != "" {
-		asciiProof := []byte(pb.Proof)
-		if err := proof.FromASCII(bytes.NewReader(asciiProof)); err != nil {
-			return nil, nil, err
-		}
-	}
-
-	// Return also the JSON marshal version of the bundle.
-	pbMarshal, err := json.MarshalIndent(&pb, "", "\t")
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to marshal the proof bundle, %w", err)
-	}
-
-	return &pb, pbMarshal, nil
+	return
 }
 
 // getTrustedKeyFromHash returns, if present, the key that corresponds to a given key hash.
@@ -394,7 +324,7 @@ func getTrustedKeyFromHash(trustedKeys []string, hash string) (crypto.PublicKey,
 	return k, fmt.Errorf("keyhash is not matching any of the trusted keys")
 }
 
-func buildSigsumProofBundle(p proof.SigsumProof) ([]byte, error) {
+func buildSigsumProofBundle(p s_proof.SigsumProof) ([]byte, error) {
 	b := bytes.Buffer{}
 	header := fmt.Sprintf("version=2\nlog=%x\nleaf=%x %x\n\n", p.LogKeyHash, p.Leaf.KeyHash, p.Leaf.Signature)
 	_, _ = b.Write([]byte(header))
