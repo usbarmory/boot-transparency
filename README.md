@@ -119,7 +119,7 @@ quorum demo-quorum-rule
 `)
 
 // Set witness policy.
-if err = te.SetWitnessPolicy(wp); err != nil {
+if err = te.SetWitnessPolicy(witnessPolicy); err != nil {
 	// Handle error: unable to set witness policy.
 }
 
