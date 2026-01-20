@@ -8,6 +8,7 @@
 package tessera
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -149,12 +150,16 @@ func (e *TesseraEngine) GetProof(statement []byte, probe []byte) (proof []byte, 
 }
 
 // SetKey implements transparency.SetKey() for the Tessera engine.
-func (e *TesseraEngine) SetKey(logKey [][]byte, submitKey [][]byte) (err error) {
+// Tessera supports Ed25519 public keys in sumdb note format:
+// https://pkg.go.dev/golang.org/x/mod/sumdb/note
+func (e *TesseraEngine) SetKey(logKey []byte, submitKey []byte) (err error) {
 	// Reset any previously stored key.
 	e.logPubkey = []string{}
 
-	// Parse and load log public key(s) that needs to be compliant with note format.
-	for _, k := range logKey {
+	// Parse and load log public key(s).
+	logKey = bytes.Trim(logKey, "\n")
+	logKeys := bytes.Split(logKey, []byte("\n"))
+	for _, k := range logKeys {
 		lk := string(k)
 		_, err = note.NewVerifier(lk)
 

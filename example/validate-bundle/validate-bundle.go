@@ -152,7 +152,7 @@ func btValidate(fsys fs.FS, bootPolicyPath string, witnessPolicyPath string, sub
 	}
 
 	// Set public keys.
-	err = te.SetKey([][]byte{logKey}, [][]byte{submitKey})
+	err = te.SetKey(logKey, submitKey)
 	if err != nil {
 		return err
 	}

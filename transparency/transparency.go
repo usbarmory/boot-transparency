@@ -64,12 +64,15 @@ type ProofBundle struct {
 type Engine interface {
 	// SetKey sets the log and submitter keys that will be used by the
 	// transparency engine to fetch, or verify, the proof.
-	// The function takes as inputs two arrays (of byte arrays)
-	// to allow configuring multiple log and submitter trusted keys.
+	// The public key format depends by the underlying transparency engine,
+	// refer to the SetKey() documentation of the chosen transparency engine.
+	// The library allows configuring multiple log and submitter trusted keys,
+	// they are expected to be separeted by a single newline byte (i.e. 0x0a)
+	// within the whole key blob.
 	//
 	// Return error if:
 	//    - the parsing of the public keys fails.
-	SetKey(logKey [][]byte, submitKey [][]byte) (err error)
+	SetKey(logKey []byte, submitKey []byte) (err error)
 
 	// SetWitnessPolicy sets the witness policy for the transparency engine.
 	// The function accepts as input the witness policy in the format expected

@@ -169,13 +169,16 @@ func (e *SigsumEngine) GetProof(statement []byte, probe []byte) (proof []byte, e
 }
 
 // SetKey implements transparency.SetKey() for the Sigsum engine.
-func (e *SigsumEngine) SetKey(logKey [][]byte, submitKey [][]byte) (err error) {
+// Sigsum supports Ed25519 public keys in OpenSSH format.
+func (e *SigsumEngine) SetKey(logKey []byte, submitKey []byte) (err error) {
 	// Reset any previously stored key.
 	e.logPubkey = []string{}
 	e.submitPubkey = []string{}
 
 	// Parse and load log public key(s).
-	for _, k := range logKey {
+	logKey = bytes.Trim(logKey, "\n")
+	logKeys := bytes.Split(logKey, []byte("\n"))
+	for _, k := range logKeys {
 		lk := string(k)
 		_, err = key.ParsePublicKey(lk)
 
@@ -187,7 +190,9 @@ func (e *SigsumEngine) SetKey(logKey [][]byte, submitKey [][]byte) (err error) {
 	}
 
 	// Parse and load submit public key(s).
-	for _, k := range submitKey {
+	submitKey = bytes.Trim(submitKey, "\n")
+	submitKeys := bytes.Split(submitKey, []byte("\n"))
+	for _, k := range submitKeys {
 		sk := string(k)
 		_, err = key.ParsePublicKey(sk)
 
