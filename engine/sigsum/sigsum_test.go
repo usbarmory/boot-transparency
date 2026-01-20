@@ -40,9 +40,7 @@ func TestSigsumEngineSetKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = e.SetKey(logKey, submitKey)
-
-	if err != nil {
+	if err = e.SetKey(logKey, submitKey); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -87,20 +85,17 @@ func TestSigsumEngineNoCosignaturesVerifyProof(t *testing.T) {
 		"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqym9S/tFn6B/Eri5hGJiEV8BpGumEPcm65uxC+FG6K"}
 
 	e, err := transparency.GetEngine(transparency.Sigsum)
-
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = e.SetKey(logKey, submitKey)
-	if err != nil {
+	if err = e.SetKey(logKey, submitKey); err != nil {
 		t.Fatal(err)
 	}
 
 	// Reset the witness policy to induce the engine to verify the proof using
 	// the no-cosignature verification.
-	err = e.SetWitnessPolicy(nil)
-	if err != nil {
+	if err = e.SetWitnessPolicy(nil); err != nil {
 		t.Fatal(err)
 	}
 
@@ -113,15 +108,13 @@ func TestSigsumEngineNoCosignaturesVerifyProof(t *testing.T) {
 		t.Errorf("not a valid Sigsum proof bundle")
 	}
 
-	err = e.VerifyProof(statement, proof, nil)
-	if err != nil {
+	if err = e.VerifyProof(statement, proof, nil); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestSigsumEngineCosignaturesVerifyProof(t *testing.T) {
 	e, err := transparency.GetEngine(transparency.Sigsum)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -129,13 +122,11 @@ func TestSigsumEngineCosignaturesVerifyProof(t *testing.T) {
 	logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEZEryq9QPSJWgA7yjUPnVkSqzAaScd/E+W22QXCCl/m"}
 	submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqym9S/tFn6B/Eri5hGJiEV8BpGumEPcm65uxC+FG6K"}
 
-	err = e.SetKey(logKey, submitKey)
-	if err != nil {
+	if err = e.SetKey(logKey, submitKey); err != nil {
 		t.Fatal(err)
 	}
 
-	err = e.SetWitnessPolicy(validWitnessPolicy)
-	if err != nil {
+	if err = e.SetWitnessPolicy(validWitnessPolicy); err != nil {
 		t.Fatal(err)
 	}
 
@@ -148,15 +139,13 @@ func TestSigsumEngineCosignaturesVerifyProof(t *testing.T) {
 		t.Errorf("not a valid Sigsum proof bundle")
 	}
 
-	err = e.VerifyProof(statement, proof, nil)
-	if err != nil {
+	if err = e.VerifyProof(statement, proof, nil); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestSigsumEngineCosignaturesVerifyProofInvalidLogKey(t *testing.T) {
 	e, err := transparency.GetEngine(transparency.Sigsum)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -165,13 +154,11 @@ func TestSigsumEngineCosignaturesVerifyProofInvalidLogKey(t *testing.T) {
 	logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKwmwKhVrEUaZTlHjhoWA4jwJLOF8TY+/NpHAXAHbAHl"}
 	submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqym9S/tFn6B/Eri5hGJiEV8BpGumEPcm65uxC+FG6K"}
 
-	err = e.SetKey(logKey, submitKey)
-	if err != nil {
+	if err = e.SetKey(logKey, submitKey); err != nil {
 		t.Fatal(err)
 	}
 
-	err = e.SetWitnessPolicy(validWitnessPolicy)
-	if err != nil {
+	if err = e.SetWitnessPolicy(validWitnessPolicy); err != nil {
 		t.Fatal(err)
 	}
 
@@ -193,7 +180,6 @@ func TestSigsumEngineCosignaturesVerifyProofInvalidLogKey(t *testing.T) {
 
 func TestSigsumEngineCosignaturesVerifyProofInvalidSubmitKey(t *testing.T) {
 	e, err := transparency.GetEngine(transparency.Sigsum)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -201,13 +187,11 @@ func TestSigsumEngineCosignaturesVerifyProofInvalidSubmitKey(t *testing.T) {
 	logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEZEryq9QPSJWgA7yjUPnVkSqzAaScd/E+W22QXCCl/m"}
 	submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMdLcxVjCAQUHbD4jCfFP+f8v1nmyjWkq6rXiexrK8II"}
 
-	err = e.SetKey(logKey, submitKey)
-	if err != nil {
+	if err = e.SetKey(logKey, submitKey); err != nil {
 		t.Fatal(err)
 	}
 
-	err = e.SetWitnessPolicy(validWitnessPolicy)
-	if err != nil {
+	if err = e.SetWitnessPolicy(validWitnessPolicy); err != nil {
 		t.Fatal(err)
 	}
 
@@ -220,16 +204,14 @@ func TestSigsumEngineCosignaturesVerifyProofInvalidSubmitKey(t *testing.T) {
 		t.Errorf("not a valid Sigsum proof bundle")
 	}
 
-	err = e.VerifyProof(statement, proof, nil)
 	// Error expected: VerifyProof must return the leaf key hash (i.e. submitter's key) mismatch error.
-	if err != nil && err.Error() != "unknown leaf key hash" {
+	if err = e.VerifyProof(statement, proof, nil); err != nil && err.Error() != "unknown leaf key hash" {
 		t.Fatal(err)
 	}
 }
 
 func TestSigsumEngineGetProof(t *testing.T) {
 	e, err := transparency.GetEngine(transparency.Sigsum)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -237,13 +219,11 @@ func TestSigsumEngineGetProof(t *testing.T) {
 	logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEZEryq9QPSJWgA7yjUPnVkSqzAaScd/E+W22QXCCl/m"}
 	submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqym9S/tFn6B/Eri5hGJiEV8BpGumEPcm65uxC+FG6K"}
 
-	err = e.SetKey(logKey, submitKey)
-	if err != nil {
+	if err = e.SetKey(logKey, submitKey); err != nil {
 		t.Fatal(err)
 	}
 
-	err = e.SetWitnessPolicy(validWitnessPolicy)
-	if err != nil {
+	if err = e.SetWitnessPolicy(validWitnessPolicy); err != nil {
 		t.Fatal(err)
 	}
 

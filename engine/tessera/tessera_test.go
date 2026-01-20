@@ -44,9 +44,7 @@ func TestTesseraEngineSetKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = e.SetKey(logKey, submitKey)
-
-	if err != nil {
+	if err = e.SetKey(logKey, submitKey); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -62,9 +60,8 @@ func TestNegativeTesseraEngineSetKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = e.SetKey(logKey, submitKey)
-
-	if err == nil {
+	// Error expected
+	if err = e.SetKey(logKey, submitKey); err == nil {
 		t.Fatal(err)
 	}
 }
@@ -91,8 +88,7 @@ func TestTesseraEngineNegativeNoCosignaturesVerifyProof(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = e.SetKey(logKey, []string{})
-	if err != nil {
+	if err = e.SetKey(logKey, []string{}); err != nil {
 		t.Fatal(err)
 	}
 
