@@ -169,31 +169,33 @@ func (e *SigsumEngine) GetProof(statement []byte, probe []byte) (proof []byte, e
 }
 
 // SetKey implements transparency.SetKey() for the Sigsum engine.
-func (e *SigsumEngine) SetKey(logKey []string, submitKey []string) (err error) {
+func (e *SigsumEngine) SetKey(logKey [][]byte, submitKey [][]byte) (err error) {
 	// Reset any previously stored key.
 	e.logPubkey = []string{}
 	e.submitPubkey = []string{}
 
 	// Parse and load log public key(s).
 	for _, k := range logKey {
-		_, err = key.ParsePublicKey(k)
+		lk := string(k)
+		_, err = key.ParsePublicKey(lk)
 
 		if err != nil {
 			return
 		}
 
-		e.logPubkey = append(e.logPubkey, k)
+		e.logPubkey = append(e.logPubkey, lk)
 	}
 
 	// Parse and load submit public key(s).
 	for _, k := range submitKey {
-		_, err = key.ParsePublicKey(k)
+		sk := string(k)
+		_, err = key.ParsePublicKey(sk)
 
 		if err != nil {
 			return
 		}
 
-		e.submitPubkey = append(e.submitPubkey, k)
+		e.submitPubkey = append(e.submitPubkey, sk)
 	}
 
 	return

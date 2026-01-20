@@ -149,19 +149,20 @@ func (e *TesseraEngine) GetProof(statement []byte, probe []byte) (proof []byte, 
 }
 
 // SetKey implements transparency.SetKey() for the Tessera engine.
-func (e *TesseraEngine) SetKey(logKey []string, submitKey []string) (err error) {
+func (e *TesseraEngine) SetKey(logKey [][]byte, submitKey [][]byte) (err error) {
 	// Reset any previously stored key.
 	e.logPubkey = []string{}
 
 	// Parse and load log public key(s) that needs to be compliant with note format.
 	for _, k := range logKey {
-		_, err = note.NewVerifier(k)
+		lk := string(k)
+		_, err = note.NewVerifier(lk)
 
 		if err != nil {
 			return
 		}
 
-		e.logPubkey = append(e.logPubkey, k)
+		e.logPubkey = append(e.logPubkey, lk)
 	}
 
 	return

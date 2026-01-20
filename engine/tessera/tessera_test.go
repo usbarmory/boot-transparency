@@ -35,25 +35,26 @@ func TestLoadTestData(t *testing.T) {
 }
 
 func TestTesseraEngineSetKey(t *testing.T) {
-	logKey := []string{"PeterNeumann+c74f20a3+ARpc2QcUPDhMQegwxbzhKqiBfsVkmqq/LDE4izWy10TW"}
-	// Tessera does not use the submit key in the verification process.
-	submitKey := []string{}
+	logKey := [][]byte{
+		[]byte(`PeterNeumann+c74f20a3+ARpc2QcUPDhMQegwxbzhKqiBfsVkmqq/LDE4izWy10TW`),
+	}
 
 	e, err := transparency.GetEngine(transparency.Tessera)
 	if err != nil && !strings.Contains(err.Error(), "tessera support is incomplete") {
 		t.Fatal(err)
 	}
 
-	if err = e.SetKey(logKey, submitKey); err != nil {
+	// Tessera does not use the submit key in the verification process.
+	if err = e.SetKey(logKey, nil); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestNegativeTesseraEngineSetKey(t *testing.T) {
 	// Invalid vkey: malformed verifier id.
-	logKey := []string{"PeterNeumann+c74f203+ARpc2QcUPDhMQegwxbzKqiBfsVkmqq/LDE4izWy10TW"}
-	// Tessera does not use the submit key in the verification process.
-	submitKey := []string{}
+	logKey := [][]byte{
+		[]byte(`PeterNeumann+c74f203+ARpc2QcUPDhMQegwxbzKqiBfsVkmqq/LDE4izWy10TW`),
+	}
 
 	e, err := transparency.GetEngine(transparency.Tessera)
 	if err != nil && !strings.Contains(err.Error(), "tessera support is incomplete") {
@@ -61,7 +62,7 @@ func TestNegativeTesseraEngineSetKey(t *testing.T) {
 	}
 
 	// Error expected
-	if err = e.SetKey(logKey, submitKey); err == nil {
+	if err = e.SetKey(logKey, nil); err == nil {
 		t.Fatal(err)
 	}
 }
@@ -81,14 +82,16 @@ func TestTesseraEngineNegativeNoCosignaturesVerifyProof(t *testing.T) {
 	// Test support for multiple keys configured in the transparency engine:
 	// in this example only the last keys are the correct ones for verifying
 	// the test statement proof.
-	logKey := []string{"PeterNeumann+c74f20a3+ARpc2QcUPDhMQegwxbzhKqiBfsVkmqq/LDE4izWy10TW"}
+	logKey := [][]byte{
+		[]byte(`PeterNeumann+c74f20a3+ARpc2QcUPDhMQegwxbzhKqiBfsVkmqq/LDE4izWy10TW`),
+	}
 
 	e, err := transparency.GetEngine(transparency.Tessera)
 	if err != nil && !strings.Contains(err.Error(), "tessera support is incomplete") {
 		t.Fatal(err)
 	}
 
-	if err = e.SetKey(logKey, []string{}); err != nil {
+	if err = e.SetKey(logKey, nil); err != nil {
 		t.Fatal(err)
 	}
 

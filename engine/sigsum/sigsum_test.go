@@ -32,8 +32,12 @@ func TestLoadTestData(t *testing.T) {
 }
 
 func TestSigsumEngineSetKey(t *testing.T) {
-	logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKwmwKhVrEUaZTlHjhoWA4jwJLOF8TY+/NpHAXAHbAHl"}
-	submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMdLcxVjCAQUHbD4jCfFP+f8v1nmyjWkq6rXiexrK8II"}
+	logKey := [][]byte{
+		[]byte(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKwmwKhVrEUaZTlHjhoWA4jwJLOF8TY+/NpHAXAHbAHl`),
+	}
+	submitKey := [][]byte{
+		[]byte(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMdLcxVjCAQUHbD4jCfFP+f8v1nmyjWkq6rXiexrK8II`),
+	}
 
 	e, err := transparency.GetEngine(transparency.Sigsum)
 	if err != nil {
@@ -78,11 +82,15 @@ func TestSigsumEngineNoCosignaturesVerifyProof(t *testing.T) {
 	// Test support for multiple keys configured in the transparency engine:
 	// in this example only the last keys are the correct ones for verifying
 	// the test statement proof.
-	logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKwmwKhVrEUaZTlHjhoWA4jwJLOF8TY+/NpHAXAHbAHl",
-		"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN6kw3w2BWjlKLdrtnv4IaN+zg8/RpKGA98AbbTwjpdQ",
-		"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEZEryq9QPSJWgA7yjUPnVkSqzAaScd/E+W22QXCCl/m"}
-	submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMCMTGNMNe1HP2us/dR5dBpyrSPDgPQ9mX5j9iqbLIS+",
-		"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqym9S/tFn6B/Eri5hGJiEV8BpGumEPcm65uxC+FG6K"}
+	logKey := [][]byte{
+		[]byte(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKwmwKhVrEUaZTlHjhoWA4jwJLOF8TY+/NpHAXAHbAHl`),
+		[]byte(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN6kw3w2BWjlKLdrtnv4IaN+zg8/RpKGA98AbbTwjpdQ`),
+		[]byte(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEZEryq9QPSJWgA7yjUPnVkSqzAaScd/E+W22QXCCl/m`),
+	}
+	submitKey := [][]byte{
+		[]byte(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMCMTGNMNe1HP2us/dR5dBpyrSPDgPQ9mX5j9iqbLIS+`),
+		[]byte(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqym9S/tFn6B/Eri5hGJiEV8BpGumEPcm65uxC+FG6K`),
+	}
 
 	e, err := transparency.GetEngine(transparency.Sigsum)
 	if err != nil {
@@ -119,8 +127,12 @@ func TestSigsumEngineCosignaturesVerifyProof(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEZEryq9QPSJWgA7yjUPnVkSqzAaScd/E+W22QXCCl/m"}
-	submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqym9S/tFn6B/Eri5hGJiEV8BpGumEPcm65uxC+FG6K"}
+	logKey := [][]byte{
+		[]byte(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEZEryq9QPSJWgA7yjUPnVkSqzAaScd/E+W22QXCCl/m`),
+	}
+	submitKey := [][]byte{
+		[]byte(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqym9S/tFn6B/Eri5hGJiEV8BpGumEPcm65uxC+FG6K`),
+	}
 
 	if err = e.SetKey(logKey, submitKey); err != nil {
 		t.Fatal(err)
@@ -151,8 +163,12 @@ func TestSigsumEngineCosignaturesVerifyProofInvalidLogKey(t *testing.T) {
 	}
 
 	// Invalid log key (i.e. the only allowed key is not matching the log keyhash in the proof).
-	logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKwmwKhVrEUaZTlHjhoWA4jwJLOF8TY+/NpHAXAHbAHl"}
-	submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqym9S/tFn6B/Eri5hGJiEV8BpGumEPcm65uxC+FG6K"}
+	logKey := [][]byte{
+		[]byte(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKwmwKhVrEUaZTlHjhoWA4jwJLOF8TY+/NpHAXAHbAHl`),
+	}
+	submitKey := [][]byte{
+		[]byte(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqym9S/tFn6B/Eri5hGJiEV8BpGumEPcm65uxC+FG6K`),
+	}
 
 	if err = e.SetKey(logKey, submitKey); err != nil {
 		t.Fatal(err)
@@ -184,8 +200,12 @@ func TestSigsumEngineCosignaturesVerifyProofInvalidSubmitKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEZEryq9QPSJWgA7yjUPnVkSqzAaScd/E+W22QXCCl/m"}
-	submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMdLcxVjCAQUHbD4jCfFP+f8v1nmyjWkq6rXiexrK8II"}
+	logKey := [][]byte{
+		[]byte(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEZEryq9QPSJWgA7yjUPnVkSqzAaScd/E+W22QXCCl/m`),
+	}
+	submitKey := [][]byte{
+		[]byte(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMdLcxVjCAQUHbD4jCfFP+f8v1nmyjWkq6rXiexrK8II`),
+	}
 
 	if err = e.SetKey(logKey, submitKey); err != nil {
 		t.Fatal(err)
@@ -216,8 +236,12 @@ func TestSigsumEngineGetProof(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	logKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEZEryq9QPSJWgA7yjUPnVkSqzAaScd/E+W22QXCCl/m"}
-	submitKey := []string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqym9S/tFn6B/Eri5hGJiEV8BpGumEPcm65uxC+FG6K"}
+	logKey := [][]byte{
+		[]byte(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEZEryq9QPSJWgA7yjUPnVkSqzAaScd/E+W22QXCCl/m`),
+	}
+	submitKey := [][]byte{
+		[]byte(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqym9S/tFn6B/Eri5hGJiEV8BpGumEPcm65uxC+FG6K`),
+	}
 
 	if err = e.SetKey(logKey, submitKey); err != nil {
 		t.Fatal(err)
