@@ -98,9 +98,8 @@ func TestTesseraEngineNegativeNoCosignaturesVerifyProof(t *testing.T) {
 		t.Errorf("not a valid Tessera proof bundle")
 	}
 
-	err = e.VerifyProof(statement, proof, probe)
 	// Error expected: the log public key will not pass log signature verification.
-	if err != nil && !strings.Contains(err.Error(), "does not match expected root") {
-		t.Fatal(err)
+	if err = e.VerifyProof(statement, proof, probe); err == nil || !strings.Contains(err.Error(), "does not match expected root") {
+		t.Fatal("root mismatch error not returned correctly")
 	}
 }

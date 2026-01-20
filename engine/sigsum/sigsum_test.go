@@ -144,7 +144,7 @@ func TestSigsumEngineCosignaturesVerifyProof(t *testing.T) {
 	}
 }
 
-func TestSigsumEngineCosignaturesVerifyProofInvalidLogKey(t *testing.T) {
+func TestSigsumEngineNoCosignaturesVerifyProofInvalidLogKey(t *testing.T) {
 	// Invalid log key (i.e. the only allowed key is not matching the log keyhash in the proof).
 	logKey := []byte(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKwmwKhVrEUaZTlHjhoWA4jwJLOF8TY+/NpHAXAHbAHl`)
 	submitKey := []byte(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMqym9S/tFn6B/Eri5hGJiEV8BpGumEPcm65uxC+FG6K`)
@@ -158,7 +158,10 @@ func TestSigsumEngineCosignaturesVerifyProofInvalidLogKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err = e.SetWitnessPolicy(validWitnessPolicy); err != nil {
+	// Reset the witness policy to induce the engine to verify the proof using
+	// the no-cosignature verification. Otherwise the log key is obtained from the
+	// witness policy.
+	if err = e.SetWitnessPolicy(nil); err != nil {
 		t.Fatal(err)
 	}
 
@@ -171,10 +174,9 @@ func TestSigsumEngineCosignaturesVerifyProofInvalidLogKey(t *testing.T) {
 		t.Errorf("not a valid Sigsum proof bundle")
 	}
 
-	err = e.VerifyProof(statement, proof, nil)
 	// Error expected: VerifyProof must return the log keyhash mismatch error.
-	if err != nil && err.Error() != "unknown log key hash" {
-		t.Fatal(err)
+	if err = e.VerifyProof(statement, proof, nil); err == nil || err.Error() != "unknown log" {
+		t.Fatal("unknown log error not returned correctly")
 	}
 }
 
@@ -205,8 +207,8 @@ func TestSigsumEngineCosignaturesVerifyProofInvalidSubmitKey(t *testing.T) {
 	}
 
 	// Error expected: VerifyProof must return the leaf key hash (i.e. submitter's key) mismatch error.
-	if err = e.VerifyProof(statement, proof, nil); err != nil && err.Error() != "unknown leaf key hash" {
-		t.Fatal(err)
+	if err = e.VerifyProof(statement, proof, nil); err == nil || err.Error() != "unknown leaf key hash" {
+		t.Fatal("unknown leaf key hash error not returned correctly")
 	}
 }
 
