@@ -8,6 +8,7 @@
 package policy
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -235,7 +236,7 @@ func TestNegativeValidate(t *testing.T) {
 	}
 
 	// error expected here: the claims do not match the (single) policy entry
-	if err = Validate(policy, statement); err == nil {
-		t.Fatal(err)
+	if err = Validate(policy, statement); err == nil || !errors.Is(err, ErrValidate) {
+		t.Fatal("missing policy validation error")
 	}
 }

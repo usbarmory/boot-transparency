@@ -10,6 +10,7 @@ package policy
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"sigsum.org/sigsum-go/pkg/crypto"
@@ -17,6 +18,15 @@ import (
 
 	"github.com/usbarmory/boot-transparency/artifact"
 )
+
+// ErrValidate represent a policy validation error.
+var ErrValidate = errors.New("policy validation error")
+
+// ErrParseRequirements represents a policy requirements parsing error.
+var ErrParseRequirements = errors.New("requirements parsing error")
+
+// ErrParseStatement represents a statement parsing error.
+var ErrParseStatement = errors.New("statement parsing error")
 
 // Signature represents a Statement signature including the signer's public key
 // to ease the verifier while checking its validity.
@@ -109,12 +119,13 @@ type PolicyEntry struct {
 	Signatures SigningRequirement `json:"signatures,omitempty"`
 }
 
-// ParseStatement parses the logged statement which is included as serialized JSON in the proof bundle.
+// ParseStatement parses the logged statement which is included as serialized
+// JSON in the proof bundle.
 func ParseStatement(jsonStatement []byte) (s *Statement, err error) {
 	var h artifact.Handler
 
 	if err = json.Unmarshal(jsonStatement, &s); err != nil {
-		return
+		return nil, fmt.Errorf("%w, %w", ErrParseStatement, err)
 	}
 
 	for _, a := range s.Artifacts {
@@ -122,12 +133,12 @@ func ParseStatement(jsonStatement []byte) (s *Statement, err error) {
 		h, err = artifact.GetHandler(a.Category)
 
 		if err != nil {
-			return
+			return nil, fmt.Errorf("%w, %w", ErrParseStatement, err)
 		}
 
 		// Invoke the correspondent claims parser for the given artifact category.
 		if _, err = h.ParseClaims(a.Claims); err != nil {
-			return
+			return nil, fmt.Errorf("%w, %w", ErrParseStatement, err)
 		}
 	}
 
@@ -135,14 +146,11 @@ func ParseStatement(jsonStatement []byte) (s *Statement, err error) {
 }
 
 // ParseRequirements parses the boot policy requirements from the serialized JSON.
-//
-// Return error if:
-//   - the parsing fails.
 func ParseRequirements(jsonPolicy []byte) (policy *[]PolicyEntry, err error) {
 	var h artifact.Handler
 
 	if err = json.Unmarshal(jsonPolicy, &policy); err != nil {
-		return
+		return nil, fmt.Errorf("%w, %w", ErrParseRequirements, err)
 	}
 
 	// the policy is an array of entries (i.e. per-bundle requirements).
@@ -153,12 +161,12 @@ func ParseRequirements(jsonPolicy []byte) (policy *[]PolicyEntry, err error) {
 			// Check if an artifact handler is registered for the given artifact category.
 			h, err = artifact.GetHandler(a.Category)
 			if err != nil {
-				return
+				return nil, fmt.Errorf("%w, %w", ErrParseRequirements, err)
 			}
 
 			// Invoke the correspondent requirement parser for the given artifact category.
 			if _, err = h.ParseRequirements(a.Requirements); err != nil {
-				return
+				return nil, fmt.Errorf("%w, %w", ErrParseRequirements, err)
 			}
 		}
 	}
@@ -175,7 +183,7 @@ func ParseRequirements(jsonPolicy []byte) (policy *[]PolicyEntry, err error) {
 // The logic applied depends by the artifact category, and thus,
 // it is defined in the corresponding artifact package.
 //
-// Return error if:
+// Return ErrValidate error if:
 //   - the bundle does not met the policy requirements
 //   - the claim parsing fails
 //   - the requirement parsing fails.
@@ -192,6 +200,7 @@ func Validate(p *[]PolicyEntry, s *Statement) (err error) {
 		if entry.Signatures.Quorum > 0 {
 			err = isSigningQuorumSatisfied(&entry.Signatures, s)
 			if err != nil {
+				err = fmt.Errorf("signing quorum validation failed, %w", err)
 				continue // Quorum not satisfied try with the next policy entry.
 			}
 		}
@@ -210,23 +219,22 @@ func Validate(p *[]PolicyEntry, s *Statement) (err error) {
 			// cannot be validated. The handler for this category, that is included
 			// in the policy, is not registered.
 			if err != nil {
-				return
+				return fmt.Errorf("%w, %w", ErrValidate, err)
 			}
 
 			matchCategory := false
 			for _, statementArtifact := range s.Artifacts {
 				if policyArtifact.Category == statementArtifact.Category {
 					matchCategory = true
-					r, parseError := h.ParseRequirements([]byte(policyArtifact.Requirements))
 
+					r, parseError := h.ParseRequirements([]byte(policyArtifact.Requirements))
 					if parseError != nil {
-						return parseError
+						return fmt.Errorf("%w, %w", ErrValidate, parseError)
 					}
 
 					c, parseError := h.ParseClaims([]byte(statementArtifact.Claims))
-
 					if parseError != nil {
-						return parseError
+						return fmt.Errorf("%w, %w", ErrValidate, parseError)
 					}
 
 					// Stop validating this bundle at the first artifact that
@@ -242,7 +250,7 @@ func Validate(p *[]PolicyEntry, s *Statement) (err error) {
 			// It cannot authorize bundles that are not containing at least one artifact
 			// that is compatible (i.e. same category) with the one required by this policy entry.
 			if !matchCategory {
-				err = fmt.Errorf("the boot bundle does not include a required artifact category")
+				err = fmt.Errorf("the boot bundle does not include any required artifact, category %d", policyArtifact.Category)
 				break // Try with the next policy entry.
 			}
 		}
@@ -255,6 +263,10 @@ func Validate(p *[]PolicyEntry, s *Statement) (err error) {
 
 	// Return latest error encountered while traversing the policy array
 	// that contains the per-bundle rule sets.
+	if err != nil {
+		err = fmt.Errorf("%w, %w", ErrValidate, err)
+	}
+
 	return
 }
 
@@ -311,7 +323,7 @@ func isSigningQuorumSatisfied(p *SigningRequirement, s *Statement) (err error) {
 	}
 
 	if validSignatures < p.Quorum {
-		return fmt.Errorf("insufficient number of valid signatures (%d), policy quorum of %d not reached", validSignatures, p.Quorum)
+		return fmt.Errorf("insufficient valid signatures, %d/%d", validSignatures, p.Quorum)
 	}
 
 	return
