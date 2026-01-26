@@ -20,8 +20,8 @@ const (
 	Tessera
 )
 
-// Resolve resolves transparency engine codes into a human-readable strings.
-func (e EngineCode) Resolve() string {
+// String resolves transparency engine codes into a human-readable strings.
+func (e EngineCode) String() string {
 	name := map[EngineCode]string{
 		Sigsum:  "sigsum",
 		Tessera: "tessera",
