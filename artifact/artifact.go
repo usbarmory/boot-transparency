@@ -14,7 +14,7 @@ import (
 
 // Supported artifact hash size
 const (
-	SumSize = sha256.Size
+	HashSize = sha256.Size
 )
 
 // Supported artifact category UIDs.
