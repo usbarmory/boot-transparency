@@ -8,7 +8,13 @@
 package artifact
 
 import (
+	"crypto/sha256"
 	"fmt"
+)
+
+// Supported artifact hash size
+const (
+	SumSize = sha256.Size
 )
 
 // Supported artifact category UIDs.
@@ -58,4 +64,13 @@ func GetHandler(c uint) (Handler, error) {
 	}
 
 	return *h, nil
+}
+
+// Sum returns the checksum of the data.
+// Currently boot-transparency supports only SHA-256 as hashing algorithm.
+func Sum(b []byte) ([]byte) {
+	h := sha256.New()
+	h.Write(b)
+
+	return h.Sum(nil)
 }
