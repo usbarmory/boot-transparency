@@ -8,13 +8,9 @@
 package artifact
 
 import (
-	"crypto/sha256"
 	"fmt"
-)
-
-// Supported artifact hash size
-const (
-	HashSize = sha256.Size
+	"hash"
+	"crypto/sha256"
 )
 
 // Supported artifact category UIDs.
@@ -66,11 +62,22 @@ func GetHandler(c uint) (Handler, error) {
 	return *h, nil
 }
 
-// Sum returns the checksum of the data.
-// Currently boot-transparency supports only SHA-256 as hashing algorithm.
-func Sum(b []byte) ([]byte) {
-	h := sha256.New()
-	h.Write(b)
+// Library hasher. Set to crypto/sha256 by default.
+var hasher = sha256.New()
 
-	return h.Sum(nil)
+// Boot-transparency supports by-default SHA-256 hashing algorithm
+// implemented by the crypto standard library.
+// SetHasher allows library users to override the default hasher with
+// any custom implementation of the hash.Hash interface.
+func SetHasher(newHasher func() hash.Hash) {
+	hasher = newHasher()
+}
+
+// Sum returns the checksum of the data computed by the
+// library hasher, that can be configured via SetHasher.
+func Sum(data []byte) []byte {
+	hasher.Reset()
+	hasher.Write(data)
+
+	return hasher.Sum(nil)
 }
