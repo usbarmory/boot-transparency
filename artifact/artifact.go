@@ -70,6 +70,10 @@ var hasher = sha256.New()
 // SetHasher allows library users to override the default hasher with
 // any custom implementation of the hash.Hash interface.
 func SetHasher(newHasher func() hash.Hash) {
+	if newHasher == nil {
+		return
+	}
+
 	hasher = newHasher()
 }
 
