@@ -8,7 +8,6 @@
 package artifact
 
 import (
-	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/hex"
 	"fmt"
@@ -35,11 +34,11 @@ func ValidateHash(requireHash string, claimHash string) (err error) {
 		return fmt.Errorf("invalid hash claim, %w", err)
 	}
 
-	if len(r) != sha256.Size {
+	if len(r) != hasher.Size() {
 		return fmt.Errorf("invalid requirement hash length %q", requireHash)
 	}
 
-	if len(c) != sha256.Size {
+	if len(c) != hasher.Size() {
 		return fmt.Errorf("invalid claim hash length %q", claimHash)
 	}
 

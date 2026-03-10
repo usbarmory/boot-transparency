@@ -13,6 +13,8 @@ import (
 	"io"
 	"log"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/pborman/getopt/v2"
 	"github.com/usbarmory/boot-transparency/policy"
@@ -21,6 +23,7 @@ import (
 type ValidateSettings struct {
 	policyFile          string
 	signedStatementFile string
+	bootEntryFiles      string
 }
 
 type ParseSettings struct {
@@ -37,8 +40,9 @@ the result is printed to stdout.
 	set := getopt.New()
 	set.SetProgram(args[0] + " " + args[1])
 
-	set.FlagLong(&s.policyFile, "policy-file", 'p', "Boot-transparency policy file", "policy-file").Mandatory()
-	set.FlagLong(&s.signedStatementFile, "signed-statement", 's', "Signed statement file", "signed-statement-file").Mandatory()
+	set.FlagLong(&s.policyFile, "policy-file", 'p', "Boot-transparency policy file", "policy file").Mandatory()
+	set.FlagLong(&s.signedStatementFile, "signed-statement", 's', "Signed statement file", "signed statement file").Mandatory()
+	set.FlagLong(&s.bootEntryFiles, "boot-entry-files", 'b', "Boot artifacts files passed as a comma separated list of category:path items", "boot artifact files").Mandatory()
 	set.FlagLong(&help, "help", 'h', "Show usage message and exit")
 
 	err := set.Getopt(args[1:], nil)
@@ -124,6 +128,39 @@ func readPolicy(fileName string) (*[]policy.PolicyEntry, error) {
 	return p, nil
 }
 
+func loadBootEntry(files string) (*policy.BootEntry, error) {
+	bootEntry := policy.BootEntry{}
+
+	for _, file := range strings.Split(files, ",") {
+		bootArtifact := policy.BootArtifact{}
+
+		artifact := strings.Split(file, ":")
+		if len(artifact) != 2 {
+			return nil, fmt.Errorf("invalid boot entry, must be a comma separated list of artifacts passed as category:filename")
+		}
+
+		category, err := strconv.ParseUint(artifact[0], 10, 32)
+		if err != nil {
+			return nil, fmt.Errorf("invalid boot entry, must be a comma separated list of artifacts passed as category:filename")
+		}
+
+		bootArtifact.Category = uint(category)
+
+		f, err := os.Open(artifact[1])
+		if err != nil {
+			return nil, fmt.Errorf("invalid boot entry, %w", err)
+		}
+
+		if bootArtifact.Data, err = io.ReadAll(f); err != nil {
+			return nil, fmt.Errorf("invalid boot entry, %w", err)
+		}
+
+		bootEntry = append(bootEntry, bootArtifact)
+	}
+
+	return &bootEntry, nil
+}
+
 func main() {
 	const usage = `
 Parse or validate a boot transparency policy.
@@ -168,7 +205,12 @@ Usage: bt-policy [--help]
 			log.Fatalf("cannot read policy, %v", err)
 		}
 
-		if err = policy.Validate(p, s); err != nil {
+		b, err := loadBootEntry(settings.bootEntryFiles)
+		if err != nil {
+			log.Fatalf("cannot load boot entry, %v", err)
+		}
+
+		if err = policy.Validate(p, s, b); err != nil {
 			log.Fatal(err)
 		} else {
 			log.Printf("signed statement is matching the policy")

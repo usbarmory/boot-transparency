@@ -8,9 +8,9 @@
 package artifact
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"hash"
-	"crypto/sha256"
 )
 
 // Supported artifact category UIDs.
@@ -75,6 +75,12 @@ func SetHasher(newHasher func() hash.Hash) {
 	}
 
 	hasher = newHasher()
+}
+
+// HashSize returns the hash size for the boot-transparency
+// artifacts, which depends by the selected hashing algorithm.
+func HashSize() int {
+	return hasher.Size()
 }
 
 // Sum returns the checksum of the data computed by the

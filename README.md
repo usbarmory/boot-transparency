@@ -156,22 +156,18 @@ if err != nil {
 
 // Ensure the artifacts loaded during the booting process are matching
 // the ones referenced in the proof bundle (i.e. file hash matching).
-b := BootEntry{
-	Artifact{
+b := policy.BootEntry{
+	policy.BootArtifact{
 		Category: artifact.LinuxKernel,
-		Hash:     "4551848b4ab43cb4321c4d6ba98e1d215f950cee21bfd82c8c82ab64e34ec9a6",
+		Data:     entry.Linux,
 	},
-	Artifact{
+	policy.BootArtifact{
 		Category: artifact.Initrd,
-		Hash:     "337630b74e55eae241f460faadf5a2f9a2157d6de2853d4106c35769e4acf538",
+		Data:     entry.Initrd,
 	},
 }
 
-if err = b.validateProofHashes(c); err != nil {
-	// Handle error: file hashes are not matching the ones included in the logged statement.
-}
-
-if err = policy.Validate(r, c); err != nil {
+if err = policy.Validate(r, c, b); err != nil {
 	// Handle error: the boot bundle is NOT authorized for boot.
 }
 

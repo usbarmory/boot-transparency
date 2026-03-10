@@ -9,6 +9,7 @@ package policy
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -27,6 +28,12 @@ var ErrParseRequirements = errors.New("requirements parsing error")
 
 // ErrParseStatement represents a statement parsing error.
 var ErrParseStatement = errors.New("statement parsing error")
+
+// ErrHashMismatch represents an hash mismatch error.
+var ErrHashMismatch = errors.New("hash mismatch")
+
+// ErrInvalidBootEntry represents an invalid boot entry error.
+var ErrInvalidBootEntry = errors.New("invalid boot entry")
 
 // Signature represents a Statement signature including the signer's public key
 // to ease the verifier while checking its validity.
@@ -119,6 +126,32 @@ type PolicyEntry struct {
 	Signatures SigningRequirement `json:"signatures,omitempty"`
 }
 
+// BootArtifact represents the artifact that has been loaded by the software
+// compoment which is requiring the boot-transparency validation (e.g. the bootloader,
+// or the user-space updating tool, importing this library).
+type BootArtifact struct {
+	// Category represents the artifact category (e.g. LinuxKernel, Initrd, Dtb, ...).
+	Category uint
+
+	// Data represents the bytes of the artifact.
+	Data []byte
+
+	// Metadata represents ancillary information on the loading process for
+	// the given artifact.
+	// Such information cannot be specified in the statement claims as they
+	// are dependant by the specific loader configuration environment (e.g.
+	// `cmdline` for LinuxKernel artifacts). These metadata allows implementing
+	// policy authorization logics based on combinations of the statement claims
+	// and these informations passed by the loader.
+	Metadata map[string]string
+
+	// hash represents the computed checksum of the artifact.
+	hash []byte
+}
+
+// BootEntry represents a boot entry as a set of boot artifacts.
+type BootEntry []BootArtifact
+
 // ParseStatement parses the logged statement which is included as serialized
 // JSON in the proof bundle.
 func ParseStatement(jsonStatement []byte) (s *Statement, err error) {
@@ -175,6 +208,9 @@ func ParseRequirements(jsonPolicy []byte) (policy *[]PolicyEntry, err error) {
 }
 
 // Validate validates the claims present in a given statement against the policy requirements.
+// The set of loaded artifacts (i.e. BootEntry) is required to validate the actual
+// correspondency between the claimed file hashes and the ones loaded in memory that are
+// being authorized.
 //
 // The policy array (i.e. list of per-artifact bundle requirements) is
 // traversed to verify whether there is at least one entry
@@ -187,8 +223,15 @@ func ParseRequirements(jsonPolicy []byte) (policy *[]PolicyEntry, err error) {
 //   - the bundle does not met the policy requirements
 //   - the claim parsing fails
 //   - the requirement parsing fails.
-func Validate(p *[]PolicyEntry, s *Statement) (err error) {
+func Validate(p *[]PolicyEntry, s *Statement, b *BootEntry) (err error) {
 	var h artifact.Handler
+
+	// Before start traversing the policy, the validateStatementHashes guarantees
+	// that the claims included in the statement are referring to the same files
+	// included in the boot entry that is being authorized.
+	if err = b.validateStatementHashes(s); err != nil {
+		return fmt.Errorf("%w, %w", ErrValidate, err)
+	}
 
 	// Traverse the policy.
 	for _, entry := range *p {
@@ -327,4 +370,82 @@ func isSigningQuorumSatisfied(p *SigningRequirement, s *Statement) (err error) {
 	}
 
 	return
+}
+
+func (b BootEntry) validateStatementHashes(s *Statement) (err error) {
+	for _, a := range b {
+		if err = a.validateStatementHash(s); err != nil {
+			return err
+		}
+	}
+
+	return
+}
+
+// Validate the matching between loaded artifact hash and the one included
+// in the proof bundle.
+// This step is vital to ensure the correspondence between the artifacts
+// loaded in memory during the boot and the claims that will be validated.
+func (a BootArtifact) validateStatementHash(s *Statement) (err error) {
+	var h artifact.Handler
+	var found bool
+
+	if len(a.Data) == 0 {
+		return fmt.Errorf("%w missing data bytes for artifact category %d", ErrInvalidBootEntry, a.Category)
+	}
+
+	for _, claimedArtifact := range s.Artifacts {
+		// The claims are referring to a different artifact
+		// category, try with next block of claims in the statement.
+		if a.Category != claimedArtifact.Category {
+			continue
+		}
+
+		if h, err = artifact.GetHandler(a.Category); err != nil {
+			return
+		}
+
+		// boot-transparency expect to parse requirements in JSON format.
+		requirements, _ := json.Marshal(map[string]string{"file_hash": hex.EncodeToString(a.Hash())})
+
+		r, err := h.ParseRequirements([]byte(requirements))
+		if err != nil {
+			return err
+		}
+
+		c, err := h.ParseClaims([]byte(claimedArtifact.Claims))
+		if err != nil {
+			return err
+		}
+
+		// The validation logic is safe in the sense that error is returned
+		// if a file hash requested by the boot loader is not present in the
+		// statement for a given artifact category.
+		if err = h.Validate(r, c); err != nil {
+			return fmt.Errorf("%w for artifact category %d, hash %q", ErrHashMismatch, a.Category, hex.EncodeToString(a.Hash()))
+		}
+
+		found = true
+		break
+	}
+
+	if !found {
+		return fmt.Errorf("one or more artifacts are not present in the proof bundle")
+	}
+
+	return
+}
+
+// Hash returns the checksum of the boot artifact computed
+// by the library hasher. The hasher can be configured via the
+// artifact.SetHasher function.
+func (a BootArtifact) Hash() []byte {
+	// Do not re-compute the checksum of an artifact if it
+	// has been already calculated.
+	if len(a.hash) == artifact.HashSize() {
+		return a.hash
+	}
+
+	a.hash = artifact.Sum(a.Data)
+	return a.hash
 }
