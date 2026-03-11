@@ -1,6 +1,6 @@
 {
 	"origin": "https://test.sigsum.org/barreleye",
-	"leaf_signature": "b380a0b0df0ae1710c1a51a708d7f45c0df840047a91c820dac04fe3f2c03b40b10b3f0cbcb189de410f83ad735ccf0d8146fe0b9c1408eda2b421d1daea8101",
+	"leaf_signature": "cf4e40c8bef8eb2742327ba8037bc531ca8929a58b38ba7ca4c48152eff3f62d8c9c71a720d4ea601bfe47a5c543409e2e0116958230a5e2e9356c123464920c",
 	"log_public_key_hash": "4e89cc51651f0d95f3c6127c15e1a42e3ddf7046c5b17b752689c402e773bb4d",
 	"submit_public_key_hash": "302928c2e0e01da52e3b161c54906de9b55ce250f0f47e80e022d04036e2765c"
 }

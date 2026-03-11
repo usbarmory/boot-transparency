@@ -61,6 +61,109 @@ func TestValidate(t *testing.T) {
             "requirements": {
                 "min_version": "v6.14.0-29",
                 "tainted": false,
+                "build_args": {
+                    "CONFIG_STACKPROTECTOR_STRONG": "y"
+                }
+            }
+        },
+        {
+            "category": 2,
+            "requirements": {
+                "tainted": false
+            }
+        }
+    ],
+    "signatures": {
+        "signers": [
+            {
+                "name": "signatory I",
+                "pub_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP5rbNcIOcwqBHzLOhJEfdKFHa+pIs10idfTm8c+HDnK"
+            },
+            {
+                "name": "signatory II",
+                "pub_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL0zV5fSWzzXa4R7Kpk6RAXkvWsJGpvkQ+9/xxpHC49J"
+            }
+        ],
+        "quorum": 2
+    }
+}]`)
+
+	s := []byte(`{
+	"header": {
+		"description": "Linux bundle",
+		"revision": "v1"
+	},
+	"artifacts": [
+		{
+			"category": 1,
+			"claims": {
+				"file_name": "test-vmlinuz-6.14.0-29-generic",
+				"file_hash": "5e6d8e01d75e3e0396d672b0e8c3e31f78532eef9fa2a3f464299ee7cc44a12e",
+				"version": "v6.14.0-29-generic",
+				"tainted": false,
+				"build_args": {
+					"CONFIG_STACKPROTECTOR_STRONG": "y"
+				}
+			}
+		},
+		{
+			"category": 2,
+			"claims": {
+				"file_name": "test-initrd.img-6.14.0-29-generic",
+				"file_hash": "b868d20383e979c588e7b16d24b9d3fcb9c1213c89135e6c656edf94cbf31542",
+				"version": "v6.14.0-29-generic",
+				"tainted": false
+			}
+		}
+	],
+	"signatures": [
+		{
+			"pub_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP5rbNcIOcwqBHzLOhJEfdKFHa+pIs10idfTm8c+HDnK",
+			"signature": "8d984b482ab45de5a2f0171a338b6ce8e64d95a70d6ea14b9d2a5f772c21d339d4cd51091b8f4c93f6dc289ee32ad94d048c8badb4fc3cc0a3136bfb4886ba0f"
+		},
+		{
+			"pub_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL0zV5fSWzzXa4R7Kpk6RAXkvWsJGpvkQ+9/xxpHC49J",
+			"signature": "99af82c7c559cf98902ac299f10a608353f2447729115667e924719d4ffb2b3cf80dc6715959afafaa5d255ae45e880351245cba6233ae093716136670b7d409"
+		}
+	]
+}`)
+
+	bootEntry := BootEntry{
+		BootArtifact{
+			Category: artifact.LinuxKernel,
+			Data:     []byte(`test linux kernel`),
+		},
+		BootArtifact{
+			Category: artifact.Initrd,
+			Data:     []byte(`test initrd`),
+		},
+	}
+
+	policy, err := ParseRequirements(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	statement, err := ParseStatement(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// success expected here: the claims match the (unique) policy entry
+	if err = Validate(policy, statement, &bootEntry); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestValidateMultiplePolicyEntries(t *testing.T) {
+	p := []byte(`[
+{
+    "artifacts": [
+        {
+            "category": 1,
+            "requirements": {
+                "min_version": "v6.14.0-29",
+                "tainted": false,
                 "architecture": "x64",
                 "license":["GPL"],
                 "metadata_include":[ "I WANT CANDY"]

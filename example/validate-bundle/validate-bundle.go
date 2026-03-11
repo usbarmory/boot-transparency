@@ -28,8 +28,8 @@ const (
 	logKeyPath        = "keys/log-key.pub"
 
 	// Boot entry artifacts.
-	kernelPath = "boot_entry/vmlinuz-6.14.0-29-generic"
-	initrdPath = "boot_entry/initrd.img-6.14.0-29-generic"
+	kernelPath = "boot_entry/test-vmlinuz-6.14.0-29-generic"
+	initrdPath = "boot_entry/test-initrd.img-6.14.0-29-generic"
 )
 
 func btValidate(fsys fs.FS, bootPolicyPath string, witnessPolicyPath string, submitKeyPath string, logKeyPath string, proofBundlePath string, kernelPath string, initrdPath string, online bool) (err error) {

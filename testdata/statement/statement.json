@@ -7,9 +7,9 @@
 		{
 			"category": 1,
 			"claims": {
-				"file_name": "vmlinuz-6.14.0-36-generic",
-				"file_hash": "4551848b4ab43cb4321c4d6ba98e1d215f950cee21bfd82c8c82ab64e34ec9a6",
-				"version": "v6.14.0-36-generic",
+				"file_name": "test-vmlinuz-6.14.0-29-generic",
+				"file_hash": "5e6d8e01d75e3e0396d672b0e8c3e31f78532eef9fa2a3f464299ee7cc44a12e",
+				"version": "v6.14.0-29-generic",
 				"tainted": false,
 				"build_args": {
 					"CONFIG_STACKPROTECTOR_STRONG": "y"
@@ -19,8 +19,9 @@
 		{
 			"category": 2,
 			"claims": {
-				"file_name": "initrd.img-6.14.0-36-generic",
-				"file_hash": "337630b74e55eae241f460faadf5a2f9a2157d6de2853d4106c35769e4acf538",
+				"file_name": "test-initrd.img-6.14.0-29-generic",
+				"file_hash": "b868d20383e979c588e7b16d24b9d3fcb9c1213c89135e6c656edf94cbf31542",
+				"version": "v6.14.0-29-generic",
 				"tainted": false
 			}
 		}
