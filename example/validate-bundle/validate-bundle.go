@@ -20,13 +20,14 @@ import (
 )
 
 const (
-	// Boot-transparency
+	// Boot-transparency assets.
 	bootPolicyPath    = "policy/policy.json"
 	witnessPolicyPath = "sigsum/trust_policy"
 	proofBundlePath   = "sigsum/proof-bundle.json"
 	submitKeyPath     = "keys/submit-key.pub"
 	logKeyPath        = "keys/log-key.pub"
 
+	// Boot entry artifacts.
 	kernelPath = "boot_entry/vmlinuz-6.14.0-29-generic"
 	initrdPath = "boot_entry/initrd.img-6.14.0-29-generic"
 )
