@@ -127,19 +127,21 @@ func btValidate(fsys fs.FS, bootPolicyPath string, witnessPolicyPath string, sub
 	}
 
 	// Assemble the boot entry.
-	b := policy.BootEntry{
-		policy.BootArtifact{
-			Category: artifact.LinuxKernel,
-			Data:     kernel,
-		},
-		policy.BootArtifact{
-			Category: artifact.Initrd,
-			Data:     initrd,
+	be := policy.BootEntry{
+		Artifacts: []policy.BootArtifact{
+			policy.BootArtifact{
+				Category: artifact.LinuxKernel,
+				Data:     kernel,
+			},
+			policy.BootArtifact{
+				Category: artifact.Initrd,
+				Data:     initrd,
+			},
 		},
 	}
 
 	// Validate the matching bewteen the logged claims and the policy requirements.
-	if err = policy.Validate(r, c, &b); err != nil {
+	if err = be.Validate(r, c); err != nil {
 		// The boot bundle is NOT authorized for boot.
 		return err
 	}

@@ -155,7 +155,7 @@ func loadBootEntry(files string) (*policy.BootEntry, error) {
 			return nil, fmt.Errorf("invalid boot entry, %w", err)
 		}
 
-		bootEntry = append(bootEntry, bootArtifact)
+		bootEntry.Artifacts = append(bootEntry.Artifacts, bootArtifact)
 	}
 
 	return &bootEntry, nil
@@ -205,12 +205,12 @@ Usage: bt-policy [--help]
 			log.Fatalf("cannot read policy, %v", err)
 		}
 
-		b, err := loadBootEntry(settings.bootEntryFiles)
+		be, err := loadBootEntry(settings.bootEntryFiles)
 		if err != nil {
 			log.Fatalf("cannot load boot entry, %v", err)
 		}
 
-		if err = policy.Validate(p, s, b); err != nil {
+		if err = be.Validate(p, s); err != nil {
 			log.Fatal(err)
 		} else {
 			log.Printf("signed statement is matching the policy")

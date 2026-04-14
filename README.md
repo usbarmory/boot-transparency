@@ -156,18 +156,20 @@ if err != nil {
 
 // Ensure the artifacts loaded during the booting process are matching
 // the ones referenced in the proof bundle (i.e. file hash matching).
-b := policy.BootEntry{
-	policy.BootArtifact{
-		Category: artifact.LinuxKernel,
-		Data:     entry.Linux,
-	},
-	policy.BootArtifact{
-		Category: artifact.Initrd,
-		Data:     entry.Initrd,
+be := policy.BootEntry{
+	Artifacts: []policy.BootArtifact{
+		policy.BootArtifact{
+			Category: artifact.LinuxKernel,
+			Data:     entry.Linux,
+		},
+		policy.BootArtifact{
+			Category: artifact.Initrd,
+			Data:     entry.Initrd,
+		},
 	},
 }
 
-if err = policy.Validate(r, c, b); err != nil {
+if err = be.Validate(r, c); err != nil {
 	// Handle error: the boot bundle is NOT authorized for boot.
 }
 

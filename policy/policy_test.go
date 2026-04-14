@@ -129,13 +129,15 @@ func TestValidate(t *testing.T) {
 }`)
 
 	bootEntry := BootEntry{
-		BootArtifact{
-			Category: artifact.LinuxKernel,
-			Data:     []byte(`test linux kernel`),
-		},
-		BootArtifact{
-			Category: artifact.Initrd,
-			Data:     []byte(`test initrd`),
+		Artifacts: []BootArtifact{
+			BootArtifact{
+				Category: artifact.LinuxKernel,
+				Data:     []byte(`test linux kernel`),
+			},
+			BootArtifact{
+				Category: artifact.Initrd,
+				Data:     []byte(`test initrd`),
+			},
 		},
 	}
 
@@ -150,7 +152,7 @@ func TestValidate(t *testing.T) {
 	}
 
 	// success expected here: the claims match the (unique) policy entry
-	if err = Validate(policy, statement, &bootEntry); err != nil {
+	if err = bootEntry.Validate(policy, statement); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -241,13 +243,15 @@ func TestValidateMultiplePolicyEntries(t *testing.T) {
 }`)
 
 	bootEntry := BootEntry{
-		BootArtifact{
-			Category: artifact.LinuxKernel,
-			Data:     []byte(`test linux kernel`),
-		},
-		BootArtifact{
-			Category: artifact.Initrd,
-			Data:     []byte(`test initrd`),
+		Artifacts: []BootArtifact{
+			BootArtifact{
+				Category: artifact.LinuxKernel,
+				Data:     []byte(`test linux kernel`),
+			},
+			BootArtifact{
+				Category: artifact.Initrd,
+				Data:     []byte(`test initrd`),
+			},
 		},
 	}
 
@@ -262,7 +266,7 @@ func TestValidateMultiplePolicyEntries(t *testing.T) {
 	}
 
 	// success expected here: the claims match the second policy entry
-	if err = Validate(policy, statement, &bootEntry); err != nil {
+	if err = bootEntry.Validate(policy, statement); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -342,13 +346,15 @@ func TestNegativeValidate(t *testing.T) {
 }`)
 
 	bootEntry := BootEntry{
-		BootArtifact{
-			Category: artifact.LinuxKernel,
-			Data:     []byte(`test linux kernel`),
-		},
-		BootArtifact{
-			Category: artifact.Initrd,
-			Data:     []byte(`test initrd`),
+		Artifacts: []BootArtifact{
+			BootArtifact{
+				Category: artifact.LinuxKernel,
+				Data:     []byte(`test linux kernel`),
+			},
+			BootArtifact{
+				Category: artifact.Initrd,
+				Data:     []byte(`test initrd`),
+			},
 		},
 	}
 
@@ -363,7 +369,7 @@ func TestNegativeValidate(t *testing.T) {
 	}
 
 	// error expected here: the claims do not match the (single) policy entry
-	if err = Validate(policy, statement, &bootEntry); err == nil || !errors.Is(err, ErrValidate) {
+	if err = bootEntry.Validate(policy, statement); err == nil || !errors.Is(err, ErrValidate) {
 		t.Fatal("missing policy validation error")
 	}
 }
@@ -454,13 +460,15 @@ func TestNegativeValidateInvalidBootEntry(t *testing.T) {
 }`)
 
 	bootEntry := BootEntry{
-		BootArtifact{
-			Category: artifact.LinuxKernel,
-			Data:     []byte(`test linux kernel`),
-		},
-		BootArtifact{
-			Category: artifact.Initrd,
-			// missing Initrd data here
+		Artifacts: []BootArtifact{
+			BootArtifact{
+				Category: artifact.LinuxKernel,
+				Data:     []byte(`test linux kernel`),
+			},
+			BootArtifact{
+				Category: artifact.Initrd,
+				// missing Initrd data here
+			},
 		},
 	}
 
@@ -475,7 +483,7 @@ func TestNegativeValidateInvalidBootEntry(t *testing.T) {
 	}
 
 	// error expected here: the boot entry is not valid
-	if err = Validate(policy, statement, &bootEntry); err == nil || !errors.Is(err, ErrInvalidBootEntry) {
+	if err = bootEntry.Validate(policy, statement); err == nil || !errors.Is(err, ErrInvalidBootEntry) {
 		t.Fatal("missing invalid boot entry error")
 	}
 }

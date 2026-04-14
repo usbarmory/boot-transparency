@@ -150,7 +150,10 @@ type BootArtifact struct {
 }
 
 // BootEntry represents a boot entry as a set of boot artifacts.
-type BootEntry []BootArtifact
+type BootEntry struct {
+	// Artifacts represents a set of [BootArtifact]
+	Artifacts []BootArtifact
+}
 
 // ParseStatement parses the logged statement which is included as serialized
 // JSON in the proof bundle.
@@ -207,11 +210,11 @@ func ParseRequirements(jsonPolicy []byte) (policy *[]PolicyEntry, err error) {
 	return
 }
 
-// Validate validates the claims present in a given statement against the policy requirements.
-// The set of loaded artifacts (i.e. BootEntry) is required to validate the actual
-// correspondency between the claimed file hashes and the ones loaded in memory that are
+// Validate validates a given [BootEntry].
+// The set of loaded artifacts is required to validate the actual correspondency
+// between the claimed file hashes and the ones loaded in memory that are
 // being authorized.
-//
+// The statement claims are validated against the policy requirements.
 // The policy array (i.e. list of per-artifact bundle requirements) is
 // traversed to verify whether there is at least one entry
 // matching the claims for the artifacts bundle.
@@ -223,13 +226,13 @@ func ParseRequirements(jsonPolicy []byte) (policy *[]PolicyEntry, err error) {
 //   - the bundle does not met the policy requirements
 //   - the claim parsing fails
 //   - the requirement parsing fails.
-func Validate(p *[]PolicyEntry, s *Statement, b *BootEntry) (err error) {
+func (be *BootEntry) Validate(p *[]PolicyEntry, s *Statement) (err error) {
 	var h artifact.Handler
 
 	// Before start traversing the policy, the validateStatementHashes guarantees
 	// that the claims included in the statement are referring to the same files
 	// included in the boot entry that is being authorized.
-	if err = b.validateStatementHashes(s); err != nil {
+	if err = be.validateStatementHashes(s); err != nil {
 		return fmt.Errorf("%w, %w", ErrValidate, err)
 	}
 
@@ -372,8 +375,8 @@ func isSigningQuorumSatisfied(p *SigningRequirement, s *Statement) (err error) {
 	return
 }
 
-func (b BootEntry) validateStatementHashes(s *Statement) (err error) {
-	for _, a := range b {
+func (be BootEntry) validateStatementHashes(s *Statement) (err error) {
+	for _, a := range be.Artifacts {
 		if err = a.validateStatementHash(s); err != nil {
 			return err
 		}
