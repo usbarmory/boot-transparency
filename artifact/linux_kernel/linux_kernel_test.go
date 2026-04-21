@@ -54,7 +54,7 @@ func TestNegativeLinuxKernelParseClaims(t *testing.T) {
 }
 
 func TestLinuxKernelValidate(t *testing.T) {
-	r := []byte(`{"min_version": "v6.14.0-28-generic", "file_hash": "4551848b4ab43cb4321c4d6ba98e1d215f950cee21bfd82c8c82ab64e34ec9a6", "architecture":"x64", "tainted": false, "license": ["GPL-2.0-only"], "min_timestamp": "2025-01-01T23:20:50.52Z", "build_args": {"CONFIG_STACKPROTECTOR_STRONG": "y"}}`)
+	r := []byte(`{"min_version": "v6.14.0-28-generic", "file_hash": "4551848b4ab43cb4321c4d6ba98e1d215f950cee21bfd82c8c82ab64e34ec9a6", "architecture":"x64", "tainted": false, "license": ["GPL-2.0-only"], "min_timestamp": "2025-01-01T23:20:50.52Z", "build_args": {"CONFIG_STACKPROTECTOR_STRONG": "^y$"}}`)
 
 	c := []byte(`{"file_name": "vmlinuz-6.14.0-36-generic", "file_hash": "4551848b4ab43cb4321c4d6ba98e1d215f950cee21bfd82c8c82ab64e34ec9a6", "version":"v6.14.0-36-generic" ,"architecture":"x64", "tainted": false, "license": ["GPL-2.0-only"], "timestamp": "2025-10-21T23:20:50.52Z", "build_args": {"CONFIG_STACKPROTECTOR_STRONG": "y"}}`)
 
@@ -79,9 +79,9 @@ func TestLinuxKernelValidate(t *testing.T) {
 }
 
 func TestNegativeLinuxKernelValidate(t *testing.T) {
-	r := []byte(`{"min_version": "v6.14.0-29", "architecture":"x64", "tainted": false, "license": ["GPL-2.0-only"], "min_timestamp": "2025-01-01T23:20:50.52Z", "build_args": {"CONFIG_STACKPROTECTOR_STRONG": "y"}}`)
+	r := []byte(`{"min_version": "v6.14.0-29", "architecture":"x64", "tainted": false, "license": ["GPL-2.0-only"], "min_timestamp": "2025-01-01T23:20:50.52Z", "build_args": {"CONFIG_STACKPROTECTOR_STRONG": "^y$"}}`)
 
-	c := []byte(`{"file_name": "vmlinuz-6.14.0-36-generic", "hash": "4551848b4ab43cb4321c4d6ba98e1d215f950cee21bfd82c8c82ab64e34ec9a6", "version":"v6.14.0-29-generic" ,"architecture":"x64", "tainted": false, "license": ["GPL-2.0-only"], "timestamp": "2025-10-21T23:20:50.52Z", "build_args": {"CONFIG_STACKPROTECTOR_STRONG": "test"}}`)
+	c := []byte(`{"file_name": "vmlinuz-6.14.0-36-generic", "hash": "4551848b4ab43cb4321c4d6ba98e1d215f950cee21bfd82c8c82ab64e34ec9a6", "version":"v6.14.0-29-generic" ,"architecture":"x64", "tainted": false, "license": ["GPL-2.0-only"], "timestamp": "2025-10-21T23:20:50.52Z", "build_args": {"CONFIG_STACKPROTECTOR_STRONG": "yes"}}`)
 
 	h, err := artifact.GetHandler(artifact.LinuxKernel)
 	if err != nil {

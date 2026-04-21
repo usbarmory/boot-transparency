@@ -54,9 +54,9 @@ func TestNegativeDtbParseClaims(t *testing.T) {
 }
 
 func TestDtbValidate(t *testing.T) {
-	r := []byte(`{"min_version": "v6.14.0-29", "architecture":"x64", "metadata":{"model": "Inverse Path USB armory"}}`)
+	r := []byte(`{"min_version": "v6.14.0-29", "architecture":"x64", "metadata":{"model": "USB armory"}}`)
 
-	c := []byte(`{"file_name": "test.dtb", "file_hash": "337630b74e55eae241f460faadf5a2f9a2157d6de2853d4106c35769e4acf538", "version":"v6.14.0-29-generic" ,"architecture":"x64", "metadata":{"model":"USB armory"}}`)
+	c := []byte(`{"file_name": "test.dtb", "file_hash": "337630b74e55eae241f460faadf5a2f9a2157d6de2853d4106c35769e4acf538", "version":"v6.14.0-29-generic" ,"architecture":"x64", "metadata":{"model":"Inverse Path USB armory"}}`)
 
 	h, err := artifact.GetHandler(artifact.Dtb)
 	if err != nil {

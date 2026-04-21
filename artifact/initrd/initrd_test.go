@@ -54,7 +54,7 @@ func TestNegativeInitrdParseClaims(t *testing.T) {
 }
 
 func TestInitrdValidate(t *testing.T) {
-	r := []byte(`{"min_version": "v6.14.0-29-generic", "architecture":"x64", "tainted": false, "license": ["GPL-2.0-only"], "min_timestamp": "2025-01-01T23:20:50.52Z", "build_args": {"CONFIG_STACKPROTECTOR_STRONG": "=y"}}`)
+	r := []byte(`{"min_version": "v6.14.0-29-generic", "architecture":"x64", "tainted": false, "license": ["GPL-2.0-only"], "min_timestamp": "2025-01-01T23:20:50.52Z", "build_args": {"CONFIG_STACKPROTECTOR_STRONG": "y"}}`)
 
 	c := []byte(`{"file_name": "initrd.img-6.14.0-36-generic", "file_hash": "337630b74e55eae241f460faadf5a2f9a2157d6de2853d4106c35769e4acf538","version":"v6.14.0-36-generic" ,"architecture":"x64", "tainted": false, "license": ["GPL-2.0-only"], "timestamp": "2025-10-21T23:20:50.52Z", "build_args": {"CONFIG_STACKPROTECTOR_STRONG": "y"}}`)
 
@@ -81,7 +81,7 @@ func TestInitrdValidate(t *testing.T) {
 func TestNegativeInitrdValidate(t *testing.T) {
 	r := []byte(`{"min_version": "v6.12.0-10-generic", "architecture":"x64", "tainted": false, "license": ["GPL-2.0-only"], "min_timestamp": "2025-01-01T23:20:50.52Z", "build_args": {"CONFIG_STACKPROTECTOR_STRONG": "y"}}`)
 
-	c := []byte(`{"file_name": "initrd.img-6.14.0-36-generic", "file_hash": "337630b74e55eae241f460faadf5a2f9a2157d6de2853d4106c35769e4acf538","version":"v6.14.0-36-generic" ,"architecture":"x64", "tainted": false, "license": ["GPL-2.0-only"], "timestamp": "2025-10-21T23:20:50.52Z" }`)
+	c := []byte(`{"file_name": "initrd.img-6.14.0-36-generic", "file_hash": "337630b74e55eae241f460faadf5a2f9a2157d6de2853d4106c35769e4acf538","version":"v6.14.0-36-generic" ,"architecture":"x64", "tainted": false, "license": ["GPL-2.0-only"], "timestamp": "2025-10-21T23:20:50.52Z", "build_args": {"CONFIG_STACKPROTECTOR_STRONG": "n"}}`)
 
 	h, err := artifact.GetHandler(artifact.Initrd)
 	if err != nil {

@@ -101,7 +101,7 @@ func ValidateMap(require map[string]string, claim map[string]string) (err error)
 				return fmt.Errorf("required key not present in the claims")
 			}
 
-			if err = ValidateStringMatch(c, regexp); err != nil {
+			if err = ValidateStringMatch(regexp, c); err != nil {
 				return
 			}
 		}
