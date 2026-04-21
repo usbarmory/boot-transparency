@@ -442,7 +442,7 @@ func (a BootArtifact) validateStatementHash(s *Statement) (err error) {
 // Hash returns the checksum of the boot artifact computed
 // by the library hasher. The hasher can be configured via the
 // artifact.SetHasher function.
-func (a BootArtifact) Hash() []byte {
+func (a *BootArtifact) Hash() []byte {
 	// Do not re-compute the checksum of an artifact if it
 	// has been already calculated.
 	if len(a.hash) == artifact.HashSize() {
